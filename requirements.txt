@@ -1,0 +1,10 @@
+requests
+logging
+pandas
+numpy
+ta
+streamlit
+plotly
+selenium
+webdriver-manager
+streamlit-autorefresh
