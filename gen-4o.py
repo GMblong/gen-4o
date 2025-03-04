@@ -221,20 +221,17 @@ def init_driver(twofa_code=""):
     Inisialisasi driver Selenium secara headless, login, dan tangani 2FA (jika muncul).
     Driver disimpan di st.session_state agar tetap aktif selama auto trade.
     """
-    # Instal ChromeDriver secara otomatis dengan direktori writable ('/tmp')
+    # Instal ChromeDriver secara otomatis dengan menentukan direktori unduhan yang writable (misalnya '/tmp')
     driver_path = chromedriver_autoinstaller.install(cwd='/tmp')
 
     options = webdriver.ChromeOptions()
     # Untuk debugging, Anda bisa nonaktifkan headless mode
-    options.add_argument("--headless")           # Aktifkan headless mode jika diperlukan
+    # options.add_argument("--headless")           # Aktifkan headless mode jika diperlukan
     options.add_argument("--no-sandbox")
     options.add_argument("--disable-dev-shm-usage")
     options.add_argument("--disable-gpu")
     # Tambahkan user-agent untuk menyamarkan automasi
-    options.add_argument("user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
-                         "AppleWebKit/537.36 (KHTML, like Gecko) "
-                         "Chrome/114.0.5735.90 Safari/537.36")
-    # Nonaktifkan fitur yang mengungkapkan automasi
+    options.add_argument("user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.5735.90 Safari/537.36")
     options.add_argument("--disable-blink-features=AutomationControlled")
     
     # Tetapkan binary location untuk Chrome/Chromium jika tersedia
@@ -260,10 +257,10 @@ def init_driver(twofa_code=""):
     
     time.sleep(5)
     
-    # Pastikan XPath sesuai dengan struktur halaman terbaru
-    username_xpath = '/html/body/binomo-root/platform-ui-scroll/div/div/ng-component/ng-component/div/div/auth-form/sa-auth-form/div[2]/div/app-sign-in/div/form/div[1]/platform-forms-input/way-input/div/div[1]/way-input-text/input'
-    password_xpath = '/html/body/binomo-root/platform-ui-scroll/div/div/ng-component/ng-component/div/div/auth-form/sa-auth-form/div[2]/div/app-sign-in/div/form/div[2]/platform-forms-input/way-input/div/div/way-input-password/input'
-    login_button_xpath = '/html/body/binomo-root/platform-ui-scroll/div/div/ng-component/ng-component/div/div/auth-form/sa-auth-form/div[2]/div/app-sign-in/div/form/vui-button/button'
+    # Menggunakan XPath dengan index untuk field login
+    username_xpath = "(//input[@type='text'])[1]"
+    password_xpath = "(//input[@type='password'])[1]"
+    login_button_xpath = "(//button[@type='submit'])[1]"
     
     username = st.secrets.get("username", "username_default")
     password = st.secrets.get("password", "password_default")
