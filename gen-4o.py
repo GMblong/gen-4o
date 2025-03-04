@@ -110,7 +110,7 @@ def check_entry_signals(df):
         last_candle['Bullish_Engulfing'] or 
         last_candle['Hammer'] or 
         last_candle['Three_White_Soldiers'] or 
-        (last_candle['EMA_3'] > last_candle['EMA_5'] and prev_candle['EMA_3'] < prev_candle['EMA_5'])
+        (last_candle['EMA_3'] > last_candle['EMA_5'] and prev_candle['EMA_3'] < prev_candle['EMA_3'])
     )
     bearish_primary = (
         last_candle['Bearish_Engulfing'] or 
@@ -221,8 +221,8 @@ def init_driver(twofa_code=""):
     Inisialisasi driver Selenium secara headless, login, dan tangani 2FA (jika muncul).
     Driver disimpan di st.session_state agar tetap aktif selama auto trade.
     """
-    # Instal ChromeDriver secara otomatis dan ambil path-nya
-    driver_path = chromedriver_autoinstaller.install()
+    # Instal ChromeDriver secara otomatis dengan menentukan direktori unduhan yang writable (misalnya '/tmp')
+    driver_path = chromedriver_autoinstaller.install(cwd='/tmp')
 
     options = webdriver.ChromeOptions()
     options.add_argument("--headless")           # Mode headless
