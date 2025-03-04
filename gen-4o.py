@@ -12,7 +12,6 @@ from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.chrome.service import Service
-from webdriver_manager.chrome import ChromeDriverManager
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from streamlit_autorefresh import st_autorefresh
@@ -222,22 +221,23 @@ def init_driver(twofa_code=""):
     Inisialisasi driver Selenium secara headless, login, dan tangani 2FA (jika muncul).
     Driver disimpan di st.session_state agar tetap aktif selama auto trade.
     """
-    # Pastikan ChromeDriver terinstal secara otomatis
-    chromedriver_autoinstaller.install()
+    # Instal ChromeDriver yang sesuai secara otomatis
+    driver_path = chromedriver_autoinstaller.install()
 
     options = webdriver.ChromeOptions()
-    options.add_argument("--headless")  # Jalankan dalam mode headless (tanpa tampilan)
+    options.add_argument("--headless")           # Mode headless
     options.add_argument("--no-sandbox")
     options.add_argument("--disable-dev-shm-usage")
+    options.add_argument("--disable-gpu")
     
-    # Jika tersedia, tetapkan binary location untuk Chrome/Chromium
+    # Tetapkan lokasi binary Chrome/Chromium jika tersedia
     if os.path.exists('/usr/bin/chromium-browser'):
         options.binary_location = '/usr/bin/chromium-browser'
     elif os.path.exists('/usr/bin/google-chrome'):
         options.binary_location = '/usr/bin/google-chrome'
     
-    # Menggunakan opsi di atas, buat driver (tanpa Service dari ChromeDriverManager)
-    driver = webdriver.Chrome(options=options)
+    service = Service(driver_path)
+    driver = webdriver.Chrome(service=service, options=options)
     
     wait = WebDriverWait(driver, 20)
     driver.get("https://binomo2.com/trading")

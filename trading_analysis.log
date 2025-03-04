@@ -219,3 +219,27 @@ Alasan: Konfirmasi bullish: Bullish Engulfing, RSI < 50, StochRSI oversold, ATR 
 2025-03-05 01:49:11 - INFO - Autentikasi dua faktor tidak terdeteksi atau sudah tidak diperlukan.
 2025-03-05 01:49:14 - INFO - Autentikasi dua faktor tidak terdeteksi atau sudah tidak diperlukan.
 2025-03-05 01:49:23 - INFO - Melakukan aksi BUY
+2025-03-05 01:49:59 - INFO - Hasil perhitungan indikator:
+2025-03-05 01:49:59 - INFO - ATR: 5.360183738677753e-07, ADX: 47.51997709027768, EMA_3: 641.8671042589158, EMA_5: 641.8671044998314, RSI: 20.97037343611899, StochRSI_K: 4.5965476806422645, MACD: -2.9075386009935755e-07, MACD_signal: -3.927290951042568e-08, BB_Upper: 641.8671052786505, BB_Lower: 641.8671037813496
+2025-03-05 01:50:00 - INFO - 
+19:14:01 \U0001f4e2 Sinyal Trading: BUY KUAT \U0001f4c8
+Alasan: Konfirmasi bullish: Bullish Engulfing, RSI < 50, StochRSI oversold, ATR meningkat dan ADX > 20, Terdeteksi bearish divergence, waspada pembalikan turun. 
+2025-03-05 01:50:00 - INFO - Melakukan aksi BUY
+2025-03-05 01:51:02 - INFO - Hasil perhitungan indikator:
+2025-03-05 01:51:02 - INFO - ATR: 5.312147030193607e-07, ADX: 50.76817992492986, EMA_3: 641.8671042644578, EMA_5: 641.8671044309987, RSI: 27.084281505633086, StochRSI_K: 14.93413087359457, MACD: -2.878730356314918e-07, MACD_signal: -8.603907784222079e-08, BB_Upper: 641.8671049209996, BB_Lower: 641.8671038270003
+2025-03-05 01:51:02 - INFO - 
+19:15:04 \U0001f4e2 Sinyal Trading: SELL LEMAH \U0001f4c9
+Alasan: Konfirmasi bearish: Bearish Engulfing, Shooting Star, Three Black Crows, ATR meningkat dan ADX > 20, 
+2025-03-05 01:51:02 - INFO - Melakukan aksi SELL
+2025-03-05 01:52:03 - INFO - Hasil perhitungan indikator:
+2025-03-05 01:52:03 - INFO - ATR: 5.101717708860536e-07, ADX: 54.75752138417332, EMA_3: 641.867104272229, EMA_5: 641.8671043884436, RSI: 29.87641863610814, StochRSI_K: 19.655161930038144, MACD: -2.729710786297801e-07, MACD_signal: -1.204716392972086e-07, BB_Upper: 641.8671044641876, BB_Lower: 641.8671040318125
+2025-03-05 01:52:03 - INFO - 
+19:16:05 \U0001f4e2 Sinyal Trading: BUY KUAT \U0001f4c8
+Alasan: Konfirmasi bullish: Three White Soldiers, RSI < 50, StochRSI oversold, ATR meningkat dan ADX > 20, 
+2025-03-05 01:52:03 - INFO - Melakukan aksi BUY
+2025-03-05 01:52:59 - INFO - Hasil perhitungan indikator:
+2025-03-05 01:52:59 - INFO - ATR: 4.881374028644418e-07, ADX: 59.08929849170799, EMA_3: 641.8671039886144, EMA_5: 641.867104143407, RSI: 23.277417037840053, StochRSI_K: 8.497367727557892, MACD: -3.3218771022802684e-07, MACD_signal: -1.6935550282106627e-07, BB_Upper: 641.8671043853454, BB_Lower: 641.8671037626547
+2025-03-05 01:53:00 - INFO - 
+19:17:02 \U0001f4e2 Sinyal Trading: SELL LEMAH \U0001f4c9
+Alasan: Konfirmasi bearish: Three Black Crows, ATR meningkat dan ADX > 20, 
+2025-03-05 01:53:00 - INFO - Melakukan aksi SELL

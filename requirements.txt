@@ -8,3 +8,4 @@ plotly
 selenium
 webdriver-manager
 streamlit-autorefresh
+chromedriver_autoinstaller
