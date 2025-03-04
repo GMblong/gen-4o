@@ -268,7 +268,7 @@ def init_driver(twofa_code=""):
     
     try:
         # Gunakan kondisi visibility agar elemen tidak hanya ada di DOM tetapi juga terlihat
-        user_field = wait.until(EC.visibility_of_element_located((By.XPATH, username_xpath)))
+        user_field = driver.find_element(By.XPATH, username_xpath)
         user_field.send_keys(username)
     except Exception as e:
         logging.error(f"Timeout atau error saat menemukan field username: {e}")
@@ -276,7 +276,7 @@ def init_driver(twofa_code=""):
         return None
 
     try:
-        pass_field = wait.until(EC.visibility_of_element_located((By.XPATH, password_xpath)))
+        pass_field = driver.find_element(By.XPATH, password_xpath)
         pass_field.send_keys(password)
     except Exception as e:
         logging.error(f"Timeout atau error saat menemukan field password: {e}")
