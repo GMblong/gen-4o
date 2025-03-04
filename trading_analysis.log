@@ -376,3 +376,18 @@ Alasan: Konfirmasi bullish: Bullish Engulfing, Hammer, Three White Soldiers, ATR
 2025-03-05 02:15:50 - INFO - 
 19:39:52 \U0001f4e2 Sinyal Trading: SELL LEMAH \U0001f4c9
 Alasan: Konfirmasi bearish: Three Black Crows, EMA3 cross EMA5 ke bawah, ATR meningkat dan ADX > 20, 
+2025-03-05 02:22:51 - INFO - Hasil perhitungan indikator:
+2025-03-05 02:22:51 - INFO - ATR: 7.67941067205031e-07, ADX: 31.642130581543285, EMA_3: 641.8671021262721, EMA_5: 641.8671020161204, RSI: 57.20454249755077, StochRSI_K: 78.84482047493134, MACD: 9.616860552341677e-08, MACD_signal: -8.100561359178434e-08, BB_Upper: 641.8671024567734, BB_Lower: 641.8671016952267
+2025-03-05 02:22:51 - INFO - 
+19:46:53 \U0001f4e2 Sinyal Trading: SELL LEMAH \U0001f4c9
+Alasan: Konfirmasi bearish: Bearish Engulfing, Shooting Star, Three Black Crows, RSI > 50, ATR meningkat dan ADX > 20, Terdeteksi bullish divergence, waspada pembalikan naik. 
+2025-03-05 02:22:54 - INFO - Hasil perhitungan indikator:
+2025-03-05 02:22:54 - INFO - ATR: 7.67941067205031e-07, ADX: 31.642130581543285, EMA_3: 641.8671021512721, EMA_5: 641.867102032787, RSI: 58.610315708957835, StochRSI_K: 82.33883624869395, MACD: 1.0276198736391962e-07, MACD_signal: -7.968693722368376e-08, BB_Upper: 641.8671024722004, BB_Lower: 641.8671016997995
+2025-03-05 02:22:54 - INFO - 
+19:46:56 \U0001f4e2 Sinyal Trading: SELL KUAT \U0001f4c9
+Alasan: Konfirmasi bearish: Bearish Engulfing, Shooting Star, Three Black Crows, RSI > 50, StochRSI overbought, ATR meningkat dan ADX > 20, Terdeteksi bullish divergence, waspada pembalikan naik. 
+2025-03-05 02:23:00 - INFO - Hasil perhitungan indikator:
+2025-03-05 02:23:00 - INFO - ATR: 6.363528712162531e-07, ADX: 32.64088184761134, EMA_3: 641.867102008136, EMA_5: 641.8671019663026, RSI: 52.7159297808785, StochRSI_K: 67.6884806705423, MACD: 6.95757762514404e-08, MACD_signal: -5.3843174325663466e-08, BB_Upper: 641.8671024018522, BB_Lower: 641.8671017741476
+2025-03-05 02:23:01 - INFO - 
+19:47:02 \U0001f4e2 Sinyal Trading: BUY LEMAH \U0001f4c8
+Alasan: Konfirmasi bullish: Bullish Engulfing, Hammer, Three White Soldiers, ATR meningkat dan ADX > 20, 

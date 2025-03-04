@@ -221,14 +221,21 @@ def init_driver(twofa_code=""):
     Inisialisasi driver Selenium secara headless, login, dan tangani 2FA (jika muncul).
     Driver disimpan di st.session_state agar tetap aktif selama auto trade.
     """
-    # Instal ChromeDriver secara otomatis dengan menentukan direktori unduhan yang writable (misalnya '/tmp')
+    # Instal ChromeDriver secara otomatis dengan direktori writable ('/tmp')
     driver_path = chromedriver_autoinstaller.install(cwd='/tmp')
 
     options = webdriver.ChromeOptions()
-    options.add_argument("--headless")           # Mode headless
+    # Untuk debugging, Anda bisa nonaktifkan headless mode
+    options.add_argument("--headless")           # Aktifkan headless mode jika diperlukan
     options.add_argument("--no-sandbox")
     options.add_argument("--disable-dev-shm-usage")
     options.add_argument("--disable-gpu")
+    # Tambahkan user-agent untuk menyamarkan automasi
+    options.add_argument("user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
+                         "AppleWebKit/537.36 (KHTML, like Gecko) "
+                         "Chrome/114.0.5735.90 Safari/537.36")
+    # Nonaktifkan fitur yang mengungkapkan automasi
+    options.add_argument("--disable-blink-features=AutomationControlled")
     
     # Tetapkan binary location untuk Chrome/Chromium jika tersedia
     if os.path.exists('/usr/bin/chromium-browser'):
@@ -239,13 +246,21 @@ def init_driver(twofa_code=""):
     service = Service(driver_path)
     driver = webdriver.Chrome(service=service, options=options)
     
-    # Gunakan waktu tunggu yang lebih lama (misalnya 40 detik) dan tunggu hingga elemen terlihat
+    # Gunakan waktu tunggu yang lebih lama (misalnya 40 detik)
     wait = WebDriverWait(driver, 40)
     driver.get("https://binomo2.com/trading")
-    wait.until(EC.presence_of_element_located((By.TAG_NAME, "body")))
+    
+    try:
+        # Coba tunggu hingga elemen body muncul sebagai indikasi halaman termuat
+        wait.until(EC.presence_of_element_located((By.TAG_NAME, "body")))
+    except Exception as e:
+        logging.error(f"Error saat menunggu body muncul: {e}")
+        driver.quit()
+        return None
+    
     time.sleep(5)
     
-    # Proses login
+    # Pastikan XPath sesuai dengan struktur halaman terbaru
     username_xpath = '/html/body/binomo-root/platform-ui-scroll/div/div/ng-component/ng-component/div/div/auth-form/sa-auth-form/div[2]/div/app-sign-in/div/form/div[1]/platform-forms-input/way-input/div/div[1]/way-input-text/input'
     password_xpath = '/html/body/binomo-root/platform-ui-scroll/div/div/ng-component/ng-component/div/div/auth-form/sa-auth-form/div[2]/div/app-sign-in/div/form/div[2]/platform-forms-input/way-input/div/div/way-input-password/input'
     login_button_xpath = '/html/body/binomo-root/platform-ui-scroll/div/div/ng-component/ng-component/div/div/auth-form/sa-auth-form/div[2]/div/app-sign-in/div/form/vui-button/button'
@@ -254,26 +269,29 @@ def init_driver(twofa_code=""):
     password = st.secrets.get("password", "password_default")
     
     try:
-        # Menggunakan visibility_of_element_located agar elemen harus terlihat
+        # Gunakan kondisi visibility agar elemen tidak hanya ada di DOM tetapi juga terlihat
         user_field = wait.until(EC.visibility_of_element_located((By.XPATH, username_xpath)))
         user_field.send_keys(username)
     except Exception as e:
         logging.error(f"Timeout atau error saat menemukan field username: {e}")
-        raise
+        driver.quit()
+        return None
 
     try:
         pass_field = wait.until(EC.visibility_of_element_located((By.XPATH, password_xpath)))
         pass_field.send_keys(password)
     except Exception as e:
         logging.error(f"Timeout atau error saat menemukan field password: {e}")
-        raise
+        driver.quit()
+        return None
 
     try:
         login_button = wait.until(EC.element_to_be_clickable((By.XPATH, login_button_xpath)))
         login_button.click()
     except Exception as e:
         logging.error(f"Timeout atau error saat menemukan tombol login: {e}")
-        raise
+        driver.quit()
+        return None
 
     time.sleep(5)
     
@@ -283,6 +301,7 @@ def init_driver(twofa_code=""):
         twofa_input = driver.find_element(By.XPATH, twofa_xpath)
         if not twofa_code:
             st.info("Autentikasi 2FA terdeteksi. Masukkan kode 2FA di sidebar dan tekan 'Refresh Data'.")
+            driver.quit()
             return None
         else:
             twofa_input.send_keys(twofa_code)
@@ -291,7 +310,9 @@ def init_driver(twofa_code=""):
             time.sleep(5)
     except Exception as e:
         logging.info("Autentikasi dua faktor tidak terdeteksi atau sudah tidak diperlukan.")
+    
     return driver
+
 
 def execute_trade_action(driver, signal):
     """
