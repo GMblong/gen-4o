@@ -361,3 +361,18 @@ Alasan: Konfirmasi bullish: Three White Soldiers, RSI < 50, ATR meningkat dan AD
 2025-03-05 02:12:00 - INFO - Chromedriver is already installed.
 2025-03-05 02:12:16 - INFO - Autentikasi dua faktor tidak terdeteksi atau sudah tidak diperlukan.
 2025-03-05 02:12:17 - INFO - Melakukan aksi BUY
+2025-03-05 02:14:00 - INFO - Hasil perhitungan indikator:
+2025-03-05 02:14:00 - INFO - ATR: 4.975746595622193e-07, ADX: 28.759599706453777, EMA_3: 641.8671019406689, EMA_5: 641.867101898341, RSI: 52.1065830412587, StochRSI_K: 89.24923717859863, MACD: -1.0719384135882137e-07, MACD_signal: -2.828574133905231e-07, BB_Upper: 641.8671021612311, BB_Lower: 641.8671016147689
+2025-03-05 02:14:00 - INFO - 
+19:38:02 \U0001f4e2 Sinyal Trading: BUY LEMAH \U0001f4c8
+Alasan: Konfirmasi bullish: Three White Soldiers, ATR meningkat dan ADX > 20, Terdeteksi bullish divergence, waspada pembalikan naik. 
+2025-03-05 02:14:04 - INFO - Hasil perhitungan indikator:
+2025-03-05 02:14:04 - INFO - ATR: 5.055746659084841e-07, ADX: 28.75959970645377, EMA_3: 641.8671019556689, EMA_5: 641.867101908341, RSI: 53.3642299476222, StochRSI_K: 91.78897293382985, MACD: -1.032378804666223e-07, MACD_signal: -2.8206622121208327e-07, BB_Upper: 641.8671021717638, BB_Lower: 641.8671016162363
+2025-03-05 02:14:05 - INFO - 
+19:38:07 \U0001f4e2 Sinyal Trading: BUY LEMAH \U0001f4c8
+Alasan: Konfirmasi bullish: Bullish Engulfing, Hammer, Three White Soldiers, ATR meningkat dan ADX > 20, 
+2025-03-05 02:15:50 - INFO - Hasil perhitungan indikator:
+2025-03-05 02:15:50 - INFO - ATR: 6.856597238768479e-07, ADX: 29.41271196802226, EMA_3: 641.8671014628345, EMA_5: 641.8671015922274, RSI: 27.040586557596825, StochRSI_K: 38.63009504264519, MACD: -2.0981212855986087e-07, MACD_signal: -2.688813283570365e-07, BB_Upper: 641.8671023813702, BB_Lower: 641.8671010626299
+2025-03-05 02:15:50 - INFO - 
+19:39:52 \U0001f4e2 Sinyal Trading: SELL LEMAH \U0001f4c9
+Alasan: Konfirmasi bearish: Three Black Crows, EMA3 cross EMA5 ke bawah, ATR meningkat dan ADX > 20, 

@@ -110,7 +110,7 @@ def check_entry_signals(df):
         last_candle['Bullish_Engulfing'] or 
         last_candle['Hammer'] or 
         last_candle['Three_White_Soldiers'] or 
-        (last_candle['EMA_3'] > last_candle['EMA_5'] and prev_candle['EMA_3'] < prev_candle['EMA_3'])
+        (last_candle['EMA_3'] > last_candle['EMA_5'] and prev_candle['EMA_3'] < prev_candle['EMA_5'])
     )
     bearish_primary = (
         last_candle['Bearish_Engulfing'] or 
@@ -239,7 +239,8 @@ def init_driver(twofa_code=""):
     service = Service(driver_path)
     driver = webdriver.Chrome(service=service, options=options)
     
-    wait = WebDriverWait(driver, 20)
+    # Gunakan waktu tunggu yang lebih lama (misalnya 40 detik) dan tunggu hingga elemen terlihat
+    wait = WebDriverWait(driver, 40)
     driver.get("https://binomo2.com/trading")
     wait.until(EC.presence_of_element_located((By.TAG_NAME, "body")))
     time.sleep(5)
@@ -252,9 +253,28 @@ def init_driver(twofa_code=""):
     username = st.secrets.get("username", "username_default")
     password = st.secrets.get("password", "password_default")
     
-    wait.until(EC.presence_of_element_located((By.XPATH, username_xpath))).send_keys(username)
-    wait.until(EC.presence_of_element_located((By.XPATH, password_xpath))).send_keys(password)
-    wait.until(EC.element_to_be_clickable((By.XPATH, login_button_xpath))).click()
+    try:
+        # Menggunakan visibility_of_element_located agar elemen harus terlihat
+        user_field = wait.until(EC.visibility_of_element_located((By.XPATH, username_xpath)))
+        user_field.send_keys(username)
+    except Exception as e:
+        logging.error(f"Timeout atau error saat menemukan field username: {e}")
+        raise
+
+    try:
+        pass_field = wait.until(EC.visibility_of_element_located((By.XPATH, password_xpath)))
+        pass_field.send_keys(password)
+    except Exception as e:
+        logging.error(f"Timeout atau error saat menemukan field password: {e}")
+        raise
+
+    try:
+        login_button = wait.until(EC.element_to_be_clickable((By.XPATH, login_button_xpath)))
+        login_button.click()
+    except Exception as e:
+        logging.error(f"Timeout atau error saat menemukan tombol login: {e}")
+        raise
+
     time.sleep(5)
     
     # Tangani 2FA jika muncul
