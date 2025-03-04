@@ -243,3 +243,21 @@ Alasan: Konfirmasi bullish: Three White Soldiers, RSI < 50, StochRSI oversold, A
 19:17:02 \U0001f4e2 Sinyal Trading: SELL LEMAH \U0001f4c9
 Alasan: Konfirmasi bearish: Three Black Crows, ATR meningkat dan ADX > 20, 
 2025-03-05 01:53:00 - INFO - Melakukan aksi SELL
+2025-03-05 01:54:00 - INFO - Hasil perhitungan indikator:
+2025-03-05 01:54:00 - INFO - ATR: 4.821099176492364e-07, ADX: 61.13441520028564, EMA_3: 641.8671039468072, EMA_5: 641.867104067827, RSI: 24.36367236244803, StochRSI_K: 10.334041530835213, MACD: -3.221773567929631e-07, MACD_signal: -1.9844296335913066e-07, BB_Upper: 641.8671043772238, BB_Lower: 641.8671037307763
+2025-03-05 01:54:00 - INFO - 
+19:18:02 \U0001f4e2 Sinyal Trading: SELL LEMAH \U0001f4c9
+Alasan: Konfirmasi bearish: Bearish Engulfing, Shooting Star, Three Black Crows, ATR meningkat dan ADX > 20, Terdeteksi bullish divergence, waspada pembalikan naik. 
+2025-03-05 01:54:01 - INFO - Melakukan aksi SELL
+2025-03-05 01:55:00 - INFO - Hasil perhitungan indikator:
+2025-03-05 01:55:00 - INFO - ATR: 4.736879448111469e-07, ADX: 66.95336255504338, EMA_3: 641.8671035909036, EMA_5: 641.8671037696624, RSI: 17.047329858461026, StochRSI_K: 0.0, MACD: -3.942296871173312e-07, MACD_signal: -2.4540690131375663e-07, BB_Upper: 641.8671043748687, BB_Lower: 641.8671032611311
+2025-03-05 01:55:00 - INFO - 
+19:19:02 \U0001f4e2 Sinyal Trading: SELL LEMAH \U0001f4c9
+Alasan: Konfirmasi bearish: Three Black Crows, ATR meningkat dan ADX > 20, 
+2025-03-05 01:55:00 - INFO - Melakukan aksi SELL
+2025-03-05 01:56:01 - INFO - Hasil perhitungan indikator:
+2025-03-05 01:56:01 - INFO - ATR: 4.629503861049104e-07, ADX: 71.26982840815364, EMA_3: 641.8671033504518, EMA_5: 641.8671035419973, RSI: 14.069566519217119, StochRSI_K: 0.0, MACD: -4.3295472096360754e-07, MACD_signal: -2.858703039462509e-07, BB_Upper: 641.8671040770181, BB_Lower: 641.8671030389818
+2025-03-05 01:56:02 - INFO - 
+19:20:04 \U0001f4e2 Sinyal Trading: SELL LEMAH \U0001f4c9
+Alasan: Konfirmasi bearish: Three Black Crows, ATR meningkat dan ADX > 20, 
+2025-03-05 01:56:02 - INFO - Melakukan aksi SELL

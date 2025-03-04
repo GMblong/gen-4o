@@ -221,7 +221,7 @@ def init_driver(twofa_code=""):
     Inisialisasi driver Selenium secara headless, login, dan tangani 2FA (jika muncul).
     Driver disimpan di st.session_state agar tetap aktif selama auto trade.
     """
-    # Instal ChromeDriver yang sesuai secara otomatis
+    # Instal ChromeDriver secara otomatis dan ambil path-nya
     driver_path = chromedriver_autoinstaller.install()
 
     options = webdriver.ChromeOptions()
@@ -230,7 +230,7 @@ def init_driver(twofa_code=""):
     options.add_argument("--disable-dev-shm-usage")
     options.add_argument("--disable-gpu")
     
-    # Tetapkan lokasi binary Chrome/Chromium jika tersedia
+    # Tetapkan binary location untuk Chrome/Chromium jika tersedia
     if os.path.exists('/usr/bin/chromium-browser'):
         options.binary_location = '/usr/bin/chromium-browser'
     elif os.path.exists('/usr/bin/google-chrome'):
