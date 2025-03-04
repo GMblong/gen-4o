@@ -194,3 +194,28 @@ Alasan: Konfirmasi bearish: Three Black Crows, ATR meningkat dan ADX > 20,
 2025-03-05 01:47:01 - INFO - Get LATEST chromedriver version for google-chrome
 2025-03-05 01:47:01 - INFO - Get LATEST chromedriver version for google-chrome
 2025-03-05 01:47:01 - INFO - Driver [C:\Users\ihsan\.wdm\drivers\chromedriver\win64\133.0.6943.141\chromedriver-win32/chromedriver.exe] found in cache
+2025-03-05 01:48:41 - INFO - Hasil perhitungan indikator:
+2025-03-05 01:48:41 - INFO - ATR: 6.319036881581071e-07, ADX: 38.38440661781842, EMA_3: 641.8671048156632, EMA_5: 641.8671050371203, RSI: 23.078607071754377, StochRSI_K: 0.0, MACD: -1.102491751225898e-07, MACD_signal: 8.781056143432738e-08, BB_Upper: 641.8671062047246, BB_Lower: 641.8671042672753
+2025-03-05 01:48:42 - INFO - 
+19:12:43 \U0001f4e2 Sinyal Trading: SELL LEMAH \U0001f4c9
+Alasan: Konfirmasi bearish: Three Black Crows, ATR meningkat dan ADX > 20, 
+2025-03-05 01:48:48 - INFO - Hasil perhitungan indikator:
+2025-03-05 01:48:48 - INFO - ATR: 6.319036881581071e-07, ADX: 38.38440661781842, EMA_3: 641.8671048806632, EMA_5: 641.8671050804536, RSI: 24.879280584882963, StochRSI_K: 0.0, MACD: -9.31062231757096e-08, MACD_signal: 9.123915182370342e-08, BB_Upper: 641.8671061712262, BB_Lower: 641.8671043527738
+2025-03-05 01:48:48 - INFO - 
+19:12:50 \U0001f4e2 Sinyal Trading: SELL LEMAH \U0001f4c9
+Alasan: Konfirmasi bearish: Three Black Crows, ATR meningkat dan ADX > 20, 
+2025-03-05 01:48:50 - INFO - Hasil perhitungan indikator:
+2025-03-05 01:48:50 - INFO - ATR: 6.319036881581071e-07, ADX: 38.38440661781842, EMA_3: 641.8671048756632, EMA_5: 641.8671050771203, RSI: 24.73085066065667, StochRSI_K: 0.0, MACD: -9.442499049328035e-08, MACD_signal: 9.097539836018927e-08, BB_Upper: 641.8671061736451, BB_Lower: 641.867104346355
+2025-03-05 01:48:50 - INFO - 
+19:12:52 \U0001f4e2 Sinyal Trading: SELL LEMAH \U0001f4c9
+Alasan: Konfirmasi bearish: Three Black Crows, ATR meningkat dan ADX > 20, 
+2025-03-05 01:48:51 - INFO - Downloading chromedriver (133.0.6943.141)...
+2025-03-05 01:48:59 - INFO - Hasil perhitungan indikator:
+2025-03-05 01:48:59 - INFO - ATR: 5.255229436547803e-07, ADX: 42.02267791361944, EMA_3: 641.8671046678317, EMA_5: 641.8671048647469, RSI: 28.08347260554504, StochRSI_K: 9.214385794246887, MACD: -1.699588665360352e-07, MACD_signal: 3.625667584025487e-08, BB_Upper: 641.8671055743105, BB_Lower: 641.8671042416895
+2025-03-05 01:49:00 - INFO - 
+19:13:02 \U0001f4e2 Sinyal Trading: BUY KUAT \U0001f4c8
+Alasan: Konfirmasi bullish: Bullish Engulfing, RSI < 50, StochRSI oversold, ATR meningkat dan ADX > 20, Terdeteksi bearish divergence, waspada pembalikan turun. 
+2025-03-05 01:49:00 - INFO - Chromedriver is already installed.
+2025-03-05 01:49:11 - INFO - Autentikasi dua faktor tidak terdeteksi atau sudah tidak diperlukan.
+2025-03-05 01:49:14 - INFO - Autentikasi dua faktor tidak terdeteksi atau sudah tidak diperlukan.
+2025-03-05 01:49:23 - INFO - Melakukan aksi BUY
