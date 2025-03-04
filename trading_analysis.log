@@ -701,3 +701,244 @@ Alasan: Konfirmasi bullish: Three White Soldiers, ATR meningkat dan ADX > 20,
 2025-03-05 02:38:17 - INFO - 
 20:02:19 \U0001f4e2 Sinyal Trading: BUY LEMAH \U0001f4c8
 Alasan: Konfirmasi bullish: Hammer, Three White Soldiers, ATR meningkat dan ADX > 20, 
+2025-03-05 02:40:24 - INFO - Hasil perhitungan indikator:
+2025-03-05 02:40:24 - INFO - ATR: 5.452099250227474e-07, ADX: 65.73233197960701, EMA_3: 641.8671038447902, EMA_5: 641.8671036693031, RSI: 77.01664397015865, StochRSI_K: 82.55020295755313, MACD: 4.7641765377193224e-07, MACD_signal: 3.222456950294055e-07, BB_Upper: 641.8671043050974, BB_Lower: 641.8671031789029
+2025-03-05 02:40:24 - INFO - 
+20:04:26 \U0001f4e2 Sinyal Trading: BUY LEMAH \U0001f4c8
+Alasan: Konfirmasi bullish: Three White Soldiers, ATR meningkat dan ADX > 20, 
+2025-03-05 02:40:26 - INFO - Hasil perhitungan indikator:
+2025-03-05 02:40:26 - INFO - ATR: 5.572099345421447e-07, ADX: 64.42694507962058, EMA_3: 641.8671038197901, EMA_5: 641.8671036526365, RSI: 74.13421811717178, StochRSI_K: 77.20444557150999, MACD: 4.6982415824459167e-07, MACD_signal: 3.2092699592393735e-07, BB_Upper: 641.8671042901811, BB_Lower: 641.8671031738189
+2025-03-05 02:40:26 - INFO - 
+20:04:28 \U0001f4e2 Sinyal Trading: BUY LEMAH \U0001f4c8
+Alasan: Konfirmasi bullish: Three White Soldiers, ATR meningkat dan ADX > 20, 
+2025-03-05 02:40:27 - INFO - Chromedriver is already installed.
+2025-03-05 02:40:57 - INFO - Autentikasi dua faktor tidak terdeteksi atau sudah tidak diperlukan.
+2025-03-05 02:40:58 - INFO - Melakukan aksi BUY
+2025-03-05 02:41:00 - INFO - Hasil perhitungan indikator:
+2025-03-05 02:41:00 - INFO - ATR: 5.193679514496703e-07, ADX: 51.702714096302394, EMA_3: 641.8671035873951, EMA_5: 641.867103535091, RSI: 60.63106845555402, StochRSI_K: 52.16145549298331, MACD: 3.682827127704513e-07, MACD_signal: 3.234355026038175e-07, BB_Upper: 641.8671041210238, BB_Lower: 641.8671033829763
+2025-03-05 02:41:00 - INFO - 
+20:05:02 \U0001f4e2 Sinyal Trading: SELL LEMAH \U0001f4c9
+Alasan: Konfirmasi bearish: Three Black Crows, RSI > 50, ATR meningkat dan ADX > 20, Terdeteksi bearish divergence, waspada pembalikan turun. 
+2025-03-05 02:41:03 - INFO - Melakukan aksi SELL
+2025-03-05 02:42:57 - INFO - Hasil perhitungan indikator:
+2025-03-05 02:42:57 - INFO - ATR: 6.546943462767475e-07, ADX: 41.1027449108639, EMA_3: 641.8671030786975, EMA_5: 641.8671031945051, RSI: 36.29913450331254, StochRSI_K: 7.0353630014373945, MACD: 1.890398380055558e-07, MACD_signal: 2.893827302239312e-07, BB_Upper: 641.8671042830566, BB_Lower: 641.8671026689434
+2025-03-05 02:42:57 - INFO - 
+20:06:59 \U0001f4e2 Sinyal Trading: SELL LEMAH \U0001f4c9
+Alasan: Konfirmasi bearish: Shooting Star, Three Black Crows, MACD bearish crossover, ATR meningkat dan ADX > 20, 
+2025-03-05 02:43:00 - INFO - Melakukan aksi SELL
+2025-03-05 02:43:02 - INFO - Hasil perhitungan indikator:
+2025-03-05 02:43:02 - INFO - ATR: 5.813554635973493e-07, ADX: 39.977559557268194, EMA_3: 641.8671028343488, EMA_5: 641.8671029841146, RSI: 36.9720785212725, StochRSI_K: 8.283407404964818, MACD: 7.843959792808164e-08, MACD_signal: 2.4381827771050857e-07, BB_Upper: 641.8671040638488, BB_Lower: 641.8671023001513
+2025-03-05 02:43:02 - INFO - 
+20:07:04 \U0001f4e2 Sinyal Trading: BUY KUAT \U0001f4c8
+Alasan: Konfirmasi bullish: Bullish Engulfing, RSI < 50, StochRSI oversold, ATR meningkat dan ADX > 20, Terdeteksi bearish divergence, waspada pembalikan turun. 
+2025-03-05 02:43:03 - INFO - Hasil perhitungan indikator:
+2025-03-05 02:43:03 - INFO - ATR: 5.873554683570479e-07, ADX: 39.977559557268194, EMA_3: 641.8671028493488, EMA_5: 641.8671029941146, RSI: 38.12154108262211, StochRSI_K: 10.415204818226055, MACD: 8.239567250711843e-08, MACD_signal: 2.4460949262631594e-07, BB_Upper: 641.8671040602284, BB_Lower: 641.8671023157718
+2025-03-05 02:43:03 - INFO - 
+20:07:05 \U0001f4e2 Sinyal Trading: BUY KUAT \U0001f4c8
+Alasan: Konfirmasi bullish: Bullish Engulfing, RSI < 50, StochRSI oversold, ATR meningkat dan ADX > 20, Terdeteksi bearish divergence, waspada pembalikan turun. 
+2025-03-05 02:43:06 - INFO - Melakukan aksi BUY
+2025-03-05 02:44:28 - INFO - Hasil perhitungan indikator:
+2025-03-05 02:44:28 - INFO - ATR: 6.558843539797764e-07, ADX: 42.156001040494985, EMA_3: 641.8671025171744, EMA_5: 641.8671027260764, RSI: 27.66723779811187, StochRSI_K: 0.0, MACD: -4.060223091073567e-08, MACD_signal: 1.8820011985155154e-07, BB_Upper: 641.8671035976571, BB_Lower: 641.867102058343
+2025-03-05 02:44:28 - INFO - 
+20:08:30 \U0001f4e2 Sinyal Trading: SELL LEMAH \U0001f4c9
+Alasan: Konfirmasi bearish: Bearish Engulfing, Three Black Crows, ATR meningkat dan ADX > 20, 
+2025-03-05 02:44:32 - INFO - Hasil perhitungan indikator:
+2025-03-05 02:44:32 - INFO - ATR: 6.558843539797764e-07, ADX: 42.156001040494985, EMA_3: 641.8671025621745, EMA_5: 641.8671027560764, RSI: 29.04297201805403, StochRSI_K: 0.0, MACD: -2.8734120860463008e-08, MACD_signal: 1.9057374186160605e-07, BB_Upper: 641.867103573595, BB_Lower: 641.8671021184051
+2025-03-05 02:44:32 - INFO - 
+20:08:34 \U0001f4e2 Sinyal Trading: SELL LEMAH \U0001f4c9
+Alasan: Konfirmasi bearish: Bearish Engulfing, Three Black Crows, ATR meningkat dan ADX > 20, 
+2025-03-05 02:44:45 - INFO - Hasil perhitungan indikator:
+2025-03-05 02:44:45 - INFO - ATR: 6.558843539797764e-07, ADX: 42.156001040494985, EMA_3: 641.8671025871745, EMA_5: 641.867102772743, RSI: 29.86806390446337, StochRSI_K: 0.0, MACD: -2.2140739019960165e-08, MACD_signal: 1.9189241822970664e-07, BB_Upper: 641.8671035613771, BB_Lower: 641.8671021506228
+2025-03-05 02:44:45 - INFO - 
+20:08:47 \U0001f4e2 Sinyal Trading: SELL LEMAH \U0001f4c9
+Alasan: Konfirmasi bearish: Bearish Engulfing, Three Black Crows, ATR meningkat dan ADX > 20, 
+2025-03-05 02:44:46 - INFO - Chromedriver is already installed.
+2025-03-05 02:44:56 - ERROR - Timeout atau error saat menemukan field username: Message: element not interactable
+  (Session info: chrome=133.0.6943.142)
+Stacktrace:
+	GetHandleVerifier [0x003B0B43+25139]
+	(No symbol) [0x003413F4]
+	(No symbol) [0x00220340]
+	(No symbol) [0x00262DE9]
+	(No symbol) [0x00261BFD]
+	(No symbol) [0x0028CFCC]
+	(No symbol) [0x0025D9A4]
+	(No symbol) [0x0028D244]
+	(No symbol) [0x002AE778]
+	(No symbol) [0x0028CDC6]
+	(No symbol) [0x0025BDE9]
+	(No symbol) [0x0025D124]
+	GetHandleVerifier [0x006B4373+3185251]
+	GetHandleVerifier [0x006D291A+3309578]
+	GetHandleVerifier [0x006CCF42+3286578]
+	GetHandleVerifier [0x00447AE0+643536]
+	(No symbol) [0x0034A20D]
+	(No symbol) [0x003470B8]
+	(No symbol) [0x00347257]
+	(No symbol) [0x00339E00]
+	BaseThreadInitThunk [0x76427BA9+25]
+	RtlInitializeExceptionChain [0x77A7C2EB+107]
+	RtlClearBits [0x77A7C26F+191]
+
+2025-03-05 02:45:01 - INFO - Hasil perhitungan indikator:
+2025-03-05 02:45:01 - INFO - ATR: 5.42707497462917e-07, ADX: 43.31631752642473, EMA_3: 641.8671023760872, EMA_5: 641.8671025651621, RSI: 28.224302263860622, StochRSI_K: 0.0, MACD: -1.0657799975888338e-07, MACD_signal: 1.3029945521383906e-07, BB_Upper: 641.8671031881803, BB_Lower: 641.86710197982
+2025-03-05 02:45:02 - INFO - 
+20:09:04 \U0001f4e2 Sinyal Trading: SELL LEMAH \U0001f4c9
+Alasan: Konfirmasi bearish: Three Black Crows, ATR meningkat dan ADX > 20, 
+2025-03-05 02:45:04 - INFO - Chromedriver is already installed.
+2025-03-05 02:45:16 - ERROR - Timeout atau error saat menemukan field username: Message: element not interactable
+  (Session info: chrome=133.0.6943.142)
+Stacktrace:
+	GetHandleVerifier [0x003B0B43+25139]
+	(No symbol) [0x003413F4]
+	(No symbol) [0x00220340]
+	(No symbol) [0x00262DE9]
+	(No symbol) [0x00261BFD]
+	(No symbol) [0x0028CFCC]
+	(No symbol) [0x0025D9A4]
+	(No symbol) [0x0028D244]
+	(No symbol) [0x002AE778]
+	(No symbol) [0x0028CDC6]
+	(No symbol) [0x0025BDE9]
+	(No symbol) [0x0025D124]
+	GetHandleVerifier [0x006B4373+3185251]
+	GetHandleVerifier [0x006D291A+3309578]
+	GetHandleVerifier [0x006CCF42+3286578]
+	GetHandleVerifier [0x00447AE0+643536]
+	(No symbol) [0x0034A20D]
+	(No symbol) [0x003470B8]
+	(No symbol) [0x00347257]
+	(No symbol) [0x00339E00]
+	BaseThreadInitThunk [0x76427BA9+25]
+	RtlInitializeExceptionChain [0x77A7C2EB+107]
+	RtlClearBits [0x77A7C26F+191]
+
+2025-03-05 02:47:55 - INFO - Hasil perhitungan indikator:
+2025-03-05 02:47:55 - INFO - ATR: 6.458927905647965e-07, ADX: 54.82868748378435, EMA_3: 641.8671015477719, EMA_5: 641.8671018500722, RSI: 14.294966577206651, StochRSI_K: 0.0, MACD: -3.534105417202227e-07, MACD_signal: -3.042175166745775e-08, BB_Upper: 641.8671028267513, BB_Lower: 641.8671010452488
+2025-03-05 02:47:55 - INFO - Hasil perhitungan indikator:
+2025-03-05 02:47:55 - INFO - ATR: 6.458927905647965e-07, ADX: 54.82868748378435, EMA_3: 641.8671015927719, EMA_5: 641.8671018800721, RSI: 15.01258884445943, StochRSI_K: 0.0, MACD: -3.4154243166995e-07, MACD_signal: -2.804812965740322e-08, BB_Upper: 641.8671027998577, BB_Lower: 641.8671011081423
+2025-03-05 02:47:55 - INFO - 
+20:11:57 \U0001f4e2 Sinyal Trading: SELL LEMAH \U0001f4c9
+Alasan: Konfirmasi bearish: Three Black Crows, ATR meningkat dan ADX > 20, 
+2025-03-05 02:47:56 - INFO - 
+20:11:57 \U0001f4e2 Sinyal Trading: SELL LEMAH \U0001f4c9
+Alasan: Konfirmasi bearish: Three Black Crows, ATR meningkat dan ADX > 20, 
+2025-03-05 02:47:58 - INFO - Hasil perhitungan indikator:
+2025-03-05 02:47:58 - INFO - ATR: 6.458927905647965e-07, ADX: 54.82868748378435, EMA_3: 641.8671015827719, EMA_5: 641.8671018734055, RSI: 14.846959108698286, StochRSI_K: 0.0, MACD: -3.4417973893141607e-07, MACD_signal: -2.8575591109696427e-08, BB_Upper: 641.8671028056696, BB_Lower: 641.8671010943305
+2025-03-05 02:47:58 - INFO - 
+20:12:00 \U0001f4e2 Sinyal Trading: SELL LEMAH \U0001f4c9
+Alasan: Konfirmasi bearish: Three Black Crows, ATR meningkat dan ADX > 20, 
+2025-03-05 02:47:59 - INFO - Hasil perhitungan indikator:
+2025-03-05 02:47:59 - INFO - ATR: 5.327142451443669e-07, ADX: 58.95198766201081, EMA_3: 641.8671014088859, EMA_5: 641.8671016589371, RSI: 19.000727206556533, StochRSI_K: 6.120096751029958, MACD: -3.9080919123080093e-07, MACD_signal: -1.0165530125645726e-07, BB_Upper: 641.867102307454, BB_Lower: 641.867100988546
+2025-03-05 02:48:00 - INFO - 
+20:12:02 \U0001f4e2 Sinyal Trading: BUY KUAT \U0001f4c8
+Alasan: Konfirmasi bullish: Bullish Engulfing, RSI < 50, StochRSI oversold, ATR meningkat dan ADX > 20, Terdeteksi bearish divergence, waspada pembalikan turun. 
+2025-03-05 02:48:01 - INFO - Chromedriver is already installed.
+2025-03-05 02:48:49 - ERROR - Timeout atau error saat menemukan field username: Message: 
+Stacktrace:
+	GetHandleVerifier [0x003B0B43+25139]
+	(No symbol) [0x003413F4]
+	(No symbol) [0x002204E3]
+	(No symbol) [0x002683D7]
+	(No symbol) [0x0026872B]
+	(No symbol) [0x002B1002]
+	(No symbol) [0x0028D014]
+	(No symbol) [0x002AE778]
+	(No symbol) [0x0028CDC6]
+	(No symbol) [0x0025BDE9]
+	(No symbol) [0x0025D124]
+	GetHandleVerifier [0x006B4373+3185251]
+	GetHandleVerifier [0x006D291A+3309578]
+	GetHandleVerifier [0x006CCF42+3286578]
+	GetHandleVerifier [0x00447AE0+643536]
+	(No symbol) [0x0034A20D]
+	(No symbol) [0x003470B8]
+	(No symbol) [0x00347257]
+	(No symbol) [0x00339E00]
+	BaseThreadInitThunk [0x76427BA9+25]
+	RtlInitializeExceptionChain [0x77A7C2EB+107]
+	RtlClearBits [0x77A7C26F+191]
+
+2025-03-05 02:49:00 - INFO - Hasil perhitungan indikator:
+2025-03-05 02:49:00 - INFO - ATR: 4.981713759248276e-07, ADX: 62.25062780459198, EMA_3: 641.8671012494431, EMA_5: 641.8671014637359, RSI: 14.290223091121405, StochRSI_K: 0.0, MACD: -4.2131830468861153e-07, MACD_signal: -1.6769778413184905e-07, BB_Upper: 641.86710195029, BB_Lower: 641.86710087371
+2025-03-05 02:49:00 - INFO - 
+20:13:02 \U0001f4e2 Sinyal Trading: BUY KUAT \U0001f4c8
+Alasan: Konfirmasi bullish: Bullish Engulfing, RSI < 50, StochRSI oversold, ATR meningkat dan ADX > 20, 
+2025-03-05 02:49:01 - INFO - Chromedriver is already installed.
+2025-03-05 02:49:44 - INFO - Hasil perhitungan indikator:
+2025-03-05 02:49:44 - INFO - ATR: 6.241713849290289e-07, ADX: 63.30098069497596, EMA_3: 641.867101379443, EMA_5: 641.8671015504026, RSI: 29.213811975770867, StochRSI_K: 20.556665316507537, MACD: -3.8703251448168885e-07, MACD_signal: -1.608406260904645e-07, BB_Upper: 641.8671019545261, BB_Lower: 641.867100973474
+2025-03-05 02:49:44 - INFO - 
+20:13:46 \U0001f4e2 Sinyal Trading: BUY LEMAH \U0001f4c8
+Alasan: Konfirmasi bullish: Bullish Engulfing, Hammer, RSI < 50, ATR meningkat dan ADX > 20, 
+2025-03-05 02:49:47 - INFO - Hasil perhitungan indikator:
+2025-03-05 02:49:47 - INFO - ATR: 6.241713849290289e-07, ADX: 63.30098069497596, EMA_3: 641.867101384443, EMA_5: 641.8671015537359, RSI: 29.70018639115412, StochRSI_K: 21.23203727026223, MACD: -3.857138608509558e-07, MACD_signal: -1.605768953643179e-07, BB_Upper: 641.8671019558375, BB_Lower: 641.8671009761625
+2025-03-05 02:49:47 - INFO - 
+20:13:49 \U0001f4e2 Sinyal Trading: BUY LEMAH \U0001f4c8
+Alasan: Konfirmasi bullish: Bullish Engulfing, Hammer, RSI < 50, ATR meningkat dan ADX > 20, 
+2025-03-05 02:49:48 - INFO - Chromedriver is already installed.
+2025-03-05 02:49:49 - ERROR - Timeout atau error saat menemukan field username: Message: 
+
+2025-03-05 02:49:59 - INFO - Hasil perhitungan indikator:
+2025-03-05 02:49:59 - INFO - ATR: 5.213371026580839e-07, ADX: 66.7801751213481, EMA_3: 641.8671013347216, EMA_5: 641.8671014636018, RSI: 26.67610637524551, StochRSI_K: 17.03284676176197, MACD: -3.742728722500033e-07, MACD_signal: -2.0352707532237227e-07, BB_Upper: 641.867101694054, BB_Lower: 641.8671009979461
+2025-03-05 02:49:59 - INFO - 
+20:14:01 \U0001f4e2 Sinyal Trading: BUY KUAT \U0001f4c8
+Alasan: Konfirmasi bullish: Three White Soldiers, RSI < 50, StochRSI oversold, ATR meningkat dan ADX > 20, Terdeteksi bullish divergence, waspada pembalikan naik. 
+2025-03-05 02:50:00 - INFO - Chromedriver is already installed.
+2025-03-05 02:50:35 - ERROR - Timeout atau error saat menemukan field username: Message: 
+Stacktrace:
+	GetHandleVerifier [0x003B0B43+25139]
+	(No symbol) [0x003413F4]
+	(No symbol) [0x002204E3]
+	(No symbol) [0x002683D7]
+	(No symbol) [0x0026872B]
+	(No symbol) [0x002B1002]
+	(No symbol) [0x0028D014]
+	(No symbol) [0x002AE778]
+	(No symbol) [0x0028CDC6]
+	(No symbol) [0x0025BDE9]
+	(No symbol) [0x0025D124]
+	GetHandleVerifier [0x006B4373+3185251]
+	GetHandleVerifier [0x006D291A+3309578]
+	GetHandleVerifier [0x006CCF42+3286578]
+	GetHandleVerifier [0x00447AE0+643536]
+	(No symbol) [0x0034A20D]
+	(No symbol) [0x003470B8]
+	(No symbol) [0x00347257]
+	(No symbol) [0x00339E00]
+	BaseThreadInitThunk [0x76427BA9+25]
+	RtlInitializeExceptionChain [0x77A7C2EB+107]
+	RtlClearBits [0x77A7C26F+191]
+
+2025-03-05 02:50:49 - ERROR - Timeout atau error saat menemukan field username: Message: 
+Stacktrace:
+	GetHandleVerifier [0x003B0B43+25139]
+	(No symbol) [0x003413F4]
+	(No symbol) [0x002204E3]
+	(No symbol) [0x002683D7]
+	(No symbol) [0x0026872B]
+	(No symbol) [0x002B1002]
+	(No symbol) [0x0028D014]
+	(No symbol) [0x002AE778]
+	(No symbol) [0x0028CDC6]
+	(No symbol) [0x0025BDE9]
+	(No symbol) [0x0025D124]
+	GetHandleVerifier [0x006B4373+3185251]
+	GetHandleVerifier [0x006D291A+3309578]
+	GetHandleVerifier [0x006CCF42+3286578]
+	GetHandleVerifier [0x00447AE0+643536]
+	(No symbol) [0x0034A20D]
+	(No symbol) [0x003470B8]
+	(No symbol) [0x00347257]
+	(No symbol) [0x00339E00]
+	BaseThreadInitThunk [0x76427BA9+25]
+	RtlInitializeExceptionChain [0x77A7C2EB+107]
+	RtlClearBits [0x77A7C26F+191]
+
+2025-03-05 02:50:59 - INFO - Hasil perhitungan indikator:
+2025-03-05 02:50:59 - INFO - ATR: 4.902696810776349e-07, ADX: 69.5635306624458, EMA_3: 641.8671013448608, EMA_5: 641.8671014257345, RSI: 33.1495986399341, StochRSI_K: 26.0218375066258, MACD: -3.4177719498984516e-07, MACD_signal: -2.3181007118851277e-07, BB_Upper: 641.8671014401091, BB_Lower: 641.867101099891
+2025-03-05 02:51:00 - INFO - 
+20:15:01 \U0001f4e2 Sinyal Trading: BUY LEMAH \U0001f4c8
+Alasan: Konfirmasi bullish: Bullish Engulfing, Three White Soldiers, RSI < 50, ATR meningkat dan ADX > 20, 
+2025-03-05 02:51:01 - INFO - Chromedriver is already installed.
+2025-03-05 02:51:50 - ERROR - Timeout atau error saat menemukan field username: Message: 
+
