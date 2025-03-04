@@ -16,6 +16,8 @@ from webdriver_manager.chrome import ChromeDriverManager
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from streamlit_autorefresh import st_autorefresh
+import chromedriver_autoinstaller
+import os
 
 # Konfigurasi logging
 logging.basicConfig(
@@ -220,12 +222,23 @@ def init_driver(twofa_code=""):
     Inisialisasi driver Selenium secara headless, login, dan tangani 2FA (jika muncul).
     Driver disimpan di st.session_state agar tetap aktif selama auto trade.
     """
+    # Pastikan ChromeDriver terinstal secara otomatis
+    chromedriver_autoinstaller.install()
+
     options = webdriver.ChromeOptions()
     options.add_argument("--headless")  # Jalankan dalam mode headless (tanpa tampilan)
     options.add_argument("--no-sandbox")
     options.add_argument("--disable-dev-shm-usage")
-    service = Service(ChromeDriverManager().install())
-    driver = webdriver.Chrome(service=service, options=options)
+    
+    # Jika tersedia, tetapkan binary location untuk Chrome/Chromium
+    if os.path.exists('/usr/bin/chromium-browser'):
+        options.binary_location = '/usr/bin/chromium-browser'
+    elif os.path.exists('/usr/bin/google-chrome'):
+        options.binary_location = '/usr/bin/google-chrome'
+    
+    # Menggunakan opsi di atas, buat driver (tanpa Service dari ChromeDriverManager)
+    driver = webdriver.Chrome(options=options)
+    
     wait = WebDriverWait(driver, 20)
     driver.get("https://binomo2.com/trading")
     wait.until(EC.presence_of_element_located((By.TAG_NAME, "body")))
@@ -314,21 +327,6 @@ def display_dashboard(df, signal, reason):
     fig.add_trace(go.Scatter(x=df['time'], y=df['BB_Lower'], mode='lines', name='BB Lower', line=dict(dash='dash')))
     fig.update_layout(title="Grafik Harga dan Indikator", xaxis_title="Waktu", yaxis_title="Harga")
     st.plotly_chart(fig, use_container_width=True)
-    
-    # st.markdown("### Grafik RSI")
-    # fig_rsi = px.line(df, x='time', y='RSI', title="RSI")
-    # st.plotly_chart(fig_rsi, use_container_width=True)
-    
-    # st.markdown("### Grafik MACD")
-    # fig_macd = go.Figure()
-    # fig_macd.add_trace(go.Scatter(x=df['time'], y=df['MACD'], mode='lines', name='MACD'))
-    # fig_macd.add_trace(go.Scatter(x=df['time'], y=df['MACD_signal'], mode='lines', name='MACD Signal'))
-    # fig_macd.update_layout(title="MACD", xaxis_title="Waktu", yaxis_title="Nilai")
-    # st.plotly_chart(fig_macd, use_container_width=True)
-
-###############################
-# Main: Integrasi Dashboard & Otomasi Trading
-###############################
 
 def main():
     if "auto_trade" not in st.session_state:
