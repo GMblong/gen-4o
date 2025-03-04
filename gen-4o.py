@@ -16,7 +16,9 @@ from webdriver_manager.chrome import ChromeDriverManager
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from streamlit_autorefresh import st_autorefresh
+import chromedriver_autoinstaller
 
+chromedriver_autoinstaller.install()  # Instal ChromeDriver yang sesuai secara otomatis
 # Konfigurasi logging
 logging.basicConfig(
     filename="trading_analysis.log",
