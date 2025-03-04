@@ -291,3 +291,9 @@ Alasan: Konfirmasi bullish: Three White Soldiers, EMA3 cross EMA5 ke atas, MACD 
 19:24:03 \U0001f4e2 Sinyal Trading: BUY LEMAH \U0001f4c8
 Alasan: Konfirmasi bullish: Bullish Engulfing, Three White Soldiers, RSI < 50, ATR meningkat dan ADX > 20, 
 2025-03-05 02:00:01 - INFO - Melakukan aksi BUY
+2025-03-05 02:01:03 - INFO - Hasil perhitungan indikator:
+2025-03-05 02:01:03 - INFO - ATR: 5.583434091497548e-07, ADX: 42.6273594040447, EMA_3: 641.8671030301704, EMA_5: 641.8671031645978, RSI: 28.339948697656666, StochRSI_K: 36.452188152900014, MACD: -3.477463224044186e-07, MACD_signal: -3.1930113211482435e-07, BB_Upper: 641.8671038777572, BB_Lower: 641.8671026142426
+2025-03-05 02:01:03 - INFO - 
+19:25:05 \U0001f4e2 Sinyal Trading: BUY LEMAH \U0001f4c8
+Alasan: Konfirmasi bullish: Bullish Engulfing, Hammer, RSI < 50, ATR meningkat dan ADX > 20, Terdeteksi bearish divergence, waspada pembalikan turun. 
+2025-03-05 02:01:03 - INFO - Melakukan aksi BUY
