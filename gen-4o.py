@@ -1,11 +1,11 @@
-import requests
-import logging
-import pandas as pd
-import numpy as np
-import time
-from datetime import datetime
-import ta
+import os
 import re
+import time
+import logging
+import requests
+import numpy as np
+import pandas as pd
+from datetime import datetime
 import streamlit as st
 import plotly.graph_objects as go
 from selenium import webdriver
@@ -13,27 +13,80 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
-from streamlit_autorefresh import st_autorefresh
 import chromedriver_autoinstaller
-import os
+import ta
+from streamlit_autorefresh import st_autorefresh
 
-# Konfigurasi logging
+# =============================================================================
+# KONFIGURASI HALAMAN STREAMLIT & CUSTOM CSS
+# =============================================================================
+st.set_page_config(
+    page_title="Dashboard Trading",
+    layout="wide",
+    initial_sidebar_state="expanded"
+)
+
+st.markdown(
+    """
+    <style>
+    .header-container {
+        background-color: #FFCC00FF;
+        padding: 20px;
+        border-radius: 8px;
+        color: #000000;
+        text-align: center;
+        margin-bottom: 10px;
+    }
+    .info-box {
+        background-color: #15508CFF;
+        padding: 10px;
+        height: 100%;
+        border-radius: 8px;
+        margin-bottom: 10px;
+    }
+    .reason-box {
+        background-color: #15508CFF;
+        padding: 10px;
+        height: 100%;
+        border-radius: 8px;
+        margin-top: 10px;
+        margin-bottom: 20px;
+    }
+    .subheader {
+        font-size: 1.2rem;
+        font-weight: bold;
+    }
+    .title {
+        font-size: 2rem;
+        font-weight: bold;
+    }
+    .subtitle {
+        font-size: 1.2rem;
+    }
+    </style>
+    """,
+    unsafe_allow_html=True
+)
+
+# =============================================================================
+# KONFIGURASI LOGGING & SESSION REQUESTS
+# =============================================================================
 logging.basicConfig(
     filename="trading_analysis.log",
     level=logging.INFO,
     format="%(asctime)s - %(levelname)s - %(message)s",
     datefmt="%Y-%m-%d %H:%M:%S"
 )
-
-# Buat session requests agar koneksi reuse
 session = requests.Session()
 
-#####################
-# Fungsi Analisis
-#####################
-
+# =============================================================================
+# FUNGSI UTILITAS
+# =============================================================================
 @st.cache_data(ttl=10)
 def get_google_time():
+    """
+    Ambil waktu dari header respons Google untuk mendapatkan waktu yang akurat.
+    """
     try:
         response = session.get("https://www.google.com", timeout=3)
         date_header = response.headers.get("Date")
@@ -43,7 +96,13 @@ def get_google_time():
         logging.error("Gagal mengambil waktu dari Google.")
     return datetime.utcnow()
 
+# =============================================================================
+# FUNGSI ANALISIS DATA
+# =============================================================================
 def fetch_price_data():
+    """
+    Ambil data harga candlestick dari API Binomo.
+    """
     base_url = "https://api.binomo2.com/candles/v1"
     symbol = "Z-CRY%2FIDX"
     interval = "60"
@@ -51,6 +110,7 @@ def fetch_price_data():
     current_time = get_google_time()
     formatted_time = current_time.strftime('%Y-%m-%dT00:00:00')
     url = f"{base_url}/{symbol}/{formatted_time}/{interval}?locale={locale}"
+    
     try:
         response = session.get(url, timeout=5)
         if response.status_code == 200:
@@ -61,22 +121,31 @@ def fetch_price_data():
     return []
 
 def calculate_indicators(df):
+    """
+    Hitung indikator teknikal: ATR, ADX, EMA, RSI, StochRSI, Bollinger Bands, MACD.
+    """
     df = df.copy()
     df['ATR'] = ta.volatility.average_true_range(df['high'], df['low'], df['close'], window=5)
     df['ADX'] = ta.trend.adx(df['high'], df['low'], df['close'], window=5)
     df['EMA_3'] = ta.trend.ema_indicator(df['close'], window=3)
     df['EMA_5'] = ta.trend.ema_indicator(df['close'], window=5)
     df['RSI'] = ta.momentum.rsi(df['close'], window=5)
-    df['StochRSI_K'] = ta.momentum.stochrsi_k(df['close'], window=14, smooth1=3, smooth2=3)
+    
+    # Hitung StochRSI
     min_rsi = df['RSI'].rolling(window=14).min()
     max_rsi = df['RSI'].rolling(window=14).max()
     df['StochRSI_K'] = np.where((max_rsi - min_rsi)==0, 0.5, (df['RSI']-min_rsi)/(max_rsi-min_rsi)) * 100
+    
+    # Bollinger Bands
     rolling_mean = df['close'].rolling(5).mean()
     rolling_std = df['close'].rolling(5).std()
     df['BB_Upper'] = rolling_mean + (rolling_std * 1.5)
     df['BB_Lower'] = rolling_mean - (rolling_std * 1.5)
+    
+    # MACD
     df['MACD'] = ta.trend.macd(df['close'], window_slow=12, window_fast=6)
     df['MACD_signal'] = ta.trend.macd_signal(df['close'], window_slow=12, window_fast=6, window_sign=9)
+    
     last_candle = df.iloc[-1]
     logging.info(f"ATR: {last_candle['ATR']}, ADX: {last_candle['ADX']}, EMA_3: {last_candle['EMA_3']}, "
                  f"EMA_5: {last_candle['EMA_5']}, RSI: {last_candle['RSI']}, StochRSI_K: {last_candle['StochRSI_K']}, "
@@ -85,6 +154,9 @@ def calculate_indicators(df):
     return df
 
 def detect_candlestick_patterns(df):
+    """
+    Deteksi pola candlestick pada data.
+    """
     df = df.copy()
     df['Hammer'] = ((df['high'] - df['low']) > 2 * abs(df['close'] - df['open'])) & (df['close'] > df['open'])
     df['Shooting_Star'] = ((df['high'] - df['low']) > 2 * abs(df['close'] - df['open'])) & (df['open'] > df['close'])
@@ -93,32 +165,42 @@ def detect_candlestick_patterns(df):
     df['Three_White_Soldiers'] = df['close'].diff().rolling(3).sum() > 0
     df['Three_Black_Crows'] = df['close'].diff().rolling(3).sum() < 0
     df['Doji'] = abs(df['close'] - df['open']) <= 0.1 * (df['high'] - df['low'])
+    
+    # Morning Star
     bearish_first = df['close'].shift(2) < df['open'].shift(2)
     small_body_second = abs(df['close'].shift(1) - df['open'].shift(1)) <= 0.1 * (df['high'].shift(1) - df['low'].shift(1))
     bullish_third = df['close'] > df['open']
     close_above_mid_first = df['close'] > ((df['open'].shift(2) + df['close'].shift(2)) / 2)
     df['Morning_Star'] = bearish_first & small_body_second & bullish_third & close_above_mid_first
+    
+    # Evening Star
     bullish_first = df['close'].shift(2) > df['open'].shift(2)
     small_body_second = abs(df['close'].shift(1) - df['open'].shift(1)) <= 0.1 * (df['high'].shift(1) - df['low'].shift(1))
     bearish_third = df['close'] < df['open']
     close_below_mid_first = df['close'] < ((df['open'].shift(2) + df['close'].shift(2)) / 2)
     df['Evening_Star'] = bullish_first & small_body_second & bearish_third & close_below_mid_first
+    
+    # Spinning Top
     df['Spinning_Top'] = (abs(df['close'] - df['open']) > 0.1 * (df['high'] - df['low'])) & \
                          (abs(df['close'] - df['open']) <= 0.3 * (df['high'] - df['low']))
+    
+    # Marubozu
     tolerance = 0.05 * (df['high'] - df['low'])
     bullish_marubozu = (df['close'] > df['open']) & ((df['open'] - df['low']) <= tolerance) & ((df['high'] - df['close']) <= tolerance)
     bearish_marubozu = (df['close'] < df['open']) & ((df['high'] - df['open']) <= tolerance) & ((df['close'] - df['low']) <= tolerance)
     df['Marubozu'] = bullish_marubozu | bearish_marubozu
+    
     return df
 
 def check_entry_signals(df):
+    """
+    Tentukan sinyal entry berdasarkan pola candlestick dan indikator teknikal.
+    """
     df = detect_candlestick_patterns(df)
     last_candle = df.iloc[-1]
     prev_candle = df.iloc[-2]
     adx_threshold = 20
     atr_threshold = df['ATR'].mean() * 0.5
-    volume_available = 'volume' in df.columns
-    volume_condition = (last_candle['volume'] >= df['volume'].rolling(5).mean().iloc[-1]) if volume_available else True
 
     bullish_primary = (
         last_candle['Bullish_Engulfing'] or 
@@ -152,8 +234,8 @@ def check_entry_signals(df):
         last_candle['ATR'] > atr_threshold and last_candle['ADX'] > adx_threshold
     ])
 
-    breakout_bull = last_candle['close'] < last_candle['BB_Lower'] and volume_condition
-    breakout_bear = last_candle['close'] > last_candle['BB_Upper'] and volume_condition
+    breakout_bull = last_candle['close'] < last_candle['BB_Lower']
+    breakout_bear = last_candle['close'] > last_candle['BB_Upper']
 
     divergence_warning = ""
     if last_candle['close'] < prev_candle['close'] and last_candle['MACD'] > prev_candle['MACD']:
@@ -191,9 +273,9 @@ def check_entry_signals(df):
     if last_candle['Spinning_Top']:
         reason += "Spinning Top terdeteksi, "
     if breakout_bull:
-        reason += "Breakout bullish pada BB_Lower dengan volume mendukung, "
+        reason += "Breakout bullish pada BB_Lower, "
     if breakout_bear:
-        reason += "Breakout bearish pada BB_Upper dengan volume mendukung, "
+        reason += "Breakout bearish pada BB_Upper, "
     if divergence_warning:
         reason += divergence_warning
 
@@ -211,12 +293,16 @@ def check_entry_signals(df):
         signal = "SELL KUAT 📉" if (confirmations_bear >= 3 or breakout_bear) else "SELL LEMAH 📉"
         return signal, "Konfirmasi bearish: " + reason, strength_percent
 
-    # Default fallback
+    # Default jika tidak memenuhi kriteria bullish atau bearish
     return ("BUY 📈", "RSI di bawah 50, peluang kenaikan.", 50) if last_candle['RSI'] < 50 else ("SELL 📉", "RSI di atas 50, peluang penurunan.", 50)
 
 def process_data():
+    """
+    Ambil data harga, hitung indikator, dan tentukan sinyal trading.
+    """
     candles = fetch_price_data()
     if candles:
+        # Tentukan kolom yang digunakan
         columns = ['time', 'open', 'close', 'high', 'low']
         if 'volume' in candles[0]:
             columns.append('volume')
@@ -227,31 +313,35 @@ def process_data():
             df[col] = df[col].astype(np.float64).round(8)
         df = calculate_indicators(df)
         signal, reason, strength = check_entry_signals(df)
-        # Simulasi outcome trade:
-        # Untuk BUY: trade dianggap benar jika harga pembukaan candle index[0] > harga penutupan candle index[1].
-        # Untuk SELL: trade dianggap benar jika harga pembukaan candle index[0] < harga penutupan candle index[1].
+        
+        # Simulasi outcome trade berdasarkan perbandingan harga candle terakhir
         trade_open = df.iloc[-1]['open']
         trade_close = df.iloc[-2]['close']
-        
         if "BUY" in signal:
             trade_success = trade_open > trade_close
         elif "SELL" in signal:
             trade_success = trade_open < trade_close
         else:
             trade_success = False
+        
         st.session_state.last_trade_success = trade_success
-        log_message = (f"\n{get_google_time().strftime('%H:%M:%S')} Sinyal Trading: {signal} | "
-                       f"Kekuatan: {strength:.1f}% | Trade Success: {trade_success}\nAlasan: {reason} | Close Trade: {trade_close} | Open Trade: {trade_open}")
+        log_message = (
+            f"\n{get_google_time().strftime('%H:%M:%S')} Sinyal Trading: {signal} | "
+            f"Kekuatan: {strength:.1f}% | Trade Success: {trade_success}\n"
+            f"Alasan: {reason} | Close Trade: {trade_close} | Open Trade: {trade_open}"
+        )
         logging.info(log_message)
         print(log_message)
         return df, signal, reason, strength
     return None, None, None, None
 
-#####################
-# Fungsi Bid dan Kompensasi
-#####################
-
+# =============================================================================
+# FUNGSI UNTUK EKSEKUSI PERDAGANGAN (TRADING)
+# =============================================================================
 def set_bid(driver, bid_amount):
+    """
+    Tetapkan nilai bid pada input field di halaman trading.
+    """
     if bid_amount <= 0:
         raise ValueError("Bid amount must be greater than 0")
     bid_xpath = '/html/body/binomo-root/platform-ui-scroll/div/div/ng-component/main/div/app-panel/ng-component/section/div/way-input-controls/div/input'
@@ -285,17 +375,17 @@ def set_bid(driver, bid_amount):
         return False
     return True
 
-#####################
-# Fungsi Otomasi dengan Selenium
-#####################
-
 def init_driver(twofa_code="", account_type="Demo", username_input="", password_input=""):
+    """
+    Inisialisasi driver Selenium dan lakukan login ke platform trading.
+    """
     driver_path = chromedriver_autoinstaller.install(cwd='/tmp')
     options = webdriver.ChromeOptions()
-    # options.add_argument("--headless")  # Nonaktifkan headless untuk debugging jika perlu
+    # options.add_argument("--headless")  # Nonaktifkan headless jika perlu debugging
     options.add_argument("--no-sandbox")
     options.add_argument("--disable-dev-shm-usage")
-    options.add_argument("user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/114.0.5735.90 Safari/537.36")
+    options.add_argument("user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
+                         "AppleWebKit/537.36 Chrome/114.0.5735.90 Safari/537.36")
     options.add_argument("--disable-blink-features=AutomationControlled")
     
     if os.path.exists('/usr/bin/chromium-browser'):
@@ -316,7 +406,7 @@ def init_driver(twofa_code="", account_type="Demo", username_input="", password_
         driver.quit()
         return None
     
-    time.sleep(20)
+    time.sleep(10)
     
     username_xpath = '/html/body/binomo-root/platform-ui-scroll/div/div/ng-component/ng-component/div/div/auth-form/sa-auth-form/div[2]/div/app-sign-in/div/form/div[1]/platform-forms-input/way-input/div/div[1]/way-input-text/input'
     password_xpath = '/html/body/binomo-root/platform-ui-scroll/div/div/ng-component/ng-component/div/div/auth-form/sa-auth-form/div[2]/div/app-sign-in/div/form/div[2]/platform-forms-input/way-input/div/div/way-input-password/input'
@@ -371,6 +461,18 @@ def init_driver(twofa_code="", account_type="Demo", username_input="", password_
     except Exception as e:
         logging.error(f"Error saat memilih akun: {e}")
     
+    # --- Cek popup setelah memilih tipe akun ---
+    try:
+        popup_xpath = "/ng-component/vui-modal/div/button/vui-icon/svg/use"
+        popup_button = WebDriverWait(driver, 5).until(
+            EC.presence_of_element_located((By.XPATH, popup_xpath))
+        )
+        popup_button.click()
+        logging.info("Popup dengan xpath telah diklik.")
+    except Exception as e:
+        logging.info("Popup tidak muncul, lanjutkan proses.")
+    # --- End cek popup ---
+    
     twofa_xpath = '/html/body/binomo-root/platform-ui-scroll/div/div/ng-component/ng-component/div/div/auth-form/sa-auth-form/div[2]/div/app-two-factor-auth-validation/app-otp-validation-form/form/platform-forms-input/way-input/div/div/way-input-text/input'
     try:
         twofa_input = driver.find_element(By.XPATH, twofa_xpath)
@@ -388,132 +490,144 @@ def init_driver(twofa_code="", account_type="Demo", username_input="", password_
     
     return driver
 
-def simulate_trade_outcome(df, signal):
-    """
-    Simulasikan outcome trade:
-    - Untuk BUY: trade dianggap sukses jika harga pembukaan candle index 0 > harga penutupan candle index 1.
-    - Untuk SELL: trade sukses jika harga pembukaan candle index 0 < harga penutupan candle index 1.
-    """
-    try:
-        open_price = df.iloc[-1]['open']
-        prev_close = df.iloc[-2]['close']
-    except Exception as e:
-        logging.error(f"Error mengambil data candle untuk simulasi outcome: {e}")
-        return True  # Default as success
-    if "BUY" in signal:
-        return open_price > prev_close
-    elif "SELL" in signal:
-        return open_price < prev_close
-    return True
-
 def execute_trade_action(driver, signal, bid_amount):
-    # Tentukan bid yang akan digunakan: jika trade sebelumnya gagal, gunakan bid kompensasi (2.2×)
-    if st.session_state.get("trade_success", True) is False:
-        bid_to_use = bid_amount * 2.2
-        st.session_state.comp_mode = True
-        st.session_state.comp_bid = bid_to_use
-        logging.info(f"Trade sebelumnya salah arah. Mode kompensasi aktif, menggunakan bid Rp{bid_to_use}")
-    else:
-        bid_to_use = bid_amount
-        st.session_state.comp_mode = False
-        st.session_state.comp_bid = bid_to_use
-
-    # Set bid sebelum transaksi
-    if not set_bid(driver, bid_to_use):
-        logging.warning("Gagal menetapkan bid awal/kompensasi.")
-        return "Gagal menetapkan bid."
+    """
+    Eksekusi trade berdasarkan sinyal BUY atau SELL:
+      1. Tetapkan bid dengan nilai bid_amount.
+      2. Klik tombol trade sesuai sinyal.
+    """
+    if not set_bid(driver, bid_amount):
+        logging.warning(f"Bid Rp{bid_amount} gagal ditetapkan.")
+        return f"Bid Rp{bid_amount} gagal ditetapkan."
     
     wait = WebDriverWait(driver, 10)
-    button_xpath = ""
+    if "BUY" in signal:
+        button_xpath = '/html/body/binomo-root/platform-ui-scroll/div/div/ng-component/main/div/app-panel/ng-component/section/binary-info/div[2]/div/trading-buttons/vui-button[1]/button'
+    elif "SELL" in signal:
+        button_xpath = '/html/body/binomo-root/platform-ui-scroll/div/div/ng-component/main/div/app-panel/ng-component/section/binary-info/div[2]/div/trading-buttons/vui-button[2]/button'
+    else:
+        logging.error("Signal tidak dikenali.")
+        return "Signal tidak dikenali."
+    
     try:
-        if "BUY" in signal:
-            button_xpath = '/html/body/binomo-root/platform-ui-scroll/div/div/ng-component/main/div/app-panel/ng-component/section/binary-info/div[2]/div/trading-buttons/vui-button[1]/button'
-        elif "SELL" in signal:
-            button_xpath = '/html/body/binomo-root/platform-ui-scroll/div/div/ng-component/main/div/app-panel/ng-component/section/binary-info/div[2]/div/trading-buttons/vui-button[2]/button'
         wait.until(EC.element_to_be_clickable((By.XPATH, button_xpath))).click()
-        logging.info(f"Melakukan aksi {signal} dengan bid Rp{bid_to_use}")
-        result_msg = f"Aksi {signal} berhasil dieksekusi dengan bid Rp{bid_to_use}."
+        logging.info(f"Trade {signal} dengan bid Rp{bid_amount} dikirim.")
     except Exception as e:
-        result_msg = f"Error pada eksekusi trade: {e}"
-        logging.error(result_msg)
-
-    # Simulasikan outcome trade baru setelah eksekusi dengan mengambil data terbaru
-    df_new, _, _, _ = process_data()
-    new_outcome = simulate_trade_outcome(df_new, signal)
-    st.session_state.trade_success = new_outcome
-    logging.info(f"Simulasi outcome trade baru: {new_outcome}")
+        error_msg = f"Error pada eksekusi trade: {e}"
+        logging.error(error_msg)
+        return error_msg
     
-    # Jika outcome trade sebelumnya salah, lakukan kompensasi
-    if st.session_state.get("trade_success", True) is False:
-        compensation_bid = bid_to_use * 2.2
-        st.session_state.comp_mode = True
-        st.session_state.comp_bid = compensation_bid
-        logging.info(f"Outcome trade tidak sesuai. Kompensasi akan dijalankan dengan bid Rp{compensation_bid}")
-        if not set_bid(driver, compensation_bid):
-            logging.warning("Gagal menetapkan bid kompensasi.")
-            return "Kompensasi gagal."
-        try:
-            wait.until(EC.element_to_be_clickable((By.XPATH, button_xpath))).click()
-            result_msg += f" | Kompensasi trade berhasil dengan bid Rp{compensation_bid}"
-            st.session_state.comp_mode = False
-            st.session_state.trade_success = True
-        except Exception as e:
-            error_msg = f"Error pada eksekusi trade kompensasi: {e}"
-            logging.error(error_msg)
-            result_msg += f" | {error_msg}"
-    return result_msg
+    return "Trade dieksekusi."
 
+# =============================================================================
+# FUNGSI UNTUK MENAMPILKAN DASHBOARD
+# =============================================================================
 def display_dashboard(df, signal, reason, strength, trade_msg=""):
+    """
+    Tampilkan dashboard analisa dan grafik dengan tampilan yang lebih rapi.
+    Warna box sinyal akan disesuaikan:
+      - BUY: Hijau
+      - SELL: Merah
+    """
     current_time = get_google_time().strftime('%H:%M:%S')
-    if trade_msg:
-        st.success(f"Eksekusi perdagangan otomatis: {trade_msg}")
     
-    st.markdown(f"### Auto Trade: **{'Aktif' if st.session_state.auto_trade else 'Nonaktif'}** ( {current_time} )")
-    st.markdown("### Sinyal Trading")
-    st.write(f"**Sinyal:** {signal}")
-    st.write(f"**Kekuatan Sinyal:** {strength:.1f}%")
-    st.write(f"**Alasan:** {reason}")
+    # Tentukan warna sinyal berdasarkan text sinyal (case-insensitive)
+    if "BUY" in signal.upper():
+        signal_color = "#28a745"  # Hijau
+    elif "SELL" in signal.upper():
+        signal_color = "#dc3545"  # Merah
+    else:
+        signal_color = "#15508CFF"  # Warna default
     
-    time_threshold = df['time'].max() - pd.Timedelta(minutes=30)
-    df_last30 = df[df['time'] >= time_threshold]
+    # Header
+    with st.container():
+        st.markdown(
+            f"<div class='header-container'><span class='title'>Dashboard Analisis Trading</span> <br>"
+            f"<span class='subtitle'>Auto Trade: {'Aktif' if st.session_state.auto_trade else 'Nonaktif'} | Waktu: {current_time}</span></div>",
+            unsafe_allow_html=True
+        )
     
-    st.markdown("### Data Candle (30 menit terakhir)")
-    st.dataframe(df_last30)
+    # Sinyal Trading
+    with st.container():
+        st.markdown("### Sinyal Trading")
+        col1, col2 = st.columns([1,1])
+        with col1:
+            st.markdown(
+                f"<div class='info-box' style='background-color: {signal_color};'><span class='subheader'>Sinyal:</span><br> {signal}</div>",
+                unsafe_allow_html=True
+            )
+        with col2:
+            st.markdown(
+                f"<div class='info-box' style='background-color: #E90093FF;'><span class='subheader'>Kekuatan:</span><br> {strength:.1f}%</div>",
+                unsafe_allow_html=True
+            )
+        if trade_msg:
+            st.info(f"Info Trade: {trade_msg}")
     
-    st.markdown("### Grafik Candlestick dan Indikator (30 menit terakhir)")
-    fig = go.Figure(data=[go.Candlestick(
-        x=df_last30['time'],
-        open=df_last30['open'],
-        high=df_last30['high'],
-        low=df_last30['low'],
-        close=df_last30['close'],
-        name="Candlestick"
-    )])
-    fig.add_trace(go.Scatter(x=df_last30['time'], y=df_last30['EMA_3'], mode='lines', name='EMA 3'))
-    fig.add_trace(go.Scatter(x=df_last30['time'], y=df_last30['EMA_5'], mode='lines', name='EMA 5'))
-    fig.add_trace(go.Scatter(x=df_last30['time'], y=df_last30['BB_Upper'], mode='lines', name='BB Upper', line=dict(dash='dash')))
-    fig.add_trace(go.Scatter(x=df_last30['time'], y=df_last30['BB_Lower'], mode='lines', name='BB Lower', line=dict(dash='dash')))
-    fig.update_layout(title="Grafik Harga dan Indikator (30 menit terakhir)", xaxis_title="Waktu", yaxis_title="Harga")
-    st.plotly_chart(fig, use_container_width=True)
+    # Alasan sinyal
+    with st.container():
+        st.markdown(
+            f"<div class='reason-box mt-5'><span class='subheader'>Alasan:</span><br> {reason}</div>",
+            unsafe_allow_html=True
+        )
+    
+    # Data Candle dalam expander
+    with st.expander("Lihat Data Candle (30 Menit Terakhir)"):
+        time_threshold = df['time'].max() - pd.Timedelta(minutes=30)
+        df_last30 = df[df['time'] >= time_threshold]
+        st.dataframe(df_last30)
+    
+    # Grafik Candlestick dan Indikator
+    with st.container():
+        st.markdown("### Grafik Candlestick dan Indikator (30 Menit Terakhir)")
+        time_threshold = df['time'].max() - pd.Timedelta(minutes=30)
+        df_last30 = df[df['time'] >= time_threshold]
+        fig = go.Figure(data=[go.Candlestick(
+            x=df_last30['time'],
+            open=df_last30['open'],
+            high=df_last30['high'],
+            low=df_last30['low'],
+            close=df_last30['close'],
+            name="Candlestick"
+        )])
+        fig.add_trace(go.Scatter(x=df_last30['time'], y=df_last30['EMA_3'], mode='lines', name='EMA 3'))
+        fig.add_trace(go.Scatter(x=df_last30['time'], y=df_last30['EMA_5'], mode='lines', name='EMA 5'))
+        fig.add_trace(go.Scatter(x=df_last30['time'], y=df_last30['BB_Upper'], mode='lines', name='BB Upper', line=dict(dash='dash')))
+        fig.add_trace(go.Scatter(x=df_last30['time'], y=df_last30['BB_Lower'], mode='lines', name='BB Lower', line=dict(dash='dash')))
+        fig.update_layout(
+            title="Grafik Harga dan Indikator (30 Menit Terakhir)",
+            xaxis_title="Waktu",
+            yaxis_title="Harga",
+            template="plotly_dark",
+            height=500
+        )
+        st.plotly_chart(fig, use_container_width=True)
 
+
+# =============================================================================
+# FUNGSI UTAMA
+# =============================================================================
 def main():
+    """
+    Fungsi utama untuk menjalankan dashboard dan auto trade secara sistematis.
+    """
+    # Inisialisasi status session
     if "auto_trade" not in st.session_state:
         st.session_state.auto_trade = False
     if "driver" not in st.session_state:
         st.session_state.driver = None
 
+    # Sidebar menu
     st.sidebar.title("Menu")
     _ = st.sidebar.button("Refresh Data")
     start_auto = st.sidebar.button("Start Auto Trade")
     stop_auto = st.sidebar.button("Stop Auto Trade")
     auto_refresh = st.sidebar.checkbox("Auto Refresh (per menit)", value=True)
     
-    # Pilihan tipe akun
+    # Pilihan tipe akun dan input kredensial
     account_type = st.sidebar.selectbox("Pilih Tipe Akun", ["Real", "Demo", "Tournament"], index=1)
-    # Input bid awal
     initial_bid = st.sidebar.number_input("Bid Awal (Rp)", value=15000)
-    # Input kredensial melalui dashboard
-    username_input = st.sidebar.text_input("Username", value="")  # Kosong untuk default
+    username_input = st.sidebar.text_input("Username", value="")
     password_input = st.sidebar.text_input("Password", value="", type="password")
     
     if start_auto:
@@ -526,6 +640,7 @@ def main():
 
     st.sidebar.write(f"Auto Trade: {'Aktif' if st.session_state.auto_trade else 'Nonaktif'}")
     
+    # Pengaturan auto refresh
     if auto_refresh:
         current_google_time = get_google_time()
         remaining_ms = int((60 - current_google_time.second) * 1000 - current_google_time.microsecond / 1000)
@@ -535,10 +650,12 @@ def main():
     
     twofa_code = st.sidebar.text_input("Masukkan kode 2FA (jika diperlukan):", value="")
     
+    # Proses data harga dan analisis
     df, signal, reason, strength = process_data()
     if df is not None:
         display_dashboard(df, signal, reason, strength)
         
+        # Eksekusi trade jika auto trade aktif
         if st.session_state.auto_trade:
             st.write("Auto Trade aktif: Eksekusi perdagangan otomatis sedang berjalan...")
             if st.session_state.driver is None:
@@ -548,7 +665,7 @@ def main():
                     return
                 st.session_state.driver = driver
             trade_msg = execute_trade_action(st.session_state.driver, signal, initial_bid)
-            if "Error" in trade_msg or "Kompensasi gagal" in trade_msg:
+            if "Error" in trade_msg or "Gagal" in trade_msg:
                 st.error(f"Eksekusi perdagangan otomatis gagal: {trade_msg}")
             else:
                 st.success(f"Eksekusi perdagangan otomatis berhasil: {trade_msg}")
