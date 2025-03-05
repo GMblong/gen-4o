@@ -3,14 +3,12 @@ import logging
 import pandas as pd
 import numpy as np
 import time
-from datetime import datetime, timedelta
+from datetime import datetime
 import ta
 import streamlit as st
 import plotly.graph_objects as go
-import plotly.express as px
 from selenium import webdriver
 from selenium.webdriver.common.by import By
-from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
@@ -26,13 +24,17 @@ logging.basicConfig(
     datefmt="%Y-%m-%d %H:%M:%S"
 )
 
+# Buat session requests agar koneksi reuse
+session = requests.Session()
+
 #####################
 # Fungsi Analisis
 #####################
 
+@st.cache_data(ttl=10)  # cache selama 10 detik, sesuaikan jika perlu
 def get_google_time():
     try:
-        response = requests.get("https://www.google.com", timeout=5)
+        response = session.get("https://www.google.com", timeout=3)
         date_header = response.headers.get("Date")
         if date_header:
             return datetime.strptime(date_header, "%a, %d %b %Y %H:%M:%S GMT")
@@ -40,6 +42,7 @@ def get_google_time():
         logging.error("Gagal mengambil waktu dari Google.")
     return datetime.utcnow()
 
+@st.cache_data(ttl=10)
 def fetch_price_data():
     base_url = "https://api.binomo2.com/candles/v1"
     symbol = "Z-CRY%2FIDX"
@@ -49,7 +52,7 @@ def fetch_price_data():
     formatted_time = current_time.strftime('%Y-%m-%dT00:00:00')
     url = f"{base_url}/{symbol}/{formatted_time}/{interval}?locale={locale}"
     try:
-        response = requests.get(url, timeout=10)
+        response = session.get(url, timeout=5)
         if response.status_code == 200:
             data = response.json()
             return data.get('candles') or data.get('data', [])
@@ -75,23 +78,49 @@ def calculate_indicators(df):
     df['MACD'] = ta.trend.macd(df['close'], window_slow=12, window_fast=6)
     df['MACD_signal'] = ta.trend.macd_signal(df['close'], window_slow=12, window_fast=6, window_sign=9)
     last_candle = df.iloc[-1]
-    logging.info("Hasil perhitungan indikator:")
-    logging.info(
-        f"ATR: {last_candle['ATR']}, ADX: {last_candle['ADX']}, EMA_3: {last_candle['EMA_3']}, "
-        f"EMA_5: {last_candle['EMA_5']}, RSI: {last_candle['RSI']}, StochRSI_K: {last_candle['StochRSI_K']}, "
-        f"MACD: {last_candle['MACD']}, MACD_signal: {last_candle['MACD_signal']}, "
-        f"BB_Upper: {last_candle['BB_Upper']}, BB_Lower: {last_candle['BB_Lower']}"
-    )
+    logging.info(f"ATR: {last_candle['ATR']}, ADX: {last_candle['ADX']}, EMA_3: {last_candle['EMA_3']}, "
+                 f"EMA_5: {last_candle['EMA_5']}, RSI: {last_candle['RSI']}, StochRSI_K: {last_candle['StochRSI_K']}, "
+                 f"MACD: {last_candle['MACD']}, MACD_signal: {last_candle['MACD_signal']}, "
+                 f"BB_Upper: {last_candle['BB_Upper']}, BB_Lower: {last_candle['BB_Lower']}")
     return df
 
 def detect_candlestick_patterns(df):
     df = df.copy()
+    # Pola-pola dasar
     df['Hammer'] = ((df['high'] - df['low']) > 2 * abs(df['close'] - df['open'])) & (df['close'] > df['open'])
     df['Shooting_Star'] = ((df['high'] - df['low']) > 2 * abs(df['close'] - df['open'])) & (df['open'] > df['close'])
     df['Bullish_Engulfing'] = (df['close'].shift(1) < df['open'].shift(1)) & (df['close'] > df['open'])
     df['Bearish_Engulfing'] = (df['close'].shift(1) > df['open'].shift(1)) & (df['close'] < df['open'])
     df['Three_White_Soldiers'] = df['close'].diff().rolling(3).sum() > 0
     df['Three_Black_Crows'] = df['close'].diff().rolling(3).sum() < 0
+
+    # Doji: badan kecil relatif terhadap range (threshold 10%)
+    df['Doji'] = abs(df['close'] - df['open']) <= 0.1 * (df['high'] - df['low'])
+
+    # Morning Star
+    bearish_first = df['close'].shift(2) < df['open'].shift(2)
+    small_body_second = abs(df['close'].shift(1) - df['open'].shift(1)) <= 0.1 * (df['high'].shift(1) - df['low'].shift(1))
+    bullish_third = df['close'] > df['open']
+    close_above_mid_first = df['close'] > ((df['open'].shift(2) + df['close'].shift(2)) / 2)
+    df['Morning_Star'] = bearish_first & small_body_second & bullish_third & close_above_mid_first
+
+    # Evening Star
+    bullish_first = df['close'].shift(2) > df['open'].shift(2)
+    small_body_second = abs(df['close'].shift(1) - df['open'].shift(1)) <= 0.1 * (df['high'].shift(1) - df['low'].shift(1))
+    bearish_third = df['close'] < df['open']
+    close_below_mid_first = df['close'] < ((df['open'].shift(2) + df['close'].shift(2)) / 2)
+    df['Evening_Star'] = bullish_first & small_body_second & bearish_third & close_below_mid_first
+
+    # Spinning Top
+    df['Spinning_Top'] = (abs(df['close'] - df['open']) > 0.1 * (df['high'] - df['low'])) & \
+                         (abs(df['close'] - df['open']) <= 0.3 * (df['high'] - df['low']))
+
+    # Marubozu
+    tolerance = 0.05 * (df['high'] - df['low'])
+    bullish_marubozu = (df['close'] > df['open']) & ((df['open'] - df['low']) <= tolerance) & ((df['high'] - df['close']) <= tolerance)
+    bearish_marubozu = (df['close'] < df['open']) & ((df['high'] - df['open']) <= tolerance) & ((df['close'] - df['low']) <= tolerance)
+    df['Marubozu'] = bullish_marubozu | bearish_marubozu
+
     return df
 
 def check_entry_signals(df):
@@ -101,11 +130,9 @@ def check_entry_signals(df):
     adx_threshold = 20
     atr_threshold = df['ATR'].mean() * 0.5
     volume_available = 'volume' in df.columns
-    if volume_available:
-        avg_volume = df['volume'].rolling(5).mean().iloc[-1]
-        volume_condition = last_candle['volume'] >= avg_volume
-    else:
-        volume_condition = True
+    volume_condition = (last_candle['volume'] >= df['volume'].rolling(5).mean().iloc[-1]) if volume_available else True
+
+    # Sinyal utama berdasarkan pola dan EMA
     bullish_primary = (
         last_candle['Bullish_Engulfing'] or 
         last_candle['Hammer'] or 
@@ -118,80 +145,91 @@ def check_entry_signals(df):
         last_candle['Three_Black_Crows'] or 
         (last_candle['EMA_3'] < last_candle['EMA_5'] and prev_candle['EMA_3'] > prev_candle['EMA_5'])
     )
-    confirmations_bull = 0
-    if last_candle['RSI'] < 50:
-        confirmations_bull += 1
-    if last_candle['StochRSI_K'] < 20:
-        confirmations_bull += 1
-    if last_candle['MACD'] > last_candle['MACD_signal'] and prev_candle['MACD'] < prev_candle['MACD_signal']:
-        confirmations_bull += 1
-    if last_candle['ATR'] > atr_threshold and last_candle['ADX'] > adx_threshold:
-        confirmations_bull += 1
-    confirmations_bear = 0
-    if last_candle['RSI'] > 50:
-        confirmations_bear += 1
-    if last_candle['StochRSI_K'] > 80:
-        confirmations_bear += 1
-    if last_candle['MACD'] < last_candle['MACD_signal'] and prev_candle['MACD'] > prev_candle['MACD_signal']:
-        confirmations_bear += 1
-    if last_candle['ATR'] > atr_threshold and last_candle['ADX'] > adx_threshold:
-        confirmations_bear += 1
+    if last_candle['Morning_Star']:
+        bullish_primary = True
+    if last_candle['Evening_Star']:
+        bearish_primary = True
+    if last_candle['Marubozu']:
+        bullish_primary = last_candle['close'] > last_candle['open']
+
+    confirmations_bull = sum([
+        last_candle['RSI'] < 50,
+        last_candle['StochRSI_K'] < 20,
+        last_candle['MACD'] > last_candle['MACD_signal'] and prev_candle['MACD'] < prev_candle['MACD_signal'],
+        last_candle['ATR'] > atr_threshold and last_candle['ADX'] > adx_threshold
+    ])
+    confirmations_bear = sum([
+        last_candle['RSI'] > 50,
+        last_candle['StochRSI_K'] > 80,
+        last_candle['MACD'] < last_candle['MACD_signal'] and prev_candle['MACD'] > prev_candle['MACD_signal'],
+        last_candle['ATR'] > atr_threshold and last_candle['ADX'] > adx_threshold
+    ])
+
     breakout_bull = last_candle['close'] < last_candle['BB_Lower'] and volume_condition
     breakout_bear = last_candle['close'] > last_candle['BB_Upper'] and volume_condition
+
     divergence_warning = ""
     if last_candle['close'] < prev_candle['close'] and last_candle['MACD'] > prev_candle['MACD']:
         divergence_warning = "Terdeteksi bullish divergence, waspada pembalikan naik. "
     if last_candle['close'] > prev_candle['close'] and last_candle['MACD'] < prev_candle['MACD']:
         divergence_warning = "Terdeteksi bearish divergence, waspada pembalikan turun. "
+
+    reason = ""
+    if last_candle['Bullish_Engulfing']:
+        reason += "Bullish Engulfing, "
+    if last_candle['Hammer']:
+        reason += "Hammer, "
+    if last_candle['Three_White_Soldiers']:
+        reason += "Three White Soldiers, "
+    if (last_candle['EMA_3'] > last_candle['EMA_5'] and prev_candle['EMA_3'] < prev_candle['EMA_5']):
+        reason += "EMA3 cross EMA5 ke atas, "
+    if last_candle['Morning_Star']:
+        reason += "Morning Star, "
+    if last_candle['Marubozu'] and last_candle['close'] > last_candle['open']:
+        reason += "Marubozu bullish, "
+
+    if last_candle['Bearish_Engulfing']:
+        reason += "Bearish Engulfing, "
+    if last_candle['Shooting_Star']:
+        reason += "Shooting Star, "
+    if last_candle['Three_Black_Crows']:
+        reason += "Three Black Crows, "
+    if (last_candle['EMA_3'] < last_candle['EMA_5'] and prev_candle['EMA_3'] > prev_candle['EMA_5']):
+        reason += "EMA3 cross EMA5 ke bawah, "
+    if last_candle['Evening_Star']:
+        reason += "Evening Star, "
+    if last_candle['Marubozu'] and last_candle['close'] < last_candle['open']:
+        reason += "Marubozu bearish, "
+
+    if last_candle['Doji']:
+        reason += "Doji terdeteksi, "
+    if last_candle['Spinning_Top']:
+        reason += "Spinning Top terdeteksi, "
+
+    if breakout_bull:
+        reason += "Breakout bullish pada BB_Lower dengan volume mendukung, "
+    if breakout_bear:
+        reason += "Breakout bearish pada BB_Upper dengan volume mendukung, "
+    if divergence_warning:
+        reason += divergence_warning
+
+    # Hitung kekuatan sinyal
     if bullish_primary:
+        effective = confirmations_bull + (1 if breakout_bull else 0)
+        max_possible = 5 if breakout_bull else 4
+        strength_percent = (effective / max_possible) * 100
         signal = "BUY KUAT 📈" if (confirmations_bull >= 3 or breakout_bull) else "BUY LEMAH 📈"
-        reason = "Konfirmasi bullish: "
-        if last_candle['Bullish_Engulfing']:
-            reason += "Bullish Engulfing, "
-        if last_candle['Hammer']:
-            reason += "Hammer, "
-        if last_candle['Three_White_Soldiers']:
-            reason += "Three White Soldiers, "
-        if (last_candle['EMA_3'] > last_candle['EMA_5'] and prev_candle['EMA_3'] < prev_candle['EMA_5']):
-            reason += "EMA3 cross EMA5 ke atas, "
-        if last_candle['RSI'] < 50:
-            reason += "RSI < 50, "
-        if last_candle['StochRSI_K'] < 20:
-            reason += "StochRSI oversold, "
-        if (last_candle['MACD'] > last_candle['MACD_signal'] and prev_candle['MACD'] < prev_candle['MACD_signal']):
-            reason += "MACD bullish crossover, "
-        if last_candle['ATR'] > atr_threshold and last_candle['ADX'] > adx_threshold:
-            reason += "ATR meningkat dan ADX > 20, "
-        if breakout_bull:
-            reason += "Breakout bullish pada BB_Lower dengan volume mendukung, "
-        if divergence_warning:
-            reason += divergence_warning
-        return signal, reason
+        return signal, "Konfirmasi bullish: " + reason, strength_percent
+
     if bearish_primary:
+        effective = confirmations_bear + (1 if breakout_bear else 0)
+        max_possible = 5 if breakout_bear else 4
+        strength_percent = (effective / max_possible) * 100
         signal = "SELL KUAT 📉" if (confirmations_bear >= 3 or breakout_bear) else "SELL LEMAH 📉"
-        reason = "Konfirmasi bearish: "
-        if last_candle['Bearish_Engulfing']:
-            reason += "Bearish Engulfing, "
-        if last_candle['Shooting_Star']:
-            reason += "Shooting Star, "
-        if last_candle['Three_Black_Crows']:
-            reason += "Three Black Crows, "
-        if (last_candle['EMA_3'] < last_candle['EMA_5'] and prev_candle['EMA_3'] > prev_candle['EMA_5']):
-            reason += "EMA3 cross EMA5 ke bawah, "
-        if last_candle['RSI'] > 50:
-            reason += "RSI > 50, "
-        if last_candle['StochRSI_K'] > 80:
-            reason += "StochRSI overbought, "
-        if (last_candle['MACD'] < last_candle['MACD_signal'] and prev_candle['MACD'] > prev_candle['MACD_signal']):
-            reason += "MACD bearish crossover, "
-        if last_candle['ATR'] > atr_threshold and last_candle['ADX'] > adx_threshold:
-            reason += "ATR meningkat dan ADX > 20, "
-        if breakout_bear:
-            reason += "Breakout bearish pada BB_Upper dengan volume mendukung, "
-        if divergence_warning:
-            reason += divergence_warning
-        return signal, reason
-    return ("BUY 📈", "RSI di bawah 50, peluang kenaikan.") if last_candle['RSI'] < 50 else ("SELL 📉", "RSI di atas 50, peluang penurunan.")
+        return signal, "Konfirmasi bearish: " + reason, strength_percent
+
+    return ("BUY 📈", "RSI di bawah 50, peluang kenaikan.", 50) if last_candle['RSI'] < 50 \
+           else ("SELL 📉", "RSI di atas 50, peluang penurunan.", 50)
 
 def process_data():
     candles = fetch_price_data()
@@ -205,37 +243,26 @@ def process_data():
         for col in ['open', 'close', 'high', 'low']:
             df[col] = df[col].astype(np.float64).round(8)
         df = calculate_indicators(df)
-        signal, reason = check_entry_signals(df)
-        log_message = f"\n{get_google_time().strftime('%H:%M:%S')} 📢 Sinyal Trading: {signal}\nAlasan: {reason}"
+        signal, reason, strength = check_entry_signals(df)
+        log_message = f"\n{get_google_time().strftime('%H:%M:%S')} Sinyal Trading: {signal} | Kekuatan: {strength:.1f}%\nAlasan: {reason}"
         logging.info(log_message)
         print(log_message)
-        return df, signal, reason
-    return None, None, None
+        return df, signal, reason, strength
+    return None, None, None, None
 
 ###############################
 # Fungsi Otomasi dengan Selenium
 ###############################
 
 def init_driver(twofa_code=""):
-    """
-    Inisialisasi driver Selenium secara headless, login, dan tangani 2FA (jika muncul).
-    Driver disimpan di st.session_state agar tetap aktif selama auto trade.
-    """
-    # Instal ChromeDriver secara otomatis dengan direktori writable ('/tmp')
     driver_path = chromedriver_autoinstaller.install(cwd='/tmp')
-
     options = webdriver.ChromeOptions()
-    # Untuk debugging, Anda bisa nonaktifkan headless mode
-    options.add_argument("--headless")           # Aktifkan headless mode jika diperlukan
+    # options.add_argument("--headless")
     options.add_argument("--no-sandbox")
     options.add_argument("--disable-dev-shm-usage")
-    options.add_argument("--disable-gpu")
-    # Tambahkan user-agent untuk menyamarkan automasi
-    options.add_argument("user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.5735.90 Safari/537.36")
+    options.add_argument("user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/114.0.5735.90 Safari/537.36")
     options.add_argument("--disable-blink-features=AutomationControlled")
-
     
-    # Tetapkan binary location untuk Chrome/Chromium jika tersedia
     if os.path.exists('/usr/bin/chromium-browser'):
         options.binary_location = '/usr/bin/chromium-browser'
     elif os.path.exists('/usr/bin/google-chrome'):
@@ -244,56 +271,48 @@ def init_driver(twofa_code=""):
     service = Service(driver_path)
     driver = webdriver.Chrome(service=service, options=options)
     
-    # Gunakan waktu tunggu yang lebih lama (misalnya 40 detik)
-    wait = WebDriverWait(driver, 40)
+    wait = WebDriverWait(driver, 10)  # timeout dikurangi
     driver.get("https://binomo2.com/trading")
     
     try:
-        # Coba tunggu hingga elemen body muncul sebagai indikasi halaman termuat
         wait.until(EC.presence_of_element_located((By.TAG_NAME, "body")))
     except Exception as e:
-        logging.error(f"Error saat menunggu body muncul: {e}")
+        logging.error(f"Error menunggu body muncul: {e}")
         driver.quit()
         return None
     
-    time.sleep(5)
+    time.sleep(20)  # delay diminimalisir
     
-    # Pastikan XPath sesuai dengan struktur halaman terbaru
     username_xpath = '/html/body/binomo-root/platform-ui-scroll/div/div/ng-component/ng-component/div/div/auth-form/sa-auth-form/div[2]/div/app-sign-in/div/form/div[1]/platform-forms-input/way-input/div/div[1]/way-input-text/input'
     password_xpath = '/html/body/binomo-root/platform-ui-scroll/div/div/ng-component/ng-component/div/div/auth-form/sa-auth-form/div[2]/div/app-sign-in/div/form/div[2]/platform-forms-input/way-input/div/div/way-input-password/input'
     login_button_xpath = '/html/body/binomo-root/platform-ui-scroll/div/div/ng-component/ng-component/div/div/auth-form/sa-auth-form/div[2]/div/app-sign-in/div/form/vui-button/button'
     
-    username = st.secrets.get("username", "username_default")
-    password = st.secrets.get("password", "password_default")
+    username = st.secrets.get("username", "andiarifrahmatullah@gmail.com")
+    password = st.secrets.get("password", "@Rahmatullah07")
     
     try:
-        # Gunakan kondisi visibility agar elemen tidak hanya ada di DOM tetapi juga terlihat
-        user_field = driver.find_element(By.XPATH, username_xpath)
-        user_field.send_keys(username)
+        driver.find_element(By.XPATH, username_xpath).send_keys(username)
     except Exception as e:
-        logging.error(f"Timeout atau error saat menemukan field username: {e}")
+        logging.error(f"Error menemukan field username: {e}")
         driver.quit()
         return None
-
-    try:
-        pass_field = driver.find_element(By.XPATH, password_xpath)
-        pass_field.send_keys(password)
-    except Exception as e:
-        logging.error(f"Timeout atau error saat menemukan field password: {e}")
-        driver.quit()
-        return None
-
-    try:
-        login_button = wait.until(EC.element_to_be_clickable((By.XPATH, login_button_xpath)))
-        login_button.click()
-    except Exception as e:
-        logging.error(f"Timeout atau error saat menemukan tombol login: {e}")
-        driver.quit()
-        return None
-
-    time.sleep(5)
     
-    # Tangani 2FA jika muncul
+    try:
+        driver.find_element(By.XPATH, password_xpath).send_keys(password)
+    except Exception as e:
+        logging.error(f"Error menemukan field password: {e}")
+        driver.quit()
+        return None
+    
+    try:
+        wait.until(EC.element_to_be_clickable((By.XPATH, login_button_xpath))).click()
+    except Exception as e:
+        logging.error(f"Error pada tombol login: {e}")
+        driver.quit()
+        return None
+    
+    time.sleep(2)
+    
     twofa_xpath = '/html/body/binomo-root/platform-ui-scroll/div/div/ng-component/ng-component/div/div/auth-form/sa-auth-form/div[2]/div/app-two-factor-auth-validation/app-otp-validation-form/form/platform-forms-input/way-input/div/div/way-input-text/input'
     try:
         twofa_input = driver.find_element(By.XPATH, twofa_xpath)
@@ -305,19 +324,14 @@ def init_driver(twofa_code=""):
             twofa_input.send_keys(twofa_code)
             twofa_submit_xpath = '/html/body/binomo-root/platform-ui-scroll/div/div/ng-component/ng-component/div/div/auth-form/sa-auth-form/div[2]/div/app-two-factor-auth-validation/app-otp-validation-form/form/vui-button/button'
             wait.until(EC.element_to_be_clickable((By.XPATH, twofa_submit_xpath))).click()
-            time.sleep(5)
+            time.sleep(2)
     except Exception as e:
-        logging.info("Autentikasi dua faktor tidak terdeteksi atau sudah tidak diperlukan.")
+        logging.info("2FA tidak diperlukan atau sudah ditangani.")
     
     return driver
 
-
 def execute_trade_action(driver, signal):
-    """
-    Menggunakan driver yang sudah login untuk mengeksekusi trade berdasarkan sinyal.
-    Driver tidak akan ditutup setelah eksekusi, agar dapat terus digunakan.
-    """
-    wait = WebDriverWait(driver, 20)
+    wait = WebDriverWait(driver, 10)
     result_msg = ""
     try:
         if "BUY" in signal:
@@ -340,17 +354,18 @@ def execute_trade_action(driver, signal):
 # Dashboard Streamlit & Otomasi Trading
 ###############################
 
-def display_dashboard(df, signal, reason):
+def display_dashboard(df, signal, reason, strength, trade_msg=""):
     current_time = get_google_time().strftime('%H:%M:%S')
-    st.markdown(f"### Auto Trade: **{'Aktif' if st.session_state.auto_trade else 'Nonaktif'}** ( **{current_time}** )")
+    if trade_msg:
+        st.success(f"Eksekusi perdagangan otomatis berhasil: {trade_msg}")
     
+    st.markdown(f"### Auto Trade: **{'Aktif' if st.session_state.auto_trade else 'Nonaktif'}** ( {current_time} )")
     st.markdown("### Sinyal Trading")
     st.write(f"**Sinyal:** {signal}")
+    st.write(f"**Kekuatan Sinyal:** {strength:.1f}%")
     st.write(f"**Alasan:** {reason}")
-    
     st.markdown("### Data Candle Terakhir")
     st.dataframe(df.tail(20))
-    
     st.markdown("### Grafik Candlestick dan Indikator")
     fig = go.Figure(data=[go.Candlestick(
         x=df['time'],
@@ -374,7 +389,7 @@ def main():
         st.session_state.driver = None
 
     st.sidebar.title("Menu")
-    refresh = st.sidebar.button("Refresh Data")
+    _ = st.sidebar.button("Refresh Data")
     start_auto = st.sidebar.button("Start Auto Trade")
     stop_auto = st.sidebar.button("Stop Auto Trade")
     auto_refresh = st.sidebar.checkbox("Auto Refresh (per menit)", value=True)
@@ -389,7 +404,6 @@ def main():
 
     st.sidebar.write(f"Auto Trade : {'Aktif' if st.session_state.auto_trade else 'Nonaktif'}")
     
-    # Jika auto refresh aktif, hitung sisa waktu hingga pergantian menit berdasarkan waktu Google
     if auto_refresh:
         current_google_time = get_google_time()
         remaining_ms = int((60 - current_google_time.second) * 1000 - current_google_time.microsecond / 1000)
@@ -397,12 +411,11 @@ def main():
             remaining_ms = 60000
         st_autorefresh(interval=remaining_ms, limit=1000, key="auto_refresh")
     
-    # Input kode 2FA, jika diperlukan
     twofa_code = st.sidebar.text_input("Masukkan kode 2FA (jika diperlukan):", value="")
     
-    df, signal, reason = process_data()
+    df, signal, reason, strength = process_data()
     if df is not None:
-        display_dashboard(df, signal, reason)
+        display_dashboard(df, signal, reason, strength)
         
         if st.session_state.auto_trade:
             st.write("Auto Trade aktif: Eksekusi perdagangan otomatis sedang berjalan...")
