@@ -5,6 +5,7 @@ import numpy as np
 import time
 from datetime import datetime
 import ta
+import re
 import streamlit as st
 import plotly.graph_objects as go
 from selenium import webdriver
@@ -31,7 +32,7 @@ session = requests.Session()
 # Fungsi Analisis
 #####################
 
-@st.cache_data(ttl=10)  # cache selama 10 detik, sesuaikan jika perlu
+@st.cache_data(ttl=10)
 def get_google_time():
     try:
         response = session.get("https://www.google.com", timeout=3)
@@ -42,7 +43,6 @@ def get_google_time():
         logging.error("Gagal mengambil waktu dari Google.")
     return datetime.utcnow()
 
-@st.cache_data(ttl=10)
 def fetch_price_data():
     base_url = "https://api.binomo2.com/candles/v1"
     symbol = "Z-CRY%2FIDX"
@@ -70,7 +70,7 @@ def calculate_indicators(df):
     df['StochRSI_K'] = ta.momentum.stochrsi_k(df['close'], window=14, smooth1=3, smooth2=3)
     min_rsi = df['RSI'].rolling(window=14).min()
     max_rsi = df['RSI'].rolling(window=14).max()
-    df['StochRSI_K'] = np.where((max_rsi - min_rsi) == 0, 0.5, (df['RSI'] - min_rsi) / (max_rsi - min_rsi)) * 100
+    df['StochRSI_K'] = np.where((max_rsi - min_rsi)==0, 0.5, (df['RSI']-min_rsi)/(max_rsi-min_rsi)) * 100
     rolling_mean = df['close'].rolling(5).mean()
     rolling_std = df['close'].rolling(5).std()
     df['BB_Upper'] = rolling_mean + (rolling_std * 1.5)
@@ -86,41 +86,29 @@ def calculate_indicators(df):
 
 def detect_candlestick_patterns(df):
     df = df.copy()
-    # Pola-pola dasar
     df['Hammer'] = ((df['high'] - df['low']) > 2 * abs(df['close'] - df['open'])) & (df['close'] > df['open'])
     df['Shooting_Star'] = ((df['high'] - df['low']) > 2 * abs(df['close'] - df['open'])) & (df['open'] > df['close'])
     df['Bullish_Engulfing'] = (df['close'].shift(1) < df['open'].shift(1)) & (df['close'] > df['open'])
     df['Bearish_Engulfing'] = (df['close'].shift(1) > df['open'].shift(1)) & (df['close'] < df['open'])
     df['Three_White_Soldiers'] = df['close'].diff().rolling(3).sum() > 0
     df['Three_Black_Crows'] = df['close'].diff().rolling(3).sum() < 0
-
-    # Doji: badan kecil relatif terhadap range (threshold 10%)
     df['Doji'] = abs(df['close'] - df['open']) <= 0.1 * (df['high'] - df['low'])
-
-    # Morning Star
     bearish_first = df['close'].shift(2) < df['open'].shift(2)
     small_body_second = abs(df['close'].shift(1) - df['open'].shift(1)) <= 0.1 * (df['high'].shift(1) - df['low'].shift(1))
     bullish_third = df['close'] > df['open']
     close_above_mid_first = df['close'] > ((df['open'].shift(2) + df['close'].shift(2)) / 2)
     df['Morning_Star'] = bearish_first & small_body_second & bullish_third & close_above_mid_first
-
-    # Evening Star
     bullish_first = df['close'].shift(2) > df['open'].shift(2)
     small_body_second = abs(df['close'].shift(1) - df['open'].shift(1)) <= 0.1 * (df['high'].shift(1) - df['low'].shift(1))
     bearish_third = df['close'] < df['open']
     close_below_mid_first = df['close'] < ((df['open'].shift(2) + df['close'].shift(2)) / 2)
     df['Evening_Star'] = bullish_first & small_body_second & bearish_third & close_below_mid_first
-
-    # Spinning Top
     df['Spinning_Top'] = (abs(df['close'] - df['open']) > 0.1 * (df['high'] - df['low'])) & \
                          (abs(df['close'] - df['open']) <= 0.3 * (df['high'] - df['low']))
-
-    # Marubozu
     tolerance = 0.05 * (df['high'] - df['low'])
     bullish_marubozu = (df['close'] > df['open']) & ((df['open'] - df['low']) <= tolerance) & ((df['high'] - df['close']) <= tolerance)
     bearish_marubozu = (df['close'] < df['open']) & ((df['high'] - df['open']) <= tolerance) & ((df['close'] - df['low']) <= tolerance)
     df['Marubozu'] = bullish_marubozu | bearish_marubozu
-
     return df
 
 def check_entry_signals(df):
@@ -132,7 +120,6 @@ def check_entry_signals(df):
     volume_available = 'volume' in df.columns
     volume_condition = (last_candle['volume'] >= df['volume'].rolling(5).mean().iloc[-1]) if volume_available else True
 
-    # Sinyal utama berdasarkan pola dan EMA
     bullish_primary = (
         last_candle['Bullish_Engulfing'] or 
         last_candle['Hammer'] or 
@@ -187,7 +174,6 @@ def check_entry_signals(df):
         reason += "Morning Star, "
     if last_candle['Marubozu'] and last_candle['close'] > last_candle['open']:
         reason += "Marubozu bullish, "
-
     if last_candle['Bearish_Engulfing']:
         reason += "Bearish Engulfing, "
     if last_candle['Shooting_Star']:
@@ -200,12 +186,10 @@ def check_entry_signals(df):
         reason += "Evening Star, "
     if last_candle['Marubozu'] and last_candle['close'] < last_candle['open']:
         reason += "Marubozu bearish, "
-
     if last_candle['Doji']:
         reason += "Doji terdeteksi, "
     if last_candle['Spinning_Top']:
         reason += "Spinning Top terdeteksi, "
-
     if breakout_bull:
         reason += "Breakout bullish pada BB_Lower dengan volume mendukung, "
     if breakout_bear:
@@ -213,7 +197,6 @@ def check_entry_signals(df):
     if divergence_warning:
         reason += divergence_warning
 
-    # Hitung kekuatan sinyal
     if bullish_primary:
         effective = confirmations_bull + (1 if breakout_bull else 0)
         max_possible = 5 if breakout_bull else 4
@@ -228,8 +211,8 @@ def check_entry_signals(df):
         signal = "SELL KUAT 📉" if (confirmations_bear >= 3 or breakout_bear) else "SELL LEMAH 📉"
         return signal, "Konfirmasi bearish: " + reason, strength_percent
 
-    return ("BUY 📈", "RSI di bawah 50, peluang kenaikan.", 50) if last_candle['RSI'] < 50 \
-           else ("SELL 📉", "RSI di atas 50, peluang penurunan.", 50)
+    # Default fallback
+    return ("BUY 📈", "RSI di bawah 50, peluang kenaikan.", 50) if last_candle['RSI'] < 50 else ("SELL 📉", "RSI di atas 50, peluang penurunan.", 50)
 
 def process_data():
     candles = fetch_price_data()
@@ -244,20 +227,72 @@ def process_data():
             df[col] = df[col].astype(np.float64).round(8)
         df = calculate_indicators(df)
         signal, reason, strength = check_entry_signals(df)
-        log_message = f"\n{get_google_time().strftime('%H:%M:%S')} Sinyal Trading: {signal} | Kekuatan: {strength:.1f}%\nAlasan: {reason}"
+        # Simulasi outcome trade:
+        # Untuk BUY: trade dianggap benar jika harga pembukaan candle index[0] > harga penutupan candle index[1].
+        # Untuk SELL: trade dianggap benar jika harga pembukaan candle index[0] < harga penutupan candle index[1].
+        trade_open = df.iloc[-1]['open']
+        trade_close = df.iloc[-2]['close']
+        
+        if "BUY" in signal:
+            trade_success = trade_open > trade_close
+        elif "SELL" in signal:
+            trade_success = trade_open < trade_close
+        else:
+            trade_success = False
+        st.session_state.last_trade_success = trade_success
+        log_message = (f"\n{get_google_time().strftime('%H:%M:%S')} Sinyal Trading: {signal} | "
+                       f"Kekuatan: {strength:.1f}% | Trade Success: {trade_success}\nAlasan: {reason} | Close Trade: {trade_close} | Open Trade: {trade_open}")
         logging.info(log_message)
         print(log_message)
         return df, signal, reason, strength
     return None, None, None, None
 
-###############################
-# Fungsi Otomasi dengan Selenium
-###############################
+#####################
+# Fungsi Bid dan Kompensasi
+#####################
 
-def init_driver(twofa_code=""):
+def set_bid(driver, bid_amount):
+    if bid_amount <= 0:
+        raise ValueError("Bid amount must be greater than 0")
+    bid_xpath = '/html/body/binomo-root/platform-ui-scroll/div/div/ng-component/main/div/app-panel/ng-component/section/div/way-input-controls/div/input'
+    try:
+        bid_element = WebDriverWait(driver, 15).until(
+            EC.presence_of_element_located((By.XPATH, bid_xpath))
+        )
+    except Exception as e:
+        logging.error(f"Error menemukan elemen bid: {e}")
+        return False
+
+    bid_value_str = f"Rp{bid_amount}"
+    try:
+        bid_element.clear()
+    except Exception as e:
+        logging.error(f"Error saat clear bid: {e}")
+        return False
+    time.sleep(1)
+    try:
+        bid_element.send_keys(bid_value_str)
+    except Exception as e:
+        logging.error(f"Error saat mengirim bid: {e}")
+        return False
+    time.sleep(1)
+    entered_bid = bid_element.get_attribute('value')
+    logging.info(f"Bid yang dimasukkan: {entered_bid}, seharusnya: {bid_value_str}")
+    entered_bid_numeric = int(re.sub(r"[^\d]", "", entered_bid))
+    expected_bid_numeric = int(re.sub(r"[^\d]", "", bid_value_str))
+    if entered_bid_numeric != expected_bid_numeric:
+        logging.warning(f"Bid numeric yang dimasukkan {entered_bid_numeric} tidak sama dengan {expected_bid_numeric}.")
+        return False
+    return True
+
+#####################
+# Fungsi Otomasi dengan Selenium
+#####################
+
+def init_driver(twofa_code="", account_type="Demo", username_input="", password_input=""):
     driver_path = chromedriver_autoinstaller.install(cwd='/tmp')
     options = webdriver.ChromeOptions()
-    # options.add_argument("--headless")
+    # options.add_argument("--headless")  # Nonaktifkan headless untuk debugging jika perlu
     options.add_argument("--no-sandbox")
     options.add_argument("--disable-dev-shm-usage")
     options.add_argument("user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/114.0.5735.90 Safari/537.36")
@@ -271,7 +306,7 @@ def init_driver(twofa_code=""):
     service = Service(driver_path)
     driver = webdriver.Chrome(service=service, options=options)
     
-    wait = WebDriverWait(driver, 10)  # timeout dikurangi
+    wait = WebDriverWait(driver, 10)
     driver.get("https://binomo2.com/trading")
     
     try:
@@ -281,14 +316,14 @@ def init_driver(twofa_code=""):
         driver.quit()
         return None
     
-    time.sleep(20)  # delay diminimalisir
+    time.sleep(20)
     
     username_xpath = '/html/body/binomo-root/platform-ui-scroll/div/div/ng-component/ng-component/div/div/auth-form/sa-auth-form/div[2]/div/app-sign-in/div/form/div[1]/platform-forms-input/way-input/div/div[1]/way-input-text/input'
     password_xpath = '/html/body/binomo-root/platform-ui-scroll/div/div/ng-component/ng-component/div/div/auth-form/sa-auth-form/div[2]/div/app-sign-in/div/form/div[2]/platform-forms-input/way-input/div/div/way-input-password/input'
     login_button_xpath = '/html/body/binomo-root/platform-ui-scroll/div/div/ng-component/ng-component/div/div/auth-form/sa-auth-form/div[2]/div/app-sign-in/div/form/vui-button/button'
     
-    username = st.secrets.get("username", "andiarifrahmatullah@gmail.com")
-    password = st.secrets.get("password", "@Rahmatullah07")
+    username = username_input if username_input.strip() != "" else "andiarifrahmatullah@gmail.com"
+    password = password_input if password_input.strip() != "" else "@Rahmatullah07"
     
     try:
         driver.find_element(By.XPATH, username_xpath).send_keys(username)
@@ -313,6 +348,29 @@ def init_driver(twofa_code=""):
     
     time.sleep(2)
     
+    try:
+        account_switcher = WebDriverWait(driver, 10).until(
+            EC.presence_of_element_located((By.XPATH, '//*[@id="account"]'))
+        )
+        account_switcher.click()
+        time.sleep(1)
+        account_types = {
+            'Real': '/html/body/vui-popover/div[2]/account-list/div[1]',
+            'Demo': '/html/body/vui-popover/div[2]/account-list/div[2]',
+            'Tournament': '/html/body/vui-popover/div[2]/account-list/div[3]'
+        }
+        chosen_xpath = account_types.get(account_type)
+        if not chosen_xpath:
+            logging.error("Tipe akun tidak dikenali.")
+        else:
+            account_element = WebDriverWait(driver, 10).until(
+                EC.element_to_be_clickable((By.XPATH, chosen_xpath))
+            )
+            account_element.click()
+            time.sleep(1)
+    except Exception as e:
+        logging.error(f"Error saat memilih akun: {e}")
+    
     twofa_xpath = '/html/body/binomo-root/platform-ui-scroll/div/div/ng-component/ng-component/div/div/auth-form/sa-auth-form/div[2]/div/app-two-factor-auth-validation/app-otp-validation-form/form/platform-forms-input/way-input/div/div/way-input-text/input'
     try:
         twofa_input = driver.find_element(By.XPATH, twofa_xpath)
@@ -330,56 +388,112 @@ def init_driver(twofa_code=""):
     
     return driver
 
-def execute_trade_action(driver, signal):
+def simulate_trade_outcome(df, signal):
+    """
+    Simulasikan outcome trade:
+    - Untuk BUY: trade dianggap sukses jika harga pembukaan candle index 0 > harga penutupan candle index 1.
+    - Untuk SELL: trade sukses jika harga pembukaan candle index 0 < harga penutupan candle index 1.
+    """
+    try:
+        open_price = df.iloc[-1]['open']
+        prev_close = df.iloc[-2]['close']
+    except Exception as e:
+        logging.error(f"Error mengambil data candle untuk simulasi outcome: {e}")
+        return True  # Default as success
+    if "BUY" in signal:
+        return open_price > prev_close
+    elif "SELL" in signal:
+        return open_price < prev_close
+    return True
+
+def execute_trade_action(driver, signal, bid_amount):
+    # Tentukan bid yang akan digunakan: jika trade sebelumnya gagal, gunakan bid kompensasi (2.2×)
+    if st.session_state.get("trade_success", True) is False:
+        bid_to_use = bid_amount * 2.2
+        st.session_state.comp_mode = True
+        st.session_state.comp_bid = bid_to_use
+        logging.info(f"Trade sebelumnya salah arah. Mode kompensasi aktif, menggunakan bid Rp{bid_to_use}")
+    else:
+        bid_to_use = bid_amount
+        st.session_state.comp_mode = False
+        st.session_state.comp_bid = bid_to_use
+
+    # Set bid sebelum transaksi
+    if not set_bid(driver, bid_to_use):
+        logging.warning("Gagal menetapkan bid awal/kompensasi.")
+        return "Gagal menetapkan bid."
+    
     wait = WebDriverWait(driver, 10)
-    result_msg = ""
+    button_xpath = ""
     try:
         if "BUY" in signal:
-            buy_button_xpath = '/html/body/binomo-root/platform-ui-scroll/div/div/ng-component/main/div/app-panel/ng-component/section/binary-info/div[2]/div/trading-buttons/vui-button[1]/button'
-            wait.until(EC.element_to_be_clickable((By.XPATH, buy_button_xpath))).click()
-            logging.info("Melakukan aksi BUY")
-            result_msg = "Aksi BUY berhasil dieksekusi."
+            button_xpath = '/html/body/binomo-root/platform-ui-scroll/div/div/ng-component/main/div/app-panel/ng-component/section/binary-info/div[2]/div/trading-buttons/vui-button[1]/button'
         elif "SELL" in signal:
-            sell_button_xpath = '/html/body/binomo-root/platform-ui-scroll/div/div/ng-component/main/div/app-panel/ng-component/section/binary-info/div[2]/div/trading-buttons/vui-button[2]/button'
-            wait.until(EC.element_to_be_clickable((By.XPATH, sell_button_xpath))).click()
-            logging.info("Melakukan aksi SELL")
-            result_msg = "Aksi SELL berhasil dieksekusi."
+            button_xpath = '/html/body/binomo-root/platform-ui-scroll/div/div/ng-component/main/div/app-panel/ng-component/section/binary-info/div[2]/div/trading-buttons/vui-button[2]/button'
+        wait.until(EC.element_to_be_clickable((By.XPATH, button_xpath))).click()
+        logging.info(f"Melakukan aksi {signal} dengan bid Rp{bid_to_use}")
+        result_msg = f"Aksi {signal} berhasil dieksekusi dengan bid Rp{bid_to_use}."
     except Exception as e:
-        error_msg = f"Error pada eksekusi trade: {e}"
-        logging.error(error_msg)
-        result_msg = error_msg
-    return result_msg
+        result_msg = f"Error pada eksekusi trade: {e}"
+        logging.error(result_msg)
 
-###############################
-# Dashboard Streamlit & Otomasi Trading
-###############################
+    # Simulasikan outcome trade baru setelah eksekusi dengan mengambil data terbaru
+    df_new, _, _, _ = process_data()
+    new_outcome = simulate_trade_outcome(df_new, signal)
+    st.session_state.trade_success = new_outcome
+    logging.info(f"Simulasi outcome trade baru: {new_outcome}")
+    
+    # Jika outcome trade sebelumnya salah, lakukan kompensasi
+    if st.session_state.get("trade_success", True) is False:
+        compensation_bid = bid_to_use * 2.2
+        st.session_state.comp_mode = True
+        st.session_state.comp_bid = compensation_bid
+        logging.info(f"Outcome trade tidak sesuai. Kompensasi akan dijalankan dengan bid Rp{compensation_bid}")
+        if not set_bid(driver, compensation_bid):
+            logging.warning("Gagal menetapkan bid kompensasi.")
+            return "Kompensasi gagal."
+        try:
+            wait.until(EC.element_to_be_clickable((By.XPATH, button_xpath))).click()
+            result_msg += f" | Kompensasi trade berhasil dengan bid Rp{compensation_bid}"
+            st.session_state.comp_mode = False
+            st.session_state.trade_success = True
+        except Exception as e:
+            error_msg = f"Error pada eksekusi trade kompensasi: {e}"
+            logging.error(error_msg)
+            result_msg += f" | {error_msg}"
+    return result_msg
 
 def display_dashboard(df, signal, reason, strength, trade_msg=""):
     current_time = get_google_time().strftime('%H:%M:%S')
     if trade_msg:
-        st.success(f"Eksekusi perdagangan otomatis berhasil: {trade_msg}")
+        st.success(f"Eksekusi perdagangan otomatis: {trade_msg}")
     
     st.markdown(f"### Auto Trade: **{'Aktif' if st.session_state.auto_trade else 'Nonaktif'}** ( {current_time} )")
     st.markdown("### Sinyal Trading")
     st.write(f"**Sinyal:** {signal}")
     st.write(f"**Kekuatan Sinyal:** {strength:.1f}%")
     st.write(f"**Alasan:** {reason}")
-    st.markdown("### Data Candle Terakhir")
-    st.dataframe(df.tail(20))
-    st.markdown("### Grafik Candlestick dan Indikator")
+    
+    time_threshold = df['time'].max() - pd.Timedelta(minutes=30)
+    df_last30 = df[df['time'] >= time_threshold]
+    
+    st.markdown("### Data Candle (30 menit terakhir)")
+    st.dataframe(df_last30)
+    
+    st.markdown("### Grafik Candlestick dan Indikator (30 menit terakhir)")
     fig = go.Figure(data=[go.Candlestick(
-        x=df['time'],
-        open=df['open'],
-        high=df['high'],
-        low=df['low'],
-        close=df['close'],
+        x=df_last30['time'],
+        open=df_last30['open'],
+        high=df_last30['high'],
+        low=df_last30['low'],
+        close=df_last30['close'],
         name="Candlestick"
     )])
-    fig.add_trace(go.Scatter(x=df['time'], y=df['EMA_3'], mode='lines', name='EMA 3'))
-    fig.add_trace(go.Scatter(x=df['time'], y=df['EMA_5'], mode='lines', name='EMA 5'))
-    fig.add_trace(go.Scatter(x=df['time'], y=df['BB_Upper'], mode='lines', name='BB Upper', line=dict(dash='dash')))
-    fig.add_trace(go.Scatter(x=df['time'], y=df['BB_Lower'], mode='lines', name='BB Lower', line=dict(dash='dash')))
-    fig.update_layout(title="Grafik Harga dan Indikator", xaxis_title="Waktu", yaxis_title="Harga")
+    fig.add_trace(go.Scatter(x=df_last30['time'], y=df_last30['EMA_3'], mode='lines', name='EMA 3'))
+    fig.add_trace(go.Scatter(x=df_last30['time'], y=df_last30['EMA_5'], mode='lines', name='EMA 5'))
+    fig.add_trace(go.Scatter(x=df_last30['time'], y=df_last30['BB_Upper'], mode='lines', name='BB Upper', line=dict(dash='dash')))
+    fig.add_trace(go.Scatter(x=df_last30['time'], y=df_last30['BB_Lower'], mode='lines', name='BB Lower', line=dict(dash='dash')))
+    fig.update_layout(title="Grafik Harga dan Indikator (30 menit terakhir)", xaxis_title="Waktu", yaxis_title="Harga")
     st.plotly_chart(fig, use_container_width=True)
 
 def main():
@@ -394,6 +508,14 @@ def main():
     stop_auto = st.sidebar.button("Stop Auto Trade")
     auto_refresh = st.sidebar.checkbox("Auto Refresh (per menit)", value=True)
     
+    # Pilihan tipe akun
+    account_type = st.sidebar.selectbox("Pilih Tipe Akun", ["Real", "Demo", "Tournament"], index=1)
+    # Input bid awal
+    initial_bid = st.sidebar.number_input("Bid Awal (Rp)", value=15000)
+    # Input kredensial melalui dashboard
+    username_input = st.sidebar.text_input("Username", value="")  # Kosong untuk default
+    password_input = st.sidebar.text_input("Password", value="", type="password")
+    
     if start_auto:
         st.session_state.auto_trade = True
     if stop_auto:
@@ -402,7 +524,7 @@ def main():
             st.session_state.driver.quit()
             st.session_state.driver = None
 
-    st.sidebar.write(f"Auto Trade : {'Aktif' if st.session_state.auto_trade else 'Nonaktif'}")
+    st.sidebar.write(f"Auto Trade: {'Aktif' if st.session_state.auto_trade else 'Nonaktif'}")
     
     if auto_refresh:
         current_google_time = get_google_time()
@@ -420,13 +542,13 @@ def main():
         if st.session_state.auto_trade:
             st.write("Auto Trade aktif: Eksekusi perdagangan otomatis sedang berjalan...")
             if st.session_state.driver is None:
-                driver = init_driver(twofa_code)
+                driver = init_driver(twofa_code, account_type=account_type, username_input=username_input, password_input=password_input)
                 if driver is None:
-                    st.error("Login gagal. Pastikan kode 2FA sudah dimasukkan jika diperlukan.")
+                    st.error("Login gagal. Pastikan kode 2FA dan kredensial telah dimasukkan.")
                     return
                 st.session_state.driver = driver
-            trade_msg = execute_trade_action(st.session_state.driver, signal)
-            if "Error" in trade_msg:
+            trade_msg = execute_trade_action(st.session_state.driver, signal, initial_bid)
+            if "Error" in trade_msg or "Kompensasi gagal" in trade_msg:
                 st.error(f"Eksekusi perdagangan otomatis gagal: {trade_msg}")
             else:
                 st.success(f"Eksekusi perdagangan otomatis berhasil: {trade_msg}")
