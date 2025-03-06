@@ -158,6 +158,7 @@ def detect_candlestick_patterns(df):
     Deteksi pola candlestick pada data.
     """
     df = df.copy()
+    # Pola-pola dasar
     df['Hammer'] = ((df['high'] - df['low']) > 2 * abs(df['close'] - df['open'])) & (df['close'] > df['open'])
     df['Shooting_Star'] = ((df['high'] - df['low']) > 2 * abs(df['close'] - df['open'])) & (df['open'] > df['close'])
     df['Bullish_Engulfing'] = (df['close'].shift(1) < df['open'].shift(1)) & (df['close'] > df['open'])
@@ -189,6 +190,71 @@ def detect_candlestick_patterns(df):
     bullish_marubozu = (df['close'] > df['open']) & ((df['open'] - df['low']) <= tolerance) & ((df['high'] - df['close']) <= tolerance)
     bearish_marubozu = (df['close'] < df['open']) & ((df['high'] - df['open']) <= tolerance) & ((df['close'] - df['low']) <= tolerance)
     df['Marubozu'] = bullish_marubozu | bearish_marubozu
+
+    # === Pola tambahan ===
+    # 1. Tweezer Top dan Tweezer Bottom
+    tol = 0.05 * (df['high'] - df['low'])
+    df['Tweezer_Top'] = (abs(df['high'] - df['high'].shift(1)) <= tol) & \
+                        (df['close'].shift(1) > df['open'].shift(1)) & (df['close'] < df['open'])
+    df['Tweezer_Bottom'] = (abs(df['low'] - df['low'].shift(1)) <= tol) & \
+                           (df['close'].shift(1) < df['open'].shift(1)) & (df['close'] > df['open'])
+    
+    # 2. Railroad Tracks
+    tol_rt = 0.05 * (df['high'] - df['low'])
+    df['Railroad_Tracks'] = (abs(df['open'] - df['open'].shift(1)) <= tol_rt) & \
+                            (abs(df['close'] - df['close'].shift(1)) <= tol_rt) & \
+                            (((df['close'].shift(1) > df['open'].shift(1)) & (df['close'] > df['open'])) | \
+                             ((df['close'].shift(1) < df['open'].shift(1)) & (df['close'] < df['open'])))
+    
+    # 3. Three Inside (Up & Down)
+    df['Three_Inside_Up'] = (df['close'].shift(2) < df['open'].shift(2)) & \
+                            (df['close'].shift(1) > df['open'].shift(1)) & \
+                            (df['high'].shift(1) < df['high'].shift(2)) & (df['low'].shift(1) > df['low'].shift(2)) & \
+                            (df['close'] > df['open']) & \
+                            (df['open'] < df['open'].shift(1)) & (df['close'] > df['close'].shift(1))
+    df['Three_Inside_Down'] = (df['close'].shift(2) > df['open'].shift(2)) & \
+                              (df['close'].shift(1) < df['open'].shift(1)) & \
+                              (df['high'].shift(1) < df['high'].shift(2)) & (df['low'].shift(1) > df['low'].shift(2)) & \
+                              (df['close'] < df['open']) & \
+                              (df['open'] > df['open'].shift(1)) & (df['close'] < df['close'].shift(1))
+    df['Three_Inside'] = df['Three_Inside_Up'] | df['Three_Inside_Down']
+    
+    # 4. Fakey Pattern (deteksi false breakout)
+    body_prev = abs(df['close'].shift(1) - df['open'].shift(1))
+    df['Fakey_Bullish'] = ((df['high'].shift(1) - np.maximum(df['open'].shift(1), df['close'].shift(1))) > 2 * body_prev) & \
+                          (df['close'] < df['low'].shift(1))
+    df['Fakey_Bearish'] = ((np.minimum(df['open'].shift(1), df['close'].shift(1)) - df['low'].shift(1)) > 2 * body_prev) & \
+                          (df['close'] > df['high'].shift(1))
+    df['Fakey_Pattern'] = df['Fakey_Bullish'] | df['Fakey_Bearish']
+    
+    # 5. Rising & Falling Wedge (menggunakan window 5 candle)
+    df['Rising_Wedge'] = False
+    df['Falling_Wedge'] = False
+    window = 5
+    for i in range(window - 1, len(df)):
+        highs = df['high'].iloc[i - window + 1: i + 1]
+        lows = df['low'].iloc[i - window + 1: i + 1]
+        if len(highs) < window or len(lows) < window:
+            continue
+        x = np.arange(window)
+        slope_high = np.polyfit(x, highs, 1)[0]
+        slope_low = np.polyfit(x, lows, 1)[0]
+        # Rising Wedge: kedua slope positif dan slope_low lebih besar (naik lebih cepat) daripada slope_high
+        if (slope_high > 0) and (slope_low > 0) and (slope_low > slope_high):
+            df.at[df.index[i], 'Rising_Wedge'] = True
+        # Falling Wedge: kedua slope negatif dan slope_high lebih besar (naik kurang cepat) daripada slope_low
+        if (slope_high < 0) and (slope_low < 0) and (slope_high > slope_low):
+            df.at[df.index[i], 'Falling_Wedge'] = True
+    
+    # 6. Dragonfly & Gravestone Doji
+    # Dragonfly Doji: tubuh sangat kecil, bayangan atas minimal, bayangan bawah panjang.
+    df['Dragonfly_Doji'] = df['Doji'] & \
+                           ((df['high'] - np.maximum(df['open'], df['close'])) <= 0.1 * (df['high'] - df['low'])) & \
+                           ((np.minimum(df['open'], df['close']) - df['low']) >= 0.6 * (df['high'] - df['low']))
+    # Gravestone Doji: tubuh sangat kecil, bayangan bawah minimal, bayangan atas panjang.
+    df['Gravestone_Doji'] = df['Doji'] & \
+                            ((np.minimum(df['open'], df['close']) - df['low']) <= 0.1 * (df['high'] - df['low'])) & \
+                            ((df['high'] - np.maximum(df['open'], df['close'])) >= 0.6 * (df['high'] - df['low']))
     
     return df
 
@@ -278,6 +344,26 @@ def check_entry_signals(df):
         reason += "Breakout bearish pada BB_Upper, "
     if divergence_warning:
         reason += divergence_warning
+
+    # Tambahan pola candlestick
+    if last_candle['Tweezer_Top']:
+        reason += "Tweezer Top, "
+    if last_candle['Tweezer_Bottom']:
+        reason += "Tweezer Bottom, "
+    if last_candle['Railroad_Tracks']:
+        reason += "Railroad Tracks, "
+    if last_candle['Three_Inside']:
+        reason += "Three Inside, "
+    if last_candle['Fakey_Pattern']:
+        reason += "Fakey Pattern, "
+    if last_candle['Rising_Wedge']:
+        reason += "Rising Wedge, "
+    if last_candle['Falling_Wedge']:
+        reason += "Falling Wedge, "
+    if last_candle['Dragonfly_Doji']:
+        reason += "Dragonfly Doji, "
+    if last_candle['Gravestone_Doji']:
+        reason += "Gravestone Doji, "
 
     if bullish_primary:
         effective = confirmations_bull + (1 if breakout_bull else 0)
@@ -703,9 +789,12 @@ def main():
                         if new_balance > st.session_state.prev_balance:
                             st.session_state.current_bid = initial_bid
                             st.info(f"Profit terjadi. Reset bid ke nilai awal: Rp{initial_bid}")
-                        else:
+                        elif new_balance < st.session_state.prev_balance:
                             st.session_state.current_bid = int(st.session_state.current_bid * compensation_factor)
                             st.info(f"Loss atau break-even. Bid selanjutnya: Rp{st.session_state.current_bid}")
+                        else:
+                            st.info(f"Tidak ada perubahan pada saldo. Bid tetap: Rp{st.session_state.current_bid}")
+
                         st.session_state.prev_balance = new_balance
                         st.session_state.trade_executed_minute = None
                         # Setelah update bid, jika kondisi waktu terpenuhi, langsung eksekusi trade baru
