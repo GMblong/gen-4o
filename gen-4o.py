@@ -38,15 +38,16 @@ st.markdown(
         margin-bottom: 10px;
     }
     .info-box {
-        background-color: #15508CFF;
+        background-color: #FFFFFFFF;
         padding: 10px;
         height: 100%;
         border-radius: 8px;
         margin-bottom: 10px;
     }
     .reason-box {
-        background-color: #D68C03FF;
+        background-color: #FFFFFFFF;
         padding: 10px;
+        color: #000000FF;
         height: 100%;
         border-radius: 8px;
         margin-top: 10px;
