@@ -1324,3 +1324,7 @@ Stacktrace:
 2025-03-06 03:28:50 - INFO - 
 11:49:24 Sinyal Trading: BUY LEMAH \U0001f4c8 | Kekuatan: 50.0% | Trade Success: False
 Alasan: Konfirmasi bullish: Bullish Engulfing, Hammer, Three Black Crows, Terdeteksi bearish divergence, waspada pembalikan turun.  | Close Trade: 641.86708798 | Open Trade: 641.86708796
+2025-03-06 03:29:08 - INFO - ATR: 6.417257008670448e-07, ADX: 43.568561340833796, EMA_3: 641.8670880359186, EMA_5: 641.8670883093243, RSI: 17.298060250372046, StochRSI_K: 0.0, MACD: -3.878396910295123e-07, MACD_signal: -9.769286309808891e-08, BB_Upper: 641.8670890528336, BB_Lower: 641.8670876351663
+2025-03-06 03:29:08 - INFO - 
+11:49:42 Sinyal Trading: SELL LEMAH \U0001f4c9 | Kekuatan: 25.0% | Trade Success: True
+Alasan: Konfirmasi bearish: Shooting Star, Three Black Crows,  | Close Trade: 641.86708798 | Open Trade: 641.86708796
