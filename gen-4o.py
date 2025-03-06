@@ -1,4 +1,5 @@
 import os
+import sys
 import re
 import time
 import logging
@@ -8,6 +9,7 @@ import pandas as pd
 from datetime import datetime
 import streamlit as st
 import plotly.graph_objects as go
+import chromedriver_autoinstaller
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.chrome.service import Service
@@ -551,34 +553,49 @@ def set_bid(driver, bid_amount):
             return False
     return True
 
-# Fungsi init_driver: Jalankan Chrome dalam mode headless untuk Streamlit Cloud
 def init_driver(twofa_code="", account_type="Demo", username_input="", password_input=""):
+    """
+    Inisialisasi driver Selenium dan lakukan login ke platform trading
+    dalam mode headless. Fungsi ini akan mendeteksi apakah dijalankan secara lokal
+    (misalnya Windows atau variabel lingkungan LOCAL_RUN diset ke "true") atau online (misalnya Streamlit Cloud)
+    dan menggunakan konfigurasi yang sesuai.
+    """
     options = webdriver.ChromeOptions()
-    options.add_argument("--headless=new")  # Pastikan headless mode aktif
+    options.add_argument("--headless")  # Mode headless
+    # Jika menggunakan Chrome versi baru, bisa gunakan: options.add_argument("--headless=new")
     options.add_argument("--no-sandbox")
     options.add_argument("--disable-dev-shm-usage")
     options.add_argument("--disable-gpu")
     options.add_argument("--remote-debugging-port=9222")
     options.add_argument("--disable-blink-features=AutomationControlled")
     
-    # Jika di lingkungan Streamlit Cloud, sebaiknya jangan mengatur binary_location
-    # Jika diperlukan, Anda bisa mengomentari bagian berikut:
-    # if os.path.exists('/usr/bin/chromium-browser'):
-    #     options.binary_location = '/usr/bin/chromium-browser'
-    # elif os.path.exists('/usr/bin/google-chrome'):
-    #     options.binary_location = '/usr/bin/google-chrome'
+    # Deteksi lingkungan: jika LOCAL_RUN="true" atau platform Windows, anggap sebagai lokal
+    local_run = os.environ.get("LOCAL_RUN", "false").lower() == "true" or sys.platform.startswith("win")
     
-    try:
-        new_driver_path = chromedriver_autoinstaller.install(cwd='/tmp', version="133.0.0.0")
-        service = Service(new_driver_path)
-        driver = webdriver.Chrome(service=service, options=options)
-        logging.info("Menggunakan chromedriver terbaru dari instalasi otomatis.")
-    except Exception as e:
-        logging.error(f"Driver terbaru tidak bisa digunakan: {e}. Menggunakan driver dari path fallback.")
-        fallback_driver_path = r'D:\aplikasi\gen-4o\133\chromedriver.exe'
-        service = Service(fallback_driver_path)
-        driver = webdriver.Chrome(service=service, options=options)
-    
+    if local_run:
+        try:
+            # Coba gunakan chromedriver_autoinstaller terlebih dahulu
+            new_driver_path = chromedriver_autoinstaller.install(cwd='/tmp')
+            service = Service(new_driver_path)
+            driver = webdriver.Chrome(service=service, options=options)
+            logging.info("Local run: Menggunakan chromedriver otomatis.")
+        except Exception as e:
+            logging.error(f"Local run: Chromedriver otomatis gagal: {e}. Menggunakan fallback driver.")
+            # Pastikan path fallback sesuai dengan konfigurasi lokal Anda
+            fallback_driver_path = r'D:\aplikasi\gen-4o\133\chromedriver.exe'
+            service = Service(fallback_driver_path)
+            driver = webdriver.Chrome(service=service, options=options)
+    else:
+        # Asumsi online: tidak menggunakan pengaturan binary_location
+        try:
+            new_driver_path = chromedriver_autoinstaller.install(cwd='/tmp')
+            service = Service(new_driver_path)
+            driver = webdriver.Chrome(service=service, options=options)
+            logging.info("Online run: Menggunakan chromedriver otomatis.")
+        except Exception as e:
+            logging.error(f"Online run: Driver tidak dapat digunakan: {e}")
+            return None
+
     wait = WebDriverWait(driver, 10)
     driver.get("https://binomo2.com/trading")
     
@@ -590,6 +607,7 @@ def init_driver(twofa_code="", account_type="Demo", username_input="", password_
         return None
     time.sleep(10)
     
+    # Lanjutkan proses login
     username_xpath = '/html/body/binomo-root/platform-ui-scroll/div/div/ng-component/ng-component/div/div/auth-form/sa-auth-form/div[2]/div/app-sign-in/div/form/div[1]/platform-forms-input/way-input/div/div[1]/way-input-text/input'
     password_xpath = '/html/body/binomo-root/platform-ui-scroll/div/div/ng-component/ng-component/div/div/auth-form/sa-auth-form/div[2]/div/app-sign-in/div/form/div[2]/platform-forms-input/way-input/div/div/way-input-password/input'
     login_button_xpath = '/html/body/binomo-root/platform-ui-scroll/div/div/ng-component/ng-component/div/div/auth-form/sa-auth-form/div[2]/div/app-sign-in/div/form/vui-button/button'
@@ -603,23 +621,25 @@ def init_driver(twofa_code="", account_type="Demo", username_input="", password_
         logging.error(f"Error menemukan field username: {e}")
         driver.quit()
         return None
+    
     try:
         driver.find_element(By.XPATH, password_xpath).send_keys(password)
     except Exception as e:
         logging.error(f"Error menemukan field password: {e}")
         driver.quit()
         return None
+    
     try:
         wait.until(EC.element_to_be_clickable((By.XPATH, login_button_xpath))).click()
     except Exception as e:
         logging.error(f"Error pada tombol login: {e}")
         driver.quit()
         return None
+    
     time.sleep(2)
+    
     try:
-        account_switcher = WebDriverWait(driver, 10).until(
-            EC.presence_of_element_located((By.XPATH, '//*[@id="account"]'))
-        )
+        account_switcher = wait.until(EC.presence_of_element_located((By.XPATH, '//*[@id="account"]')))
         account_switcher.click()
         time.sleep(1)
         account_types = {
@@ -631,9 +651,7 @@ def init_driver(twofa_code="", account_type="Demo", username_input="", password_
         if not chosen_xpath:
             logging.error("Tipe akun tidak dikenali.")
         else:
-            account_element = WebDriverWait(driver, 10).until(
-                EC.element_to_be_clickable((By.XPATH, chosen_xpath))
-            )
+            account_element = wait.until(EC.element_to_be_clickable((By.XPATH, chosen_xpath)))
             account_element.click()
             time.sleep(1)
     except Exception as e:
@@ -641,9 +659,7 @@ def init_driver(twofa_code="", account_type="Demo", username_input="", password_
     
     try:
         popup_xpath = "/html/body/ng-component/vui-modal/div/div/div/ng-component/div/div/vui-button[1]/button"
-        popup_button = WebDriverWait(driver, 10).until(
-            EC.presence_of_element_located((By.XPATH, popup_xpath))
-        )
+        popup_button = wait.until(EC.presence_of_element_located((By.XPATH, popup_xpath)))
         popup_button.click()
         logging.info("Popup dengan xpath telah diklik.")
     except Exception as e:
