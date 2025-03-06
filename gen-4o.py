@@ -560,7 +560,7 @@ def init_driver(twofa_code="", account_type="Demo", username_input="", password_
     """
     # Konfigurasi opsi untuk Chrome
     options = webdriver.ChromeOptions()
-    options.add_argument("--headless")  # Nonaktifkan headless jika perlu debugging
+    options.add_argument("--headless")
     options.add_argument("--no-sandbox")
     options.add_argument("--disable-dev-shm-usage")
     options.add_argument("user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
@@ -651,8 +651,8 @@ def init_driver(twofa_code="", account_type="Demo", username_input="", password_
         logging.error(f"Error saat memilih akun: {e}")
     
     try:
-        popup_xpath = "/ng-component/vui-modal/div/button/vui-icon/svg/use"
-        popup_button = WebDriverWait(driver, 5).until(
+        popup_xpath = "/html/body/ng-component/vui-modal/div/div/div/ng-component/div/div/vui-button[1]/button"
+        popup_button = WebDriverWait(driver, 10).until(
             EC.presence_of_element_located((By.XPATH, popup_xpath))
         )
         popup_button.click()
