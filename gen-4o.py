@@ -124,8 +124,13 @@ def fetch_price_data():
 def calculate_indicators(df):
     """
     Hitung indikator teknikal: ATR, ADX, EMA, RSI, StochRSI, Bollinger Bands, MACD.
+    Perhitungan dilakukan pada candle‑candle yang sudah lengkap, yaitu mengabaikan
+    candle terakhir karena dianggap masih berjalan.
     """
     df = df.copy()
+    # Hapus candle terakhir (yang sedang berjalan)
+    df = df.iloc[:-1].reset_index(drop=True)
+    
     df['ATR'] = ta.volatility.average_true_range(df['high'], df['low'], df['close'], window=5)
     df['ADX'] = ta.trend.adx(df['high'], df['low'], df['close'], window=5)
     df['EMA_3'] = ta.trend.ema_indicator(df['close'], window=3)
@@ -135,7 +140,7 @@ def calculate_indicators(df):
     # Hitung StochRSI
     min_rsi = df['RSI'].rolling(window=14).min()
     max_rsi = df['RSI'].rolling(window=14).max()
-    df['StochRSI_K'] = np.where((max_rsi - min_rsi)==0, 0.5, (df['RSI']-min_rsi)/(max_rsi-min_rsi)) * 100
+    df['StochRSI_K'] = np.where((max_rsi - min_rsi)==0, 0.5, (df['RSI'] - min_rsi) / (max_rsi - min_rsi)) * 100
     
     # Bollinger Bands
     rolling_mean = df['close'].rolling(5).mean()
@@ -157,8 +162,13 @@ def calculate_indicators(df):
 def detect_candlestick_patterns(df):
     """
     Deteksi pola candlestick pada data.
+    Perhitungan pola dilakukan hanya pada candle‑candle yang sudah lengkap, sehingga
+    candle terakhir (yang sedang berjalan) diabaikan.
     """
     df = df.copy()
+    # Hapus candle terakhir (yang masih berjalan)
+    df = df.iloc[:-1].reset_index(drop=True)
+    
     # Pola-pola dasar
     df['Hammer'] = ((df['high'] - df['low']) > 2 * abs(df['close'] - df['open'])) & (df['close'] > df['open'])
     df['Shooting_Star'] = ((df['high'] - df['low']) > 2 * abs(df['close'] - df['open'])) & (df['open'] > df['close'])
@@ -248,16 +258,15 @@ def detect_candlestick_patterns(df):
             df.at[df.index[i], 'Falling_Wedge'] = True
     
     # 6. Dragonfly & Gravestone Doji
-    # Dragonfly Doji: tubuh sangat kecil, bayangan atas minimal, bayangan bawah panjang.
     df['Dragonfly_Doji'] = df['Doji'] & \
                            ((df['high'] - np.maximum(df['open'], df['close'])) <= 0.1 * (df['high'] - df['low'])) & \
                            ((np.minimum(df['open'], df['close']) - df['low']) >= 0.6 * (df['high'] - df['low']))
-    # Gravestone Doji: tubuh sangat kecil, bayangan bawah minimal, bayangan atas panjang.
     df['Gravestone_Doji'] = df['Doji'] & \
                             ((np.minimum(df['open'], df['close']) - df['low']) <= 0.1 * (df['high'] - df['low'])) & \
                             ((df['high'] - np.maximum(df['open'], df['close'])) >= 0.6 * (df['high'] - df['low']))
     
     return df
+
 
 def check_entry_signals(df):
     """
@@ -384,7 +393,8 @@ def check_entry_signals(df):
 
 def process_data():
     """
-    Ambil data harga, hitung indikator, dan tentukan sinyal trading.
+    Ambil data harga, hitung indikator (dengan mengabaikan candle yang sedang berjalan, indeks 0),
+    kemudian evaluasi sinyal trading berdasarkan candle terakhir (indeks -1) dan candle sebelumnya (indeks -2).
     """
     candles = fetch_price_data()
     if candles:
@@ -396,7 +406,10 @@ def process_data():
         df = df[columns]
         for col in ['open', 'close', 'high', 'low']:
             df[col] = df[col].astype(np.float64).round(8)
+        # Hitung indikator hanya pada candle lengkap (indeks >=1)
         df = calculate_indicators(df)
+        
+        # Evaluasi sinyal berdasarkan candle terakhir dan sebelumnya
         signal, reason, strength = check_entry_signals(df)
         
         trade_open = df.iloc[-1]['open']
@@ -425,10 +438,14 @@ def process_data():
 def set_bid(driver, bid_amount):
     """
     Tetapkan nilai bid pada input field di halaman trading.
+    Clear terlebih dahulu field bid, baru masukkan nilai bid.
+    Jika terjadi kesalahan (misalnya gagal clear atau send), fungsi akan mencoba ulang satu kali lagi
+    selama waktu server (detik) belum melebihi 20.
     """
     if bid_amount <= 0:
         raise ValueError("Bid amount must be greater than 0")
     bid_xpath = '/html/body/binomo-root/platform-ui-scroll/div/div/ng-component/main/div/app-panel/ng-component/section/div/way-input-controls/div/input'
+    
     try:
         bid_element = WebDriverWait(driver, 15).until(
             EC.presence_of_element_located((By.XPATH, bid_xpath))
@@ -438,26 +455,49 @@ def set_bid(driver, bid_amount):
         return False
 
     bid_value_str = f"Rp{bid_amount}"
-    try:
-        bid_element.clear()
-    except Exception as e:
-        logging.error(f"Error saat clear bid: {e}")
-        return False
-    time.sleep(1)
-    try:
-        bid_element.send_keys(bid_value_str)
-    except Exception as e:
-        logging.error(f"Error saat mengirim bid: {e}")
-        return False
-    time.sleep(1)
+    
+    def attempt_set_bid():
+        try:
+            bid_element.clear()
+            # time.sleep(1)
+            bid_element.send_keys(bid_value_str)
+            # time.sleep(1)
+            return True
+        except Exception as ex:
+            logging.error(f"Error saat clear atau mengirim bid: {ex}")
+            return False
+
+    # Lakukan percobaan pertama
+    if not attempt_set_bid():
+        current_time = get_google_time()
+        if current_time.second <= 20:
+            logging.info("Percobaan pertama gagal, mencoba ulang karena waktu server masih ≤20 detik.")
+            if not attempt_set_bid():
+                return False
+        else:
+            return False
+
     entered_bid = bid_element.get_attribute('value')
     logging.info(f"Bid yang dimasukkan: {entered_bid}, seharusnya: {bid_value_str}")
     entered_bid_numeric = int(re.sub(r"[^\d]", "", entered_bid))
     expected_bid_numeric = int(re.sub(r"[^\d]", "", bid_value_str))
     if entered_bid_numeric != expected_bid_numeric:
         logging.warning(f"Bid numeric yang dimasukkan {entered_bid_numeric} tidak sama dengan {expected_bid_numeric}.")
-        return False
+        current_time = get_google_time()
+        if current_time.second <= 20:
+            logging.info("Mencoba ulang karena nilai bid tidak sesuai dan waktu server masih ≤20 detik.")
+            if not attempt_set_bid():
+                return False
+            entered_bid = bid_element.get_attribute('value')
+            entered_bid_numeric = int(re.sub(r"[^\d]", "", entered_bid))
+            if entered_bid_numeric != expected_bid_numeric:
+                logging.warning(f"Retry: Bid numeric {entered_bid_numeric} masih tidak sama dengan {expected_bid_numeric}.")
+                return False
+        else:
+            return False
     return True
+
+
 
 def init_driver(twofa_code="", account_type="Demo", username_input="", password_input=""):
     """
@@ -743,6 +783,7 @@ def main():
     initial_bid = st.sidebar.number_input("Bid Awal (Rp)", value=15000)
     username_input = st.sidebar.text_input("Username", value="")
     password_input = st.sidebar.text_input("Password", value="", type="password")
+    twofa_code = st.sidebar.text_input("Masukkan kode 2FA (jika diperlukan):", value="")
     
     if start_auto:
         st.session_state.auto_trade = True
@@ -758,11 +799,12 @@ def main():
     if auto_refresh:
         current_google_time = get_google_time()
         remaining_ms = int((60 - current_google_time.second) * 1000 - current_google_time.microsecond / 1000)
+        # Jika sisa waktu kurang dari 1 detik, gunakan delay minimal (misalnya 100 ms)
         if remaining_ms < 1000:
-            remaining_ms = 60000
+            remaining_ms = 100
         st_autorefresh(interval=remaining_ms, limit=1000, key="auto_refresh")
+
     
-    twofa_code = st.sidebar.text_input("Masukkan kode 2FA (jika diperlukan):", value="")
     
     df, signal, reason, strength = process_data()
     if df is not None:
