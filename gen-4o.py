@@ -554,7 +554,7 @@ def set_bid(driver, bid_amount):
 # Fungsi init_driver: Jalankan Chrome dalam mode headless untuk Streamlit Cloud
 def init_driver(twofa_code="", account_type="Demo", username_input="", password_input=""):
     options = webdriver.ChromeOptions()
-    options.add_argument("--headless")  # Pastikan headless mode aktif
+    options.add_argument("--headless=new")  # Pastikan headless mode aktif
     options.add_argument("--no-sandbox")
     options.add_argument("--disable-dev-shm-usage")
     options.add_argument("--disable-gpu")
