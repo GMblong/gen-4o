@@ -561,14 +561,14 @@ def init_driver(twofa_code="", account_type="Demo", username_input="", password_
     - Jika dijalankan di Streamlit Cloud (variabel STREAMLIT_CLOUD="true"),
       maka akan menggunakan Firefox ESR.
     
-    Pastikan bahwa untuk online, Firefox ESR telah diinstal (misalnya melalui packages.txt)
+    Untuk lingkungan online, pastikan Firefox ESR telah diinstal (misalnya melalui packages.txt)
     dan geckodriver sudah tersedia (misalnya via seleniumbase).
     """
     online_env = os.environ.get("STREAMLIT_CLOUD", "false").lower() == "true"
     local_run = os.environ.get("LOCAL_RUN", "false").lower() == "true" or (sys.platform.startswith("win") and not online_env)
     
     driver = None  # inisialisasi
-    
+
     if local_run:
         # Konfigurasi Chrome untuk lingkungan lokal
         from selenium.webdriver.chrome.options import Options as ChromeOptions
@@ -603,10 +603,10 @@ def init_driver(twofa_code="", account_type="Demo", username_input="", password_
         opts.add_argument("--headless")
         opts.add_argument("--no-sandbox")
         opts.add_argument("--disable-dev-shm-usage")
-        # Firefox biasanya sudah tidak memerlukan flag --disable-gpu
+        # Firefox biasanya tidak memerlukan flag --disable-gpu
         try:
             # Asumsikan geckodriver sudah ada di PATH (misalnya melalui instalasi seleniumbase)
-            service = FirefoxService()  # Tidak perlu parameter jika geckodriver ada di PATH
+            service = FirefoxService()  # Tanpa parameter jika geckodriver ada di PATH
             driver = webdriver.Firefox(service=service, options=opts)
             logging.info("Online run: Menggunakan Firefox ESR.")
         except Exception as e:
@@ -623,7 +623,7 @@ def init_driver(twofa_code="", account_type="Demo", username_input="", password_
         driver.quit()
         return None
 
-    # Proses login (gunakan XPath yang sama, asumsikan tampilan halaman tidak berubah)
+    # Proses login
     try:
         username_field = wait.until(EC.presence_of_element_located((By.XPATH,
             '/html/body/binomo-root/platform-ui-scroll/div/div/ng-component/ng-component/div/div/auth-form/sa-auth-form/div[2]/div/app-sign-in/div/form/div[1]/platform-forms-input/way-input/div/div[1]/way-input-text/input')))
@@ -652,6 +652,23 @@ def init_driver(twofa_code="", account_type="Demo", username_input="", password_
         logging.error(f"Error pada tombol login: {e}")
         driver.quit()
         return None
+
+    # Proses 2FA: Tunggu dengan timeout pendek untuk elemen 2FA. Jika tidak muncul atau tidak diberikan kode, lanjutkan.
+    try:
+        twofa_field = WebDriverWait(driver, 5).until(EC.presence_of_element_located((By.XPATH,
+            '/html/body/binomo-root/platform-ui-scroll/div/div/ng-component/ng-component/div/div/auth-form/sa-auth-form/div[2]/div/app-two-factor-auth-validation/app-otp-validation-form/form/platform-forms-input/way-input/div/div/way-input-text/input')))
+        # Jika elemen 2FA muncul, periksa apakah kode diberikan.
+        if twofa_field:
+            if twofa_code:
+                twofa_field.send_keys(twofa_code)
+                twofa_submit = wait.until(EC.element_to_be_clickable((By.XPATH,
+                    '/html/body/binomo-root/platform-ui-scroll/div/div/ng-component/ng-component/div/div/auth-form/sa-auth-form/div[2]/div/app-two-factor-auth-validation/app-otp-validation-form/form/vui-button/button')))
+                twofa_submit.click()
+            else:
+                logging.info("2FA muncul, namun kode tidak diberikan. Menganggap 2FA tidak diperlukan.")
+    except Exception as e:
+        # Jika elemen 2FA tidak muncul dalam waktu 5 detik, anggap 2FA tidak diperlukan.
+        logging.info("2FA tidak diperlukan atau sudah ditangani.")
 
     # Tunggu sampai tampilan setelah login muncul, misalnya account switcher
     try:
@@ -684,22 +701,6 @@ def init_driver(twofa_code="", account_type="Demo", username_input="", password_
         logging.info("Popup dengan xpath telah diklik.")
     except Exception as e:
         logging.info("Popup tidak muncul, lanjutkan proses.")
-    
-    # Proses 2FA: Tunggu sampai input 2FA tersedia
-    try:
-        twofa_field = wait.until(EC.presence_of_element_located((By.XPATH,
-            '/html/body/binomo-root/platform-ui-scroll/div/div/ng-component/ng-component/div/div/auth-form/sa-auth-form/div[2]/div/app-two-factor-auth-validation/app-otp-validation-form/form/platform-forms-input/way-input/div/div/way-input-text/input')))
-        if not twofa_code:
-            st.info("Autentikasi 2FA terdeteksi. Masukkan kode 2FA di sidebar dan tekan 'Refresh Data'.")
-            driver.quit()
-            return None
-        else:
-            twofa_field.send_keys(twofa_code)
-            twofa_submit = wait.until(EC.element_to_be_clickable((By.XPATH,
-                '/html/body/binomo-root/platform-ui-scroll/div/div/ng-component/ng-component/div/div/auth-form/sa-auth-form/div[2]/div/app-two-factor-auth-validation/app-otp-validation-form/form/vui-button/button')))
-            twofa_submit.click()
-    except Exception as e:
-        logging.info("2FA tidak diperlukan atau sudah ditangani.")
     
     return driver
 
