@@ -15173,3 +15173,379 @@ Alasan: Konfirmasi bearish: Bearish Engulfing, Three Black Crows, EMA3 cross EMA
 2025-03-07 04:50:28 - INFO - 
 13:11:02 Sinyal Trading: SELL LEMAH \U0001f4c9 | Kekuatan: 25.0% | Trade Success: True
 Alasan: Konfirmasi bearish: Shooting Star, Three Black Crows, Doji terdeteksi, Falling Wedge,  | Close Candle Sebelumnya: 641.86705822 | Open Candle Terakhir: 641.86705816
+2025-03-07 05:31:07 - INFO - ATR: 7.882116503661143e-07, ADX: 19.633503971716213, EMA_3: 641.8670585506004, EMA_5: 641.8670585422369, RSI: 49.92556948170427, StochRSI_K: 43.761488030016714, MACD: -5.7323859437019564e-08, MACD_signal: -1.9363827088115757e-09, BB_Upper: 641.8670587377225, BB_Lower: 641.8670582222775
+2025-03-07 05:31:08 - INFO - 
+13:51:41 Sinyal Trading: BUY LEMAH \U0001f4c8 | Kekuatan: 25.0% | Trade Success: True
+Alasan: Konfirmasi bullish: Three White Soldiers, EMA3 cross EMA5 ke atas, Bearish Engulfing, Shooting Star, Spinning Top terdeteksi, Terdeteksi bullish divergence, waspada pembalikan naik., Rising Wedge,  | Close Candle Sebelumnya: 641.86705867 | Open Candle Terakhir: 641.86705874
+2025-03-07 05:31:13 - INFO - ATR: 7.882116503661143e-07, ADX: 19.633503971716213, EMA_3: 641.8670585506004, EMA_5: 641.8670585422369, RSI: 49.92556948170427, StochRSI_K: 43.761488030016714, MACD: -5.7323859437019564e-08, MACD_signal: -1.9363827088115757e-09, BB_Upper: 641.8670587377225, BB_Lower: 641.8670582222775
+2025-03-07 05:31:13 - INFO - 
+13:51:41 Sinyal Trading: BUY LEMAH \U0001f4c8 | Kekuatan: 25.0% | Trade Success: True
+Alasan: Konfirmasi bullish: Three White Soldiers, EMA3 cross EMA5 ke atas, Bearish Engulfing, Shooting Star, Spinning Top terdeteksi, Terdeteksi bullish divergence, waspada pembalikan naik., Rising Wedge,  | Close Candle Sebelumnya: 641.86705867 | Open Candle Terakhir: 641.86705874
+2025-03-07 05:31:14 - INFO - Chromedriver is already installed.
+2025-03-07 05:31:15 - INFO - Local run: Menggunakan chromedriver otomatis.
+2025-03-07 05:31:28 - INFO - ATR: 7.145693187165697e-07, ADX: 19.304036396126413, EMA_3: 641.8670584503002, EMA_5: 641.867058478158, RSI: 42.68046256001076, StochRSI_K: 40.5879573479455, MACD: -7.528160494985059e-08, MACD_signal: -1.660542715701938e-08, BB_Upper: 641.8670587384148, BB_Lower: 641.8670582175852
+2025-03-07 05:31:29 - ERROR - Error saat memilih akun: Message: element click intercepted: Element <div _ngcontent-cch-c136="" class="type ng-star-inserted">...</div> is not clickable at point (780, 228). Other element would receive the click: <div class="modal_wrapper__1DMZe">...</div>
+  (Session info: chrome=134.0.6998.35)
+Stacktrace:
+	GetHandleVerifier [0x0092CED3+25523]
+	(No symbol) [0x008B23B4]
+	(No symbol) [0x007806E3]
+	(No symbol) [0x007CEE10]
+	(No symbol) [0x007CD1B4]
+	(No symbol) [0x007CAD57]
+	(No symbol) [0x007CA041]
+	(No symbol) [0x007BE695]
+	(No symbol) [0x007ED7FC]
+	(No symbol) [0x007BE124]
+	(No symbol) [0x007EDA74]
+	(No symbol) [0x0080F273]
+	(No symbol) [0x007ED5F6]
+	(No symbol) [0x007BC55F]
+	(No symbol) [0x007BD8A4]
+	GetHandleVerifier [0x00C32713+3193843]
+	GetHandleVerifier [0x00C469E9+3276489]
+	GetHandleVerifier [0x00C40F0C+3253228]
+	GetHandleVerifier [0x009CB0C0+673184]
+	(No symbol) [0x008BB43D]
+	(No symbol) [0x008B8568]
+	(No symbol) [0x008B8709]
+	(No symbol) [0x008AAE90]
+	BaseThreadInitThunk [0x76737BA9+25]
+	RtlInitializeExceptionChain [0x7784C2EB+107]
+	RtlClearBits [0x7784C26F+191]
+
+2025-03-07 05:31:29 - INFO - 
+13:52:02 Sinyal Trading: BUY LEMAH \U0001f4c8 | Kekuatan: 25.0% | Trade Success: False
+Alasan: Konfirmasi bullish: Three White Soldiers, Shooting Star, EMA3 cross EMA5 ke bawah, Fakey Pattern,  | Close Candle Sebelumnya: 641.86705859 | Open Candle Terakhir: 641.86705854
+2025-03-07 05:31:29 - INFO - Popup dengan xpath telah diklik.
+2025-03-07 05:31:30 - INFO - Chromedriver is already installed.
+2025-03-07 05:31:32 - INFO - Local run: Menggunakan chromedriver otomatis.
+2025-03-07 05:31:49 - INFO - 2FA tidak diperlukan atau sudah ditangani.
+2025-03-07 05:31:50 - ERROR - Error menemukan field username: Message: invalid session id: session deleted as the browser has closed the connection
+from disconnected: Unable to receive message from renderer
+  (Session info: chrome=134.0.6998.35)
+Stacktrace:
+	GetHandleVerifier [0x0092CED3+25523]
+	(No symbol) [0x008B23B4]
+	(No symbol) [0x007806E3]
+	(No symbol) [0x0077121B]
+	(No symbol) [0x00770F51]
+	(No symbol) [0x0076EE30]
+	(No symbol) [0x0076F9DD]
+	(No symbol) [0x007852E7]
+	(No symbol) [0x00785A6B]
+	(No symbol) [0x0078935A]
+	(No symbol) [0x007893D7]
+	(No symbol) [0x007C8401]
+	(No symbol) [0x007C8ECB]
+	(No symbol) [0x00811B32]
+	(No symbol) [0x007ED844]
+	(No symbol) [0x0080F273]
+	(No symbol) [0x007ED5F6]
+	(No symbol) [0x007BC55F]
+	(No symbol) [0x007BD8A4]
+	GetHandleVerifier [0x00C32713+3193843]
+	GetHandleVerifier [0x00C469E9+3276489]
+	GetHandleVerifier [0x00C40F0C+3253228]
+	GetHandleVerifier [0x009CB0C0+673184]
+	(No symbol) [0x008BB43D]
+	(No symbol) [0x008B8568]
+	(No symbol) [0x008B8709]
+	(No symbol) [0x008AAE90]
+	BaseThreadInitThunk [0x76737BA9+25]
+	RtlInitializeExceptionChain [0x7784C2EB+107]
+	RtlClearBits [0x7784C26F+191]
+
+2025-03-07 05:32:15 - INFO - ATR: 7.145693187165697e-07, ADX: 19.304036396126413, EMA_3: 641.8670584503002, EMA_5: 641.867058478158, RSI: 42.68046256001076, StochRSI_K: 40.5879573479455, MACD: -7.528160494985059e-08, MACD_signal: -1.660542715701938e-08, BB_Upper: 641.8670587384148, BB_Lower: 641.8670582175852
+2025-03-07 05:32:15 - INFO - 
+13:52:48 Sinyal Trading: BUY LEMAH \U0001f4c8 | Kekuatan: 25.0% | Trade Success: False
+Alasan: Konfirmasi bullish: Three White Soldiers, Shooting Star, EMA3 cross EMA5 ke bawah, Fakey Pattern,  | Close Candle Sebelumnya: 641.86705859 | Open Candle Terakhir: 641.86705854
+2025-03-07 05:32:16 - INFO - Chromedriver is already installed.
+2025-03-07 05:32:17 - INFO - Local run: Menggunakan chromedriver otomatis.
+2025-03-07 05:32:28 - INFO - ATR: 7.116554523460531e-07, ADX: 17.713695826879295, EMA_3: 641.86705871515, EMA_5: 641.8670586454388, RSI: 61.17006716533827, StochRSI_K: 87.01796208499901, MACD: 2.509068508516066e-10, MACD_signal: -1.3234160355445185e-08, BB_Upper: 641.8670589984246, BB_Lower: 641.8670581375756
+2025-03-07 05:32:28 - INFO - 
+13:53:01 Sinyal Trading: BUY LEMAH \U0001f4c8 | Kekuatan: 25.0% | Trade Success: False
+Alasan: Konfirmasi bullish: Bullish Engulfing, Three White Soldiers, EMA3 cross EMA5 ke atas, Rising Wedge,  | Close Candle Sebelumnya: 641.86705835 | Open Candle Terakhir: 641.86705832
+2025-03-07 05:32:29 - INFO - Chromedriver is already installed.
+2025-03-07 05:32:32 - ERROR - Local run: Chromedriver otomatis gagal: Message: session not created
+from disconnected: unable to connect to renderer
+Stacktrace:
+	GetHandleVerifier [0x0092CED3+25523]
+	(No symbol) [0x008B23B4]
+	(No symbol) [0x007806E3]
+	(No symbol) [0x007B9584]
+	(No symbol) [0x007B4482]
+	(No symbol) [0x007AF3F9]
+	(No symbol) [0x007F96DD]
+	(No symbol) [0x007F910A]
+	(No symbol) [0x007ED5F6]
+	(No symbol) [0x007BC55F]
+	(No symbol) [0x007BD8A4]
+	GetHandleVerifier [0x00C32713+3193843]
+	GetHandleVerifier [0x00C469E9+3276489]
+	GetHandleVerifier [0x00C40F0C+3253228]
+	GetHandleVerifier [0x009CB0C0+673184]
+	(No symbol) [0x008BB43D]
+	(No symbol) [0x008B8568]
+	(No symbol) [0x008B8709]
+	(No symbol) [0x008AAE90]
+	BaseThreadInitThunk [0x76737BA9+25]
+	RtlInitializeExceptionChain [0x7784C2EB+107]
+	RtlClearBits [0x7784C26F+191]
+. Menggunakan fallback driver.
+2025-03-07 05:32:47 - ERROR - Error saat memilih akun: Message: 
+Stacktrace:
+	GetHandleVerifier [0x0092CED3+25523]
+	(No symbol) [0x008B23B4]
+	(No symbol) [0x007806E3]
+	(No symbol) [0x007C8B79]
+	(No symbol) [0x007C8ECB]
+	(No symbol) [0x00811B32]
+	(No symbol) [0x007ED844]
+	(No symbol) [0x0080F273]
+	(No symbol) [0x007ED5F6]
+	(No symbol) [0x007BC55F]
+	(No symbol) [0x007BD8A4]
+	GetHandleVerifier [0x00C32713+3193843]
+	GetHandleVerifier [0x00C469E9+3276489]
+	GetHandleVerifier [0x00C40F0C+3253228]
+	GetHandleVerifier [0x009CB0C0+673184]
+	(No symbol) [0x008BB43D]
+	(No symbol) [0x008B8568]
+	(No symbol) [0x008B8709]
+	(No symbol) [0x008AAE90]
+	BaseThreadInitThunk [0x76737BA9+25]
+	RtlInitializeExceptionChain [0x7784C2EB+107]
+	RtlClearBits [0x7784C26F+191]
+
+2025-03-07 05:32:59 - ERROR - Error menemukan field username: Message: 
+Stacktrace:
+	GetHandleVerifier [0x00280B43+25139]
+	(No symbol) [0x002113F4]
+	(No symbol) [0x000F04E3]
+	(No symbol) [0x001383D7]
+	(No symbol) [0x0013872B]
+	(No symbol) [0x00181002]
+	(No symbol) [0x0015D014]
+	(No symbol) [0x0017E778]
+	(No symbol) [0x0015CDC6]
+	(No symbol) [0x0012BDE9]
+	(No symbol) [0x0012D124]
+	GetHandleVerifier [0x00584373+3185251]
+	GetHandleVerifier [0x005A291A+3309578]
+	GetHandleVerifier [0x0059CF42+3286578]
+	GetHandleVerifier [0x00317AE0+643536]
+	(No symbol) [0x0021A20D]
+	(No symbol) [0x002170B8]
+	(No symbol) [0x00217257]
+	(No symbol) [0x00209E00]
+	BaseThreadInitThunk [0x76737BA9+25]
+	RtlInitializeExceptionChain [0x7784C2EB+107]
+	RtlClearBits [0x7784C26F+191]
+	(No symbol) [0x00000000]
+
+2025-03-07 05:33:07 - INFO - Popup tidak muncul, lanjutkan proses.
+2025-03-07 05:33:27 - INFO - ATR: 7.073243576630734e-07, ADX: 17.78197904755837, EMA_3: 641.867058697575, EMA_5: 641.8670586569592, RSI: 51.31689596807496, StochRSI_K: 62.275259624389456, MACD: 6.330878932203632e-09, MACD_signal: -9.32115249791542e-09, BB_Upper: 641.8670589925808, BB_Lower: 641.8670583154191
+2025-03-07 05:33:28 - INFO - 2FA tidak diperlukan atau sudah ditangani.
+2025-03-07 05:33:28 - INFO - 
+13:54:00 Sinyal Trading: BUY LEMAH \U0001f4c8 | Kekuatan: 0.0% | Trade Success: True
+Alasan: Konfirmasi bullish: Three White Soldiers, Bearish Engulfing, Shooting Star, Terdeteksi bullish divergence, waspada pembalikan naik.,  | Close Candle Sebelumnya: 641.86705898 | Open Candle Terakhir: 641.86705902
+2025-03-07 05:33:28 - INFO - Chromedriver is already installed.
+2025-03-07 05:33:29 - INFO - Local run: Menggunakan chromedriver otomatis.
+2025-03-07 05:33:41 - ERROR - Error saat memilih akun: Message: element click intercepted: Element <div _ngcontent-dtt-c136="" class="type ng-star-inserted">...</div> is not clickable at point (780, 228). Other element would receive the click: <div class="modal_wrapper__1DMZe">...</div>
+  (Session info: chrome=134.0.6998.35)
+Stacktrace:
+	GetHandleVerifier [0x0092CED3+25523]
+	(No symbol) [0x008B23B4]
+	(No symbol) [0x007806E3]
+	(No symbol) [0x007CEE10]
+	(No symbol) [0x007CD1B4]
+	(No symbol) [0x007CAD57]
+	(No symbol) [0x007CA041]
+	(No symbol) [0x007BE695]
+	(No symbol) [0x007ED7FC]
+	(No symbol) [0x007BE124]
+	(No symbol) [0x007EDA74]
+	(No symbol) [0x0080F273]
+	(No symbol) [0x007ED5F6]
+	(No symbol) [0x007BC55F]
+	(No symbol) [0x007BD8A4]
+	GetHandleVerifier [0x00C32713+3193843]
+	GetHandleVerifier [0x00C469E9+3276489]
+	GetHandleVerifier [0x00C40F0C+3253228]
+	GetHandleVerifier [0x009CB0C0+673184]
+	(No symbol) [0x008BB43D]
+	(No symbol) [0x008B8568]
+	(No symbol) [0x008B8709]
+	(No symbol) [0x008AAE90]
+	BaseThreadInitThunk [0x76737BA9+25]
+	RtlInitializeExceptionChain [0x7784C2EB+107]
+	RtlClearBits [0x7784C26F+191]
+
+2025-03-07 05:33:41 - INFO - Popup dengan xpath telah diklik.
+2025-03-07 05:33:54 - INFO - ATR: 7.073243576630734e-07, ADX: 17.78197904755837, EMA_3: 641.867058697575, EMA_5: 641.8670586569592, RSI: 51.31689596807496, StochRSI_K: 62.275259624389456, MACD: 6.330878932203632e-09, MACD_signal: -9.32115249791542e-09, BB_Upper: 641.8670589925808, BB_Lower: 641.8670583154191
+2025-03-07 05:33:55 - INFO - 
+13:54:27 Sinyal Trading: BUY LEMAH \U0001f4c8 | Kekuatan: 0.0% | Trade Success: True
+Alasan: Konfirmasi bullish: Three White Soldiers, Bearish Engulfing, Shooting Star, Terdeteksi bullish divergence, waspada pembalikan naik.,  | Close Candle Sebelumnya: 641.86705898 | Open Candle Terakhir: 641.86705902
+2025-03-07 05:33:56 - INFO - Chromedriver is already installed.
+2025-03-07 05:33:57 - INFO - Local run: Menggunakan chromedriver otomatis.
+2025-03-07 05:34:02 - INFO - 2FA tidak diperlukan atau sudah ditangani.
+2025-03-07 05:34:02 - ERROR - Error menemukan field username: Message: invalid session id: session deleted as the browser has closed the connection
+from disconnected: not connected to DevTools
+  (Session info: chrome=134.0.6998.35)
+Stacktrace:
+	GetHandleVerifier [0x0092CED3+25523]
+	(No symbol) [0x008B23B4]
+	(No symbol) [0x007806E3]
+	(No symbol) [0x0076FEC0]
+	(No symbol) [0x0076FDD9]
+	(No symbol) [0x00783C00]
+	(No symbol) [0x0080EBA9]
+	(No symbol) [0x007ED5F6]
+	(No symbol) [0x007BC55F]
+	(No symbol) [0x007BD8A4]
+	GetHandleVerifier [0x00C32713+3193843]
+	GetHandleVerifier [0x00C469E9+3276489]
+	GetHandleVerifier [0x00C40F0C+3253228]
+	GetHandleVerifier [0x009CB0C0+673184]
+	(No symbol) [0x008BB43D]
+	(No symbol) [0x008B8568]
+	(No symbol) [0x008B8709]
+	(No symbol) [0x008AAE90]
+	BaseThreadInitThunk [0x76737BA9+25]
+	RtlInitializeExceptionChain [0x7784C2EB+107]
+	RtlClearBits [0x7784C26F+191]
+
+2025-03-07 05:34:27 - INFO - ATR: 7.758594935583384e-07, ADX: 23.70387467968601, EMA_3: 641.8670590037875, EMA_5: 641.8670588746395, RSI: 65.78432658657209, StochRSI_K: 98.60501823676498, MACD: 9.280427093472099e-08, MACD_signal: 1.1103932188611862e-08, BB_Upper: 641.8670593392036, BB_Lower: 641.8670582247963
+2025-03-07 05:34:28 - INFO - 
+13:55:01 Sinyal Trading: BUY LEMAH \U0001f4c8 | Kekuatan: 25.0% | Trade Success: False
+Alasan: Konfirmasi bullish: Bullish Engulfing, Three White Soldiers,  | Close Candle Sebelumnya: 641.86705868 | Open Candle Terakhir: 641.86705862
+2025-03-07 05:34:28 - INFO - Chromedriver is already installed.
+2025-03-07 05:34:29 - INFO - Local run: Menggunakan chromedriver otomatis.
+2025-03-07 05:34:43 - ERROR - Error saat memilih akun: Message: element click intercepted: Element <div _ngcontent-kov-c136="" class="type ng-star-inserted">...</div> is not clickable at point (780, 228). Other element would receive the click: <div class="modal_wrapper__1DMZe">...</div>
+  (Session info: chrome=134.0.6998.35)
+Stacktrace:
+	GetHandleVerifier [0x0092CED3+25523]
+	(No symbol) [0x008B23B4]
+	(No symbol) [0x007806E3]
+	(No symbol) [0x007CEE10]
+	(No symbol) [0x007CD1B4]
+	(No symbol) [0x007CAD57]
+	(No symbol) [0x007CA041]
+	(No symbol) [0x007BE695]
+	(No symbol) [0x007ED7FC]
+	(No symbol) [0x007BE124]
+	(No symbol) [0x007EDA74]
+	(No symbol) [0x0080F273]
+	(No symbol) [0x007ED5F6]
+	(No symbol) [0x007BC55F]
+	(No symbol) [0x007BD8A4]
+	GetHandleVerifier [0x00C32713+3193843]
+	GetHandleVerifier [0x00C469E9+3276489]
+	GetHandleVerifier [0x00C40F0C+3253228]
+	GetHandleVerifier [0x009CB0C0+673184]
+	(No symbol) [0x008BB43D]
+	(No symbol) [0x008B8568]
+	(No symbol) [0x008B8709]
+	(No symbol) [0x008AAE90]
+	BaseThreadInitThunk [0x76737BA9+25]
+	RtlInitializeExceptionChain [0x7784C2EB+107]
+	RtlClearBits [0x7784C26F+191]
+
+2025-03-07 05:34:43 - INFO - Popup dengan xpath telah diklik.
+2025-03-07 05:35:03 - INFO - 2FA tidak diperlukan atau sudah ditangani.
+2025-03-07 05:35:04 - INFO - Balance ditemukan: 465495792
+2025-03-07 05:35:27 - INFO - ATR: 7.486876054374382e-07, ADX: 28.598615663809152, EMA_3: 641.8670592218938, EMA_5: 641.867059063093, RSI: 68.22031877635018, StochRSI_K: 100.0, MACD: 1.581320248078555e-07, MACD_signal: 4.050955071246059e-08, BB_Upper: 641.8670596243091, BB_Lower: 641.8670582796908
+2025-03-07 05:35:28 - INFO - 
+13:56:00 Sinyal Trading: BUY LEMAH \U0001f4c8 | Kekuatan: 25.0% | Trade Success: True
+Alasan: Konfirmasi bullish: Hammer, Three White Soldiers, Spinning Top terdeteksi,  | Close Candle Sebelumnya: 641.86705931 | Open Candle Terakhir: 641.86705932
+2025-03-07 05:35:29 - INFO - Balance ditemukan: 465495792
+2025-03-07 05:35:30 - INFO - Balance ditemukan: 465495792
+2025-03-07 05:35:31 - INFO - Bid yang dimasukkan: Rp15000, seharusnya: Rp15000
+2025-03-07 05:35:33 - INFO - Trade BUY LEMAH \U0001f4c8 dengan bid Rp15000 dikirim.
+2025-03-07 05:36:29 - INFO - ATR: 7.549500944152775e-07, ADX: 25.860751064247303, EMA_3: 641.867059105947, EMA_5: 641.8670590387287, RSI: 52.15397488877024, StochRSI_K: 61.474377787762066, MACD: 1.3132421372574754e-07, MACD_signal: 5.867248331511798e-08, BB_Upper: 641.8670595304205, BB_Lower: 641.8670586295794
+2025-03-07 05:36:30 - INFO - 
+13:57:02 Sinyal Trading: BUY LEMAH \U0001f4c8 | Kekuatan: 25.0% | Trade Success: True
+Alasan: Konfirmasi bullish: Three White Soldiers, Bearish Engulfing, Fakey Pattern,  | Close Candle Sebelumnya: 641.86705944 | Open Candle Terakhir: 641.86705948
+2025-03-07 05:36:31 - INFO - Balance ditemukan: 463995792
+2025-03-07 05:36:31 - INFO - Balance ditemukan: 463995792
+2025-03-07 05:36:32 - INFO - Bid yang dimasukkan: Rp33000, seharusnya: Rp33000
+2025-03-07 05:36:34 - INFO - Trade BUY LEMAH \U0001f4c8 dengan bid Rp33000 dikirim.
+2025-03-07 05:37:29 - INFO - ATR: 7.279600602124895e-07, ADX: 20.922742589466598, EMA_3: 641.8670589429735, EMA_5: 641.8670589524859, RSI: 45.854527862652326, StochRSI_K: 46.36888035957395, MACD: 8.165693543560337e-08, MACD_signal: 6.326937373921506e-08, BB_Upper: 641.8670595333346, BB_Lower: 641.8670585466654
+2025-03-07 05:37:31 - INFO - 
+13:58:02 Sinyal Trading: SELL LEMAH \U0001f4c9 | Kekuatan: 25.0% | Trade Success: False
+Alasan: Konfirmasi bearish: Shooting Star, Three Black Crows, EMA3 cross EMA5 ke bawah, Rising Wedge,  | Close Candle Sebelumnya: 641.86705899 | Open Candle Terakhir: 641.86705902
+2025-03-07 05:37:32 - INFO - Balance ditemukan: 460695792
+2025-03-07 05:37:32 - INFO - Balance ditemukan: 460695792
+2025-03-07 05:37:34 - INFO - Bid yang dimasukkan: Rp72600, seharusnya: Rp72600
+2025-03-07 05:37:36 - INFO - Trade SELL LEMAH \U0001f4c9 dengan bid Rp72600 dikirim.
+2025-03-07 05:38:26 - INFO - ATR: 6.743680529399348e-07, ADX: 20.005123480903364, EMA_3: 641.8670587364868, EMA_5: 641.8670588116573, RSI: 38.86832207132854, StochRSI_K: 29.616598266225186, MACD: 1.5081923265825026e-08, MACD_signal: 5.363188364453706e-08, BB_Upper: 641.8670595705838, BB_Lower: 641.8670584494163
+2025-03-07 05:38:27 - INFO - ATR: 6.743680529399348e-07, ADX: 20.005123480903364, EMA_3: 641.8670587364868, EMA_5: 641.8670588116573, RSI: 38.86832207132854, StochRSI_K: 29.616598266225186, MACD: 1.5081923265825026e-08, MACD_signal: 5.363188364453706e-08, BB_Upper: 641.8670595705838, BB_Lower: 641.8670584494163
+2025-03-07 05:38:28 - INFO - ATR: 6.743680529399348e-07, ADX: 20.005123480903364, EMA_3: 641.8670587364868, EMA_5: 641.8670588116573, RSI: 38.86832207132854, StochRSI_K: 29.616598266225186, MACD: 1.5081923265825026e-08, MACD_signal: 5.363188364453706e-08, BB_Upper: 641.8670595705838, BB_Lower: 641.8670584494163
+2025-03-07 05:38:29 - INFO - ATR: 6.743680529399348e-07, ADX: 20.005123480903364, EMA_3: 641.8670587364868, EMA_5: 641.8670588116573, RSI: 38.86832207132854, StochRSI_K: 29.616598266225186, MACD: 1.5081923265825026e-08, MACD_signal: 5.363188364453706e-08, BB_Upper: 641.8670595705838, BB_Lower: 641.8670584494163
+2025-03-07 05:38:30 - INFO - ATR: 6.743680529399348e-07, ADX: 20.005123480903364, EMA_3: 641.8670587364868, EMA_5: 641.8670588116573, RSI: 38.86832207132854, StochRSI_K: 29.616598266225186, MACD: 1.5081923265825026e-08, MACD_signal: 5.363188364453706e-08, BB_Upper: 641.8670595705838, BB_Lower: 641.8670584494163
+2025-03-07 05:38:32 - INFO - ATR: 6.743680529399348e-07, ADX: 20.005123480903364, EMA_3: 641.8670587364868, EMA_5: 641.8670588116573, RSI: 38.86832207132854, StochRSI_K: 29.616598266225186, MACD: 1.5081923265825026e-08, MACD_signal: 5.363188364453706e-08, BB_Upper: 641.8670595705838, BB_Lower: 641.8670584494163
+2025-03-07 05:38:33 - INFO - ATR: 6.743680529399348e-07, ADX: 20.005123480903364, EMA_3: 641.8670587364868, EMA_5: 641.8670588116573, RSI: 38.86832207132854, StochRSI_K: 29.616598266225186, MACD: 1.5081923265825026e-08, MACD_signal: 5.363188364453706e-08, BB_Upper: 641.8670595705838, BB_Lower: 641.8670584494163
+2025-03-07 05:38:34 - INFO - ATR: 6.743680529399348e-07, ADX: 20.005123480903364, EMA_3: 641.8670587364868, EMA_5: 641.8670588116573, RSI: 38.86832207132854, StochRSI_K: 29.616598266225186, MACD: 1.5081923265825026e-08, MACD_signal: 5.363188364453706e-08, BB_Upper: 641.8670595705838, BB_Lower: 641.8670584494163
+2025-03-07 05:38:34 - INFO - ATR: 6.743680529399348e-07, ADX: 20.005123480903364, EMA_3: 641.8670587364868, EMA_5: 641.8670588116573, RSI: 38.86832207132854, StochRSI_K: 29.616598266225186, MACD: 1.5081923265825026e-08, MACD_signal: 5.363188364453706e-08, BB_Upper: 641.8670595705838, BB_Lower: 641.8670584494163
+2025-03-07 05:38:37 - INFO - ATR: 6.743680529399348e-07, ADX: 20.005123480903364, EMA_3: 641.8670587364868, EMA_5: 641.8670588116573, RSI: 38.86832207132854, StochRSI_K: 29.616598266225186, MACD: 1.5081923265825026e-08, MACD_signal: 5.363188364453706e-08, BB_Upper: 641.8670595705838, BB_Lower: 641.8670584494163
+2025-03-07 05:38:37 - INFO - 
+13:59:10 Sinyal Trading: SELL LEMAH \U0001f4c9 | Kekuatan: 50.0% | Trade Success: False
+Alasan: Konfirmasi bearish: Three Black Crows,  | Close Candle Sebelumnya: 641.86705878 | Open Candle Terakhir: 641.8670588
+2025-03-07 05:38:38 - INFO - Balance ditemukan: 466866792
+2025-03-07 05:38:38 - INFO - Balance ditemukan: 466866792
+2025-03-07 05:38:40 - INFO - Bid yang dimasukkan: Rp15000, seharusnya: Rp15000
+2025-03-07 05:38:41 - INFO - Trade SELL LEMAH \U0001f4c9 dengan bid Rp15000 dikirim.
+2025-03-07 05:39:27 - INFO - ATR: 6.834944428978774e-07, ADX: 16.028858341259145, EMA_3: 641.8670588582434, EMA_5: 641.8670588677716, RSI: 54.474497389440906, StochRSI_K: 53.16904153046054, MACD: 3.352204203110887e-08, MACD_signal: 4.9609915321851425e-08, BB_Upper: 641.8670594458812, BB_Lower: 641.867058442119
+2025-03-07 05:39:28 - INFO - 
+14:00:01 Sinyal Trading: BUY LEMAH \U0001f4c8 | Kekuatan: 0.0% | Trade Success: True
+Alasan: Konfirmasi bullish: Bullish Engulfing, Three Black Crows,  | Close Candle Sebelumnya: 641.86705853 | Open Candle Terakhir: 641.86705855
+2025-03-07 05:39:29 - INFO - Balance ditemukan: 465366792
+2025-03-07 05:39:30 - INFO - Balance ditemukan: 465366792
+2025-03-07 05:39:31 - INFO - Bid yang dimasukkan: Rp33000, seharusnya: Rp33000
+2025-03-07 05:39:32 - INFO - Trade BUY LEMAH \U0001f4c8 dengan bid Rp33000 dikirim.
+2025-03-07 05:40:30 - INFO - ATR: 7.227955575119235e-07, ADX: 14.425111772387163, EMA_3: 641.8670585441216, EMA_5: 641.8670586551812, RSI: 35.56125447185558, StochRSI_K: 0.0, MACD: -5.570745997829363e-08, MACD_signal: 2.8546440261822418e-08, BB_Upper: 641.8670591873364, BB_Lower: 641.8670582166636
+2025-03-07 05:40:31 - INFO - 
+14:01:03 Sinyal Trading: SELL LEMAH \U0001f4c9 | Kekuatan: 0.0% | Trade Success: False
+Alasan: Konfirmasi bearish: Bearish Engulfing, Three Black Crows, Falling Wedge,  | Close Candle Sebelumnya: 641.86705898 | Open Candle Terakhir: 641.86705898
+2025-03-07 05:40:32 - INFO - Balance ditemukan: 462066792
+2025-03-07 05:40:32 - INFO - Balance ditemukan: 462066792
+2025-03-07 05:40:35 - INFO - Bid yang dimasukkan: Rp72600, seharusnya: Rp72600
+2025-03-07 05:40:37 - INFO - Trade SELL LEMAH \U0001f4c9 dengan bid Rp72600 dikirim.
+2025-03-07 05:41:30 - INFO - ATR: 7.702364391583224e-07, ADX: 22.525316507883353, EMA_3: 641.8670579820608, EMA_5: 641.8670582434542, RSI: 24.212536756864196, StochRSI_K: 0.0, MACD: -2.140019432772533e-07, MACD_signal: -1.9963236445992725e-08, BB_Upper: 641.8670593023734, BB_Lower: 641.8670574736267
+2025-03-07 05:41:31 - INFO - 
+14:02:03 Sinyal Trading: SELL LEMAH \U0001f4c9 | Kekuatan: 25.0% | Trade Success: True
+Alasan: Konfirmasi bearish: Three Black Crows, Breakout bullish pada BB_Lower, Falling Wedge,  | Close Candle Sebelumnya: 641.86705823 | Open Candle Terakhir: 641.86705818
+2025-03-07 05:41:31 - INFO - Balance ditemukan: 468165192
+2025-03-07 05:41:31 - INFO - Balance ditemukan: 468165192
+2025-03-07 05:41:32 - INFO - Bid yang dimasukkan: Rp15000, seharusnya: Rp15000
+2025-03-07 05:41:34 - INFO - Trade SELL LEMAH \U0001f4c9 dengan bid Rp15000 dikirim.
+2025-03-07 05:42:26 - INFO - ATR: 7.921891317829118e-07, ADX: 32.06252511112861, EMA_3: 641.8670574260304, EMA_5: 641.8670577856362, RSI: 19.051970939315424, StochRSI_K: 0.0, MACD: -3.727951707332977e-07, MACD_signal: -9.052962330345374e-08, BB_Upper: 641.867059284834, BB_Lower: 641.867056727166
+2025-03-07 05:42:27 - INFO - 
+14:03:00 Sinyal Trading: SELL LEMAH \U0001f4c9 | Kekuatan: 25.0% | Trade Success: False
+Alasan: Konfirmasi bearish: Three Black Crows, Falling Wedge,  | Close Candle Sebelumnya: 641.86705742 | Open Candle Terakhir: 641.86705743
+2025-03-07 05:42:28 - INFO - Balance ditemukan: 469425192
+2025-03-07 05:42:28 - INFO - Balance ditemukan: 469425192
+2025-03-07 05:42:29 - INFO - Bid yang dimasukkan: Rp15000, seharusnya: Rp15000
+2025-03-07 05:42:30 - INFO - Trade SELL LEMAH \U0001f4c9 dengan bid Rp15000 dikirim.
+2025-03-07 05:43:29 - INFO - ATR: 7.877512911677226e-07, ADX: 39.47504608570761, EMA_3: 641.8670574280152, EMA_5: 641.8670576670909, RSI: 36.324775845904036, StochRSI_K: 35.12992741557675, MACD: -3.785363560382393e-07, MACD_signal: -1.4813096985041087e-07, BB_Upper: 641.867059023525, BB_Lower: 641.867056548475
+2025-03-07 05:43:31 - INFO - 
+14:04:02 Sinyal Trading: BUY LEMAH \U0001f4c8 | Kekuatan: 50.0% | Trade Success: True
+Alasan: Konfirmasi bullish: Bullish Engulfing, Three Black Crows, Terdeteksi bearish divergence, waspada pembalikan turun., Falling Wedge,  | Close Candle Sebelumnya: 641.86705687 | Open Candle Terakhir: 641.86705693
+2025-03-07 05:43:31 - INFO - Balance ditemukan: 467925192
+2025-03-07 05:43:32 - INFO - Balance ditemukan: 467925192
+2025-03-07 05:43:33 - INFO - Bid yang dimasukkan: Rp33000, seharusnya: Rp33000
+2025-03-07 05:43:35 - INFO - Trade BUY LEMAH \U0001f4c8 dengan bid Rp33000 dikirim.
+2025-03-07 05:44:30 - INFO - ATR: 7.302010440503862e-07, ADX: 45.405062865370816, EMA_3: 641.8670573890076, EMA_5: 641.867057561394, RSI: 34.99146609953867, StochRSI_K: 32.418203705061735, MACD: -3.7591678392345784e-07, MACD_signal: -1.9368813266502027e-07, BB_Upper: 641.8670581931971, BB_Lower: 641.8670567268028
+2025-03-07 05:44:31 - INFO - 
+14:05:03 Sinyal Trading: SELL LEMAH \U0001f4c9 | Kekuatan: 25.0% | Trade Success: True
+Alasan: Konfirmasi bearish: Bearish Engulfing, Shooting Star, Three Black Crows, Doji terdeteksi, Terdeteksi bullish divergence, waspada pembalikan naik.,  | Close Candle Sebelumnya: 641.86705743 | Open Candle Terakhir: 641.86705739
+2025-03-07 05:44:32 - INFO - Balance ditemukan: 464625192
+2025-03-07 05:44:32 - INFO - Balance ditemukan: 464625192
+2025-03-07 05:44:35 - INFO - Bid yang dimasukkan: Rp72600, seharusnya: Rp72600
+2025-03-07 05:44:37 - INFO - Trade SELL LEMAH \U0001f4c9 dengan bid Rp72600 dikirim.
+2025-03-07 05:44:40 - INFO - ATR: 7.302010440503862e-07, ADX: 45.405062865370816, EMA_3: 641.8670573890076, EMA_5: 641.867057561394, RSI: 34.99146609953867, StochRSI_K: 32.418203705061735, MACD: -3.7591678392345784e-07, MACD_signal: -1.9368813266502027e-07, BB_Upper: 641.8670581931971, BB_Lower: 641.8670567268028
+2025-03-07 05:44:42 - INFO - 
+14:05:14 Sinyal Trading: SELL LEMAH \U0001f4c9 | Kekuatan: 25.0% | Trade Success: True
+Alasan: Konfirmasi bearish: Bearish Engulfing, Shooting Star, Three Black Crows, Doji terdeteksi, Terdeteksi bullish divergence, waspada pembalikan naik.,  | Close Candle Sebelumnya: 641.86705743 | Open Candle Terakhir: 641.86705739
+2025-03-07 05:44:44 - INFO - Balance ditemukan: 457365192
