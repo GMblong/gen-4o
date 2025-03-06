@@ -741,6 +741,7 @@ def display_dashboard(df, signal, reason, strength, trade_msg=""):
     Warna box sinyal akan disesuaikan:
       - BUY: Hijau
       - SELL: Merah
+    Juga menampilkan saldo terbaru (new balance) jika tersedia.
     """
     current_time = get_google_time().strftime('%H:%M:%S')
     
@@ -757,6 +758,7 @@ def display_dashboard(df, signal, reason, strength, trade_msg=""):
             f"<span class='subtitle'>Auto Trade : {'<b>Aktif</b>' if st.session_state.auto_trade else '<b>Nonaktif</b>'} | Waktu: {current_time}</span></div>",
             unsafe_allow_html=True
         )
+
     
     with st.container():
         st.markdown("### Sinyal Trading")
@@ -777,6 +779,20 @@ def display_dashboard(df, signal, reason, strength, trade_msg=""):
     with st.container():
         st.markdown(
             f"<div class='reason-box mt-5'><span class='subheader'>Alasan:</span><br> {reason}</div>",
+            unsafe_allow_html=True
+        )
+
+        # Tampilkan balance (saldo) terbaru jika tersedia
+    if "prev_balance" in st.session_state and st.session_state.prev_balance is not None:
+        # Konversi nilai balance dari integer ke float dengan dua desimal (dengan asumsi nilai awal dalam satuan rupiah * 100)
+        balance_value = st.session_state.prev_balance / 100.0
+        # Format dengan pemisah ribuan koma dan titik desimal (misal "3,896,072.60")
+        balance_str = f"{balance_value:,.2f}"
+        # Tukar tanda koma dan titik untuk format Indonesia: "3.896.072,60"
+        balance_str = balance_str.replace(",", "X").replace(".", ",").replace("X", ".")
+        st.markdown(
+            f"<div class='info-box' style='background-color: #FFAA0000; color: #FFFFFFFF; border-radius: 8px; border: 1px solid #FFFFFF4F; text-align: left; margin-bottom: 20px;'>"
+            f"<span class='header'>Balance:</span><br> <span class='title'>Rp{balance_str}</span></div>",
             unsafe_allow_html=True
         )
     
@@ -809,6 +825,7 @@ def display_dashboard(df, signal, reason, strength, trade_msg=""):
             height=500
         )
         st.plotly_chart(fig, use_container_width=True)
+
 
 # =============================================================================
 # FUNGSI UTAMA
