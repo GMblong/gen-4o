@@ -15549,3 +15549,24 @@ Alasan: Konfirmasi bearish: Bearish Engulfing, Shooting Star, Three Black Crows,
 14:05:14 Sinyal Trading: SELL LEMAH \U0001f4c9 | Kekuatan: 25.0% | Trade Success: True
 Alasan: Konfirmasi bearish: Bearish Engulfing, Shooting Star, Three Black Crows, Doji terdeteksi, Terdeteksi bullish divergence, waspada pembalikan naik.,  | Close Candle Sebelumnya: 641.86705743 | Open Candle Terakhir: 641.86705739
 2025-03-07 05:44:44 - INFO - Balance ditemukan: 457365192
+2025-03-07 05:45:34 - INFO - ATR: 7.361608421325035e-07, ADX: 40.164713305023575, EMA_3: 641.8670576845038, EMA_5: 641.8670577009293, RSI: 52.2458510320999, StochRSI_K: 67.51066804767042, MACD: -2.7473276986711426e-07, MACD_signal: -2.0989706010543908e-07, BB_Upper: 641.8670580008816, BB_Lower: 641.8670568191185
+2025-03-07 05:45:36 - INFO - 
+14:06:08 Sinyal Trading: BUY LEMAH \U0001f4c8 | Kekuatan: 25.0% | Trade Success: False
+Alasan: Konfirmasi bullish: Bullish Engulfing, Three White Soldiers, Fakey Pattern,  | Close Candle Sebelumnya: 641.86705735 | Open Candle Terakhir: 641.86705734
+2025-03-07 05:45:37 - INFO - Balance ditemukan: 457365192
+2025-03-07 05:45:38 - INFO - Balance ditemukan: 457365192
+2025-03-07 05:45:41 - INFO - Bid yang dimasukkan: Rp159720, seharusnya: Rp159720
+2025-03-07 05:45:43 - INFO - Trade BUY LEMAH \U0001f4c8 dengan bid Rp159720 dikirim.
+2025-03-07 05:47:48 - INFO - ATR: 6.727429533715243e-07, ADX: 38.97190240710875, EMA_3: 641.867057273626, EMA_5: 641.867057410413, RSI: 31.9628816887477, StochRSI_K: 26.25858162292668, MACD: -3.186239609931363e-07, MACD_signal: -2.3937168886007756e-07, BB_Upper: 641.8670580151183, BB_Lower: 641.8670568808816
+2025-03-07 05:47:49 - INFO - 
+14:08:21 Sinyal Trading: SELL LEMAH \U0001f4c9 | Kekuatan: 25.0% | Trade Success: True
+Alasan: Konfirmasi bearish: Three Black Crows, Rising Wedge,  | Close Candle Sebelumnya: 641.86705755 | Open Candle Terakhir: 641.8670575
+2025-03-07 05:47:50 - INFO - Balance ditemukan: 441393192
+2025-03-07 05:48:29 - INFO - ATR: 6.181943579477653e-07, ADX: 42.32959366942949, EMA_3: 641.867057131813, EMA_5: 641.8670572702754, RSI: 33.9576247731638, StochRSI_K: 30.31554748036721, MACD: -3.332236246933462e-07, MACD_signal: -2.581420760267313e-07, BB_Upper: 641.8670580062613, BB_Lower: 641.8670567137386
+2025-03-07 05:48:29 - INFO - 
+14:09:02 Sinyal Trading: BUY LEMAH \U0001f4c8 | Kekuatan: 50.0% | Trade Success: True
+Alasan: Konfirmasi bullish: Bullish Engulfing, Hammer, Three Black Crows, Spinning Top terdeteksi, Terdeteksi bearish divergence, waspada pembalikan turun.,  | Close Candle Sebelumnya: 641.86705693 | Open Candle Terakhir: 641.86705694
+2025-03-07 05:48:30 - INFO - Balance ditemukan: 441393192
+2025-03-07 05:48:31 - INFO - Balance ditemukan: 441393192
+2025-03-07 05:48:33 - INFO - Bid yang dimasukkan: Rp351384, seharusnya: Rp351384
+2025-03-07 05:48:35 - INFO - Trade BUY LEMAH \U0001f4c8 dengan bid Rp351384 dikirim.

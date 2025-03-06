@@ -11,11 +11,9 @@ import streamlit as st
 import plotly.graph_objects as go
 import chromedriver_autoinstaller
 from selenium import webdriver
-from selenium.webdriver.common.by import By
-from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
-import chromedriver_autoinstaller
+from selenium.webdriver.common.by import By
 import ta
 from streamlit_autorefresh import st_autorefresh
 
@@ -556,60 +554,63 @@ def set_bid(driver, bid_amount):
 def init_driver(twofa_code="", account_type="Demo", username_input="", password_input=""):
     """
     Inisialisasi driver Selenium dan lakukan login ke platform trading
-    dalam mode headless. Fungsi ini mendeteksi apakah dijalankan secara lokal
-    (misalnya Windows atau variabel lingkungan LOCAL_RUN diset ke "true") atau online
-    (misalnya Streamlit Cloud) dan menggunakan konfigurasi yang sesuai.
+    dalam mode headless.
     
-    Untuk lingkungan online, pastikan bahwa Chromium telah diinstal (misalnya melalui packages.txt)
-    dan tersedia di /usr/bin/chromium-browser.
+    - Jika dijalankan secara lokal (misalnya Windows atau variabel LOCAL_RUN="true"),
+      maka akan menggunakan Chrome.
+    - Jika dijalankan di Streamlit Cloud (variabel STREAMLIT_CLOUD="true"),
+      maka akan menggunakan Firefox ESR.
+    
+    Pastikan bahwa untuk online, Firefox ESR telah diinstal (misalnya melalui packages.txt)
+    dan geckodriver sudah tersedia (misalnya via seleniumbase).
     """
-    options = webdriver.ChromeOptions()
-    options.add_argument("--headless")  # Mode headless
-    # Jika menggunakan Chrome versi baru, Anda dapat mencoba: options.add_argument("--headless=new")
-    options.add_argument("--no-sandbox")
-    options.add_argument("--disable-dev-shm-usage")
-    options.add_argument("--disable-gpu")
-    options.add_argument("--remote-debugging-port=9222")
-    options.add_argument("--disable-blink-features=AutomationControlled")
-    
-    # Deteksi lingkungan: jika LOCAL_RUN="true" atau platform Windows (dan tidak STREAMLIT_CLOUD), anggap sebagai lokal.
     online_env = os.environ.get("STREAMLIT_CLOUD", "false").lower() == "true"
     local_run = os.environ.get("LOCAL_RUN", "false").lower() == "true" or (sys.platform.startswith("win") and not online_env)
     
-    if not local_run:
-        # Untuk lingkungan online, asumsikan Chromium sudah terinstal
-        if os.path.exists('/usr/bin/chromium-browser'):
-            options.binary_location = '/usr/bin/chromium-browser'
-            logging.info("Online run: binary_location diset ke /usr/bin/chromium-browser")
-        elif os.path.exists('/usr/bin/google-chrome'):
-            options.binary_location = '/usr/bin/google-chrome'
-            logging.info("Online run: binary_location diset ke /usr/bin/google-chrome")
-        else:
-            logging.error("Online run: Browser binary tidak ditemukan!")
-            return None
+    driver = None  # inisialisasi
     
     if local_run:
+        # Konfigurasi Chrome untuk lingkungan lokal
+        from selenium.webdriver.chrome.options import Options as ChromeOptions
+        from selenium.webdriver.chrome.service import Service as ChromeService
+        options = ChromeOptions()
+        options.add_argument("--headless")
+        # Jika menggunakan Chrome versi baru, bisa coba: options.add_argument("--headless=new")
+        options.add_argument("--no-sandbox")
+        options.add_argument("--disable-dev-shm-usage")
+        options.add_argument("--disable-gpu")
+        options.add_argument("--remote-debugging-port=9222")
+        options.add_argument("--disable-blink-features=AutomationControlled")
+        
         try:
             new_driver_path = chromedriver_autoinstaller.install(cwd='/tmp')
-            service = Service(new_driver_path)
+            service = ChromeService(new_driver_path)
             driver = webdriver.Chrome(service=service, options=options)
-            logging.info("Local run: Menggunakan chromedriver otomatis.")
+            logging.info("Local run: Menggunakan Chrome driver otomatis.")
         except Exception as e:
             logging.error(f"Local run: Chromedriver otomatis gagal: {e}. Menggunakan fallback driver.")
             fallback_driver_path = r'D:\aplikasi\gen-4o\133\chromedriver.exe'
             if not os.path.exists(fallback_driver_path):
                 logging.error(f"Fallback driver path tidak valid: {fallback_driver_path}")
                 return None
-            service = Service(fallback_driver_path)
+            service = ChromeService(fallback_driver_path)
             driver = webdriver.Chrome(service=service, options=options)
     else:
+        # Konfigurasi Firefox untuk lingkungan online (Streamlit Cloud)
+        from selenium.webdriver.firefox.options import Options as FirefoxOptions
+        from selenium.webdriver.firefox.service import Service as FirefoxService
+        opts = FirefoxOptions()
+        opts.add_argument("--headless")
+        opts.add_argument("--no-sandbox")
+        opts.add_argument("--disable-dev-shm-usage")
+        # Firefox biasanya sudah tidak memerlukan flag --disable-gpu
         try:
-            new_driver_path = chromedriver_autoinstaller.install(cwd='/tmp')
-            service = Service(new_driver_path)
-            driver = webdriver.Chrome(service=service, options=options)
-            logging.info("Online run: Menggunakan chromedriver otomatis.")
+            # Asumsikan geckodriver sudah ada di PATH (misalnya melalui instalasi seleniumbase)
+            service = FirefoxService()  # Tidak perlu parameter jika geckodriver ada di PATH
+            driver = webdriver.Firefox(service=service, options=opts)
+            logging.info("Online run: Menggunakan Firefox ESR.")
         except Exception as e:
-            logging.error(f"Online run: Driver tidak dapat digunakan: {e}")
+            logging.error(f"Online run: Gagal inisialisasi driver Firefox: {e}")
             return None
 
     wait = WebDriverWait(driver, 20)
@@ -622,27 +623,27 @@ def init_driver(twofa_code="", account_type="Demo", username_input="", password_
         driver.quit()
         return None
 
-    # Proses login dengan explicit wait untuk elemen yang diharapkan
+    # Proses login (gunakan XPath yang sama, asumsikan tampilan halaman tidak berubah)
     try:
         username_field = wait.until(EC.presence_of_element_located((By.XPATH,
             '/html/body/binomo-root/platform-ui-scroll/div/div/ng-component/ng-component/div/div/auth-form/sa-auth-form/div[2]/div/app-sign-in/div/form/div[1]/platform-forms-input/way-input/div/div[1]/way-input-text/input')))
-        username = username_input if username_input.strip() != "" else "andiarifrahmatullah@gmail.com"
-        username_field.send_keys(username)
+        username_val = username_input if username_input.strip() != "" else "andiarifrahmatullah@gmail.com"
+        username_field.send_keys(username_val)
     except Exception as e:
         logging.error(f"Error menemukan field username: {e}")
         driver.quit()
         return None
-    
+
     try:
         password_field = wait.until(EC.presence_of_element_located((By.XPATH,
             '/html/body/binomo-root/platform-ui-scroll/div/div/ng-component/ng-component/div/div/auth-form/sa-auth-form/div[2]/div/app-sign-in/div/form/div[2]/platform-forms-input/way-input/div/div/way-input-password/input')))
-        password = password_input if password_input.strip() != "" else "@Rahmatullah07"
-        password_field.send_keys(password)
+        password_val = password_input if password_input.strip() != "" else "@Rahmatullah07"
+        password_field.send_keys(password_val)
     except Exception as e:
         logging.error(f"Error menemukan field password: {e}")
         driver.quit()
         return None
-    
+
     try:
         login_button = wait.until(EC.element_to_be_clickable((By.XPATH,
             '/html/body/binomo-root/platform-ui-scroll/div/div/ng-component/ng-component/div/div/auth-form/sa-auth-form/div[2]/div/app-sign-in/div/form/vui-button/button')))
@@ -651,8 +652,8 @@ def init_driver(twofa_code="", account_type="Demo", username_input="", password_
         logging.error(f"Error pada tombol login: {e}")
         driver.quit()
         return None
-    
-    # Tunggu sampai tampilan setelah login muncul, misalnya dengan menunggu elemen account switcher
+
+    # Tunggu sampai tampilan setelah login muncul, misalnya account switcher
     try:
         account_switcher = wait.until(EC.presence_of_element_located((By.XPATH, '//*[@id="account"]')))
         account_switcher.click()
@@ -701,7 +702,6 @@ def init_driver(twofa_code="", account_type="Demo", username_input="", password_
         logging.info("2FA tidak diperlukan atau sudah ditangani.")
     
     return driver
-
 
 def check_balance(driver):
     """
