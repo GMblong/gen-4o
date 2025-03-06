@@ -557,12 +557,12 @@ def init_driver(twofa_code="", account_type="Demo", username_input="", password_
     """
     Inisialisasi driver Selenium dan lakukan login ke platform trading
     dalam mode headless. Fungsi ini akan mendeteksi apakah dijalankan secara lokal
-    (misalnya Windows atau variabel lingkungan LOCAL_RUN diset ke "true") atau online (misalnya Streamlit Cloud)
-    dan menggunakan konfigurasi yang sesuai.
+    (misalnya Windows atau variabel lingkungan LOCAL_RUN diset ke "true") atau online
+    (misalnya Streamlit Cloud) dan menggunakan konfigurasi yang sesuai.
     """
     options = webdriver.ChromeOptions()
     options.add_argument("--headless")  # Mode headless
-    # Jika menggunakan Chrome versi baru, bisa gunakan: options.add_argument("--headless=new")
+    # Jika Chrome versi baru mendukung, Anda dapat mencoba: options.add_argument("--headless=new")
     options.add_argument("--no-sandbox")
     options.add_argument("--disable-dev-shm-usage")
     options.add_argument("--disable-gpu")
@@ -574,19 +574,21 @@ def init_driver(twofa_code="", account_type="Demo", username_input="", password_
     
     if local_run:
         try:
-            # Coba gunakan chromedriver_autoinstaller terlebih dahulu
+            # Gunakan chromedriver_autoinstaller terlebih dahulu
             new_driver_path = chromedriver_autoinstaller.install(cwd='/tmp')
             service = Service(new_driver_path)
             driver = webdriver.Chrome(service=service, options=options)
             logging.info("Local run: Menggunakan chromedriver otomatis.")
         except Exception as e:
             logging.error(f"Local run: Chromedriver otomatis gagal: {e}. Menggunakan fallback driver.")
-            # Pastikan path fallback sesuai dengan konfigurasi lokal Anda
             fallback_driver_path = r'D:\aplikasi\gen-4o\133\chromedriver.exe'
+            if not os.path.exists(fallback_driver_path):
+                logging.error(f"Fallback driver path tidak valid: {fallback_driver_path}")
+                return None
             service = Service(fallback_driver_path)
             driver = webdriver.Chrome(service=service, options=options)
     else:
-        # Asumsi online: tidak menggunakan pengaturan binary_location
+        # Asumsi online: gunakan driver otomatis tanpa fallback
         try:
             new_driver_path = chromedriver_autoinstaller.install(cwd='/tmp')
             service = Service(new_driver_path)
@@ -607,7 +609,7 @@ def init_driver(twofa_code="", account_type="Demo", username_input="", password_
         return None
     time.sleep(10)
     
-    # Lanjutkan proses login
+    # Proses login
     username_xpath = '/html/body/binomo-root/platform-ui-scroll/div/div/ng-component/ng-component/div/div/auth-form/sa-auth-form/div[2]/div/app-sign-in/div/form/div[1]/platform-forms-input/way-input/div/div[1]/way-input-text/input'
     password_xpath = '/html/body/binomo-root/platform-ui-scroll/div/div/ng-component/ng-component/div/div/auth-form/sa-auth-form/div[2]/div/app-sign-in/div/form/div[2]/platform-forms-input/way-input/div/div/way-input-password/input'
     login_button_xpath = '/html/body/binomo-root/platform-ui-scroll/div/div/ng-component/ng-component/div/div/auth-form/sa-auth-form/div[2]/div/app-sign-in/div/form/vui-button/button'
