@@ -124,12 +124,10 @@ def fetch_price_data():
 def calculate_indicators(df):
     """
     Hitung indikator teknikal: ATR, ADX, EMA, RSI, StochRSI, Bollinger Bands, MACD.
-    Perhitungan dilakukan pada candle‑candle yang sudah lengkap, yaitu mengabaikan
-    candle terakhir karena dianggap masih berjalan.
+    DIHAPUS: pembuangan candle terakhir di sini.
+    Kita asumsikan df yang diterima sudah TIDAK mencakup candle yang sedang berjalan.
     """
     df = df.copy()
-    # Hapus candle terakhir (yang sedang berjalan)
-    df = df.iloc[:-1].reset_index(drop=True)
     
     df['ATR'] = ta.volatility.average_true_range(df['high'], df['low'], df['close'], window=5)
     df['ADX'] = ta.trend.adx(df['high'], df['low'], df['close'], window=5)
@@ -137,10 +135,14 @@ def calculate_indicators(df):
     df['EMA_5'] = ta.trend.ema_indicator(df['close'], window=5)
     df['RSI'] = ta.momentum.rsi(df['close'], window=5)
     
-    # Hitung StochRSI
+    # StochRSI
     min_rsi = df['RSI'].rolling(window=14).min()
     max_rsi = df['RSI'].rolling(window=14).max()
-    df['StochRSI_K'] = np.where((max_rsi - min_rsi)==0, 0.5, (df['RSI'] - min_rsi) / (max_rsi - min_rsi)) * 100
+    df['StochRSI_K'] = np.where(
+        (max_rsi - min_rsi) == 0,
+        0.5,
+        (df['RSI'] - min_rsi) / (max_rsi - min_rsi)
+    ) * 100
     
     # Bollinger Bands
     rolling_mean = df['close'].rolling(5).mean()
@@ -152,22 +154,24 @@ def calculate_indicators(df):
     df['MACD'] = ta.trend.macd(df['close'], window_slow=12, window_fast=6)
     df['MACD_signal'] = ta.trend.macd_signal(df['close'], window_slow=12, window_fast=6, window_sign=9)
     
+    # Log candle terakhir
     last_candle = df.iloc[-1]
-    logging.info(f"ATR: {last_candle['ATR']}, ADX: {last_candle['ADX']}, EMA_3: {last_candle['EMA_3']}, "
-                 f"EMA_5: {last_candle['EMA_5']}, RSI: {last_candle['RSI']}, StochRSI_K: {last_candle['StochRSI_K']}, "
-                 f"MACD: {last_candle['MACD']}, MACD_signal: {last_candle['MACD_signal']}, "
-                 f"BB_Upper: {last_candle['BB_Upper']}, BB_Lower: {last_candle['BB_Lower']}")
+    logging.info(
+        f"ATR: {last_candle['ATR']}, ADX: {last_candle['ADX']}, "
+        f"EMA_3: {last_candle['EMA_3']}, EMA_5: {last_candle['EMA_5']}, "
+        f"RSI: {last_candle['RSI']}, StochRSI_K: {last_candle['StochRSI_K']}, "
+        f"MACD: {last_candle['MACD']}, MACD_signal: {last_candle['MACD_signal']}, "
+        f"BB_Upper: {last_candle['BB_Upper']}, BB_Lower: {last_candle['BB_Lower']}"
+    )
     return df
 
 def detect_candlestick_patterns(df):
     """
     Deteksi pola candlestick pada data.
-    Perhitungan pola dilakukan hanya pada candle‑candle yang sudah lengkap, sehingga
-    candle terakhir (yang sedang berjalan) diabaikan.
+    DIHAPUS: pembuangan candle terakhir di sini.
+    Kita asumsikan df yang diterima sudah TIDAK mencakup candle yang sedang berjalan.
     """
     df = df.copy()
-    # Hapus candle terakhir (yang masih berjalan)
-    df = df.iloc[:-1].reset_index(drop=True)
     
     # Pola-pola dasar
     df['Hammer'] = ((df['high'] - df['low']) > 2 * abs(df['close'] - df['open'])) & (df['close'] > df['open'])
@@ -193,8 +197,10 @@ def detect_candlestick_patterns(df):
     df['Evening_Star'] = bullish_first & small_body_second & bearish_third & close_below_mid_first
     
     # Spinning Top
-    df['Spinning_Top'] = (abs(df['close'] - df['open']) > 0.1 * (df['high'] - df['low'])) & \
-                         (abs(df['close'] - df['open']) <= 0.3 * (df['high'] - df['low']))
+    df['Spinning_Top'] = (
+        (abs(df['close'] - df['open']) > 0.1 * (df['high'] - df['low'])) &
+        (abs(df['close'] - df['open']) <= 0.3 * (df['high'] - df['low']))
+    )
     
     # Marubozu
     tolerance = 0.05 * (df['high'] - df['low'])
@@ -202,43 +208,59 @@ def detect_candlestick_patterns(df):
     bearish_marubozu = (df['close'] < df['open']) & ((df['high'] - df['open']) <= tolerance) & ((df['close'] - df['low']) <= tolerance)
     df['Marubozu'] = bullish_marubozu | bearish_marubozu
 
-    # === Pola tambahan ===
-    # 1. Tweezer Top dan Tweezer Bottom
+    # Pola tambahan
+    # 1. Tweezer Top & Bottom
     tol = 0.05 * (df['high'] - df['low'])
-    df['Tweezer_Top'] = (abs(df['high'] - df['high'].shift(1)) <= tol) & \
-                        (df['close'].shift(1) > df['open'].shift(1)) & (df['close'] < df['open'])
-    df['Tweezer_Bottom'] = (abs(df['low'] - df['low'].shift(1)) <= tol) & \
-                           (df['close'].shift(1) < df['open'].shift(1)) & (df['close'] > df['open'])
+    df['Tweezer_Top'] = (
+        (abs(df['high'] - df['high'].shift(1)) <= tol) &
+        (df['close'].shift(1) > df['open'].shift(1)) & (df['close'] < df['open'])
+    )
+    df['Tweezer_Bottom'] = (
+        (abs(df['low'] - df['low'].shift(1)) <= tol) &
+        (df['close'].shift(1) < df['open'].shift(1)) & (df['close'] > df['open'])
+    )
     
     # 2. Railroad Tracks
     tol_rt = 0.05 * (df['high'] - df['low'])
-    df['Railroad_Tracks'] = (abs(df['open'] - df['open'].shift(1)) <= tol_rt) & \
-                            (abs(df['close'] - df['close'].shift(1)) <= tol_rt) & \
-                            (((df['close'].shift(1) > df['open'].shift(1)) & (df['close'] > df['open'])) | \
-                             ((df['close'].shift(1) < df['open'].shift(1)) & (df['close'] < df['open'])))
+    df['Railroad_Tracks'] = (
+        (abs(df['open'] - df['open'].shift(1)) <= tol_rt) &
+        (abs(df['close'] - df['close'].shift(1)) <= tol_rt) &
+        (
+            ((df['close'].shift(1) > df['open'].shift(1)) & (df['close'] > df['open'])) |
+            ((df['close'].shift(1) < df['open'].shift(1)) & (df['close'] < df['open']))
+        )
+    )
     
     # 3. Three Inside (Up & Down)
-    df['Three_Inside_Up'] = (df['close'].shift(2) < df['open'].shift(2)) & \
-                            (df['close'].shift(1) > df['open'].shift(1)) & \
-                            (df['high'].shift(1) < df['high'].shift(2)) & (df['low'].shift(1) > df['low'].shift(2)) & \
-                            (df['close'] > df['open']) & \
-                            (df['open'] < df['open'].shift(1)) & (df['close'] > df['close'].shift(1))
-    df['Three_Inside_Down'] = (df['close'].shift(2) > df['open'].shift(2)) & \
-                              (df['close'].shift(1) < df['open'].shift(1)) & \
-                              (df['high'].shift(1) < df['high'].shift(2)) & (df['low'].shift(1) > df['low'].shift(2)) & \
-                              (df['close'] < df['open']) & \
-                              (df['open'] > df['open'].shift(1)) & (df['close'] < df['close'].shift(1))
+    df['Three_Inside_Up'] = (
+        (df['close'].shift(2) < df['open'].shift(2)) &
+        (df['close'].shift(1) > df['open'].shift(1)) &
+        (df['high'].shift(1) < df['high'].shift(2)) & (df['low'].shift(1) > df['low'].shift(2)) &
+        (df['close'] > df['open']) &
+        (df['open'] < df['open'].shift(1)) & (df['close'] > df['close'].shift(1))
+    )
+    df['Three_Inside_Down'] = (
+        (df['close'].shift(2) > df['open'].shift(2)) &
+        (df['close'].shift(1) < df['open'].shift(1)) &
+        (df['high'].shift(1) < df['high'].shift(2)) & (df['low'].shift(1) > df['low'].shift(2)) &
+        (df['close'] < df['open']) &
+        (df['open'] > df['open'].shift(1)) & (df['close'] < df['close'].shift(1))
+    )
     df['Three_Inside'] = df['Three_Inside_Up'] | df['Three_Inside_Down']
     
-    # 4. Fakey Pattern (deteksi false breakout)
+    # 4. Fakey Pattern
     body_prev = abs(df['close'].shift(1) - df['open'].shift(1))
-    df['Fakey_Bullish'] = ((df['high'].shift(1) - np.maximum(df['open'].shift(1), df['close'].shift(1))) > 2 * body_prev) & \
-                          (df['close'] < df['low'].shift(1))
-    df['Fakey_Bearish'] = ((np.minimum(df['open'].shift(1), df['close'].shift(1)) - df['low'].shift(1)) > 2 * body_prev) & \
-                          (df['close'] > df['high'].shift(1))
+    df['Fakey_Bullish'] = (
+        ((df['high'].shift(1) - np.maximum(df['open'].shift(1), df['close'].shift(1))) > 2 * body_prev) &
+        (df['close'] < df['low'].shift(1))
+    )
+    df['Fakey_Bearish'] = (
+        ((np.minimum(df['open'].shift(1), df['close'].shift(1)) - df['low'].shift(1)) > 2 * body_prev) &
+        (df['close'] > df['high'].shift(1))
+    )
     df['Fakey_Pattern'] = df['Fakey_Bullish'] | df['Fakey_Bearish']
     
-    # 5. Rising & Falling Wedge (menggunakan window 5 candle)
+    # 5. Rising & Falling Wedge (5 candle)
     df['Rising_Wedge'] = False
     df['Falling_Wedge'] = False
     window = 5
@@ -250,20 +272,24 @@ def detect_candlestick_patterns(df):
         x = np.arange(window)
         slope_high = np.polyfit(x, highs, 1)[0]
         slope_low = np.polyfit(x, lows, 1)[0]
-        # Rising Wedge: kedua slope positif dan slope_low lebih besar (naik lebih cepat) daripada slope_high
+        # Rising Wedge
         if (slope_high > 0) and (slope_low > 0) and (slope_low > slope_high):
             df.at[df.index[i], 'Rising_Wedge'] = True
-        # Falling Wedge: kedua slope negatif dan slope_high lebih besar (naik kurang cepat) daripada slope_low
+        # Falling Wedge
         if (slope_high < 0) and (slope_low < 0) and (slope_high > slope_low):
             df.at[df.index[i], 'Falling_Wedge'] = True
     
     # 6. Dragonfly & Gravestone Doji
-    df['Dragonfly_Doji'] = df['Doji'] & \
-                           ((df['high'] - np.maximum(df['open'], df['close'])) <= 0.1 * (df['high'] - df['low'])) & \
-                           ((np.minimum(df['open'], df['close']) - df['low']) >= 0.6 * (df['high'] - df['low']))
-    df['Gravestone_Doji'] = df['Doji'] & \
-                            ((np.minimum(df['open'], df['close']) - df['low']) <= 0.1 * (df['high'] - df['low'])) & \
-                            ((df['high'] - np.maximum(df['open'], df['close'])) >= 0.6 * (df['high'] - df['low']))
+    df['Dragonfly_Doji'] = (
+        df['Doji'] &
+        ((df['high'] - np.maximum(df['open'], df['close'])) <= 0.1 * (df['high'] - df['low'])) &
+        ((np.minimum(df['open'], df['close']) - df['low']) >= 0.6 * (df['high'] - df['low']))
+    )
+    df['Gravestone_Doji'] = (
+        df['Doji'] &
+        ((np.minimum(df['open'], df['close']) - df['low']) <= 0.1 * (df['high'] - df['low'])) &
+        ((df['high'] - np.maximum(df['open'], df['close'])) >= 0.6 * (df['high'] - df['low']))
+    )
     
     return df
 
@@ -271,23 +297,27 @@ def detect_candlestick_patterns(df):
 def check_entry_signals(df):
     """
     Tentukan sinyal entry berdasarkan pola candlestick dan indikator teknikal.
+    df yang diterima sudah TIDAK berisi candle terakhir yang belum selesai,
+    sehingga df.iloc[-1] adalah candle final terakhir (lengkap).
     """
-    df = detect_candlestick_patterns(df)
+    # Asumsikan df sudah melewati detect_candlestick_patterns
     last_candle = df.iloc[-1]
     prev_candle = df.iloc[-2]
+    
     adx_threshold = 20
     atr_threshold = df['ATR'].mean() * 0.5
 
+    # Syarat bullish & bearish
     bullish_primary = (
-        last_candle['Bullish_Engulfing'] or 
-        last_candle['Hammer'] or 
-        last_candle['Three_White_Soldiers'] or 
+        last_candle['Bullish_Engulfing'] or
+        last_candle['Hammer'] or
+        last_candle['Three_White_Soldiers'] or
         (last_candle['EMA_3'] > last_candle['EMA_5'] and prev_candle['EMA_3'] < prev_candle['EMA_5'])
     )
     bearish_primary = (
-        last_candle['Bearish_Engulfing'] or 
-        last_candle['Shooting_Star'] or 
-        last_candle['Three_Black_Crows'] or 
+        last_candle['Bearish_Engulfing'] or
+        last_candle['Shooting_Star'] or
+        last_candle['Three_Black_Crows'] or
         (last_candle['EMA_3'] < last_candle['EMA_5'] and prev_candle['EMA_3'] > prev_candle['EMA_5'])
     )
     if last_candle['Morning_Star']:
@@ -295,142 +325,166 @@ def check_entry_signals(df):
     if last_candle['Evening_Star']:
         bearish_primary = True
     if last_candle['Marubozu']:
-        bullish_primary = last_candle['close'] > last_candle['open']
-
+        bullish_primary = (last_candle['close'] > last_candle['open'])
+    
+    # Konfirmasi
     confirmations_bull = sum([
         last_candle['RSI'] < 50,
         last_candle['StochRSI_K'] < 20,
-        last_candle['MACD'] > last_candle['MACD_signal'] and prev_candle['MACD'] < prev_candle['MACD_signal'],
-        last_candle['ATR'] > atr_threshold and last_candle['ADX'] > adx_threshold
+        (last_candle['MACD'] > last_candle['MACD_signal'] and prev_candle['MACD'] < prev_candle['MACD_signal']),
+        (last_candle['ATR'] > atr_threshold and last_candle['ADX'] > adx_threshold)
     ])
     confirmations_bear = sum([
         last_candle['RSI'] > 50,
         last_candle['StochRSI_K'] > 80,
-        last_candle['MACD'] < last_candle['MACD_signal'] and prev_candle['MACD'] > prev_candle['MACD_signal'],
-        last_candle['ATR'] > atr_threshold and last_candle['ADX'] > adx_threshold
+        (last_candle['MACD'] < last_candle['MACD_signal'] and prev_candle['MACD'] > prev_candle['MACD_signal']),
+        (last_candle['ATR'] > atr_threshold and last_candle['ADX'] > adx_threshold)
     ])
-
-    breakout_bull = last_candle['close'] < last_candle['BB_Lower']
-    breakout_bear = last_candle['close'] > last_candle['BB_Upper']
-
+    
+    breakout_bull = (last_candle['close'] < last_candle['BB_Lower'])
+    breakout_bear = (last_candle['close'] > last_candle['BB_Upper'])
+    
+    # Divergence
     divergence_warning = ""
-    if last_candle['close'] < prev_candle['close'] and last_candle['MACD'] > prev_candle['MACD']:
+    if (last_candle['close'] < prev_candle['close']) and (last_candle['MACD'] > prev_candle['MACD']):
         divergence_warning = "Terdeteksi bullish divergence, waspada pembalikan naik. "
-    if last_candle['close'] > prev_candle['close'] and last_candle['MACD'] < prev_candle['MACD']:
+    if (last_candle['close'] > prev_candle['close']) and (last_candle['MACD'] < prev_candle['MACD']):
         divergence_warning = "Terdeteksi bearish divergence, waspada pembalikan turun. "
-
-    reason = ""
+    
+    # Alasan
+    reason = []
     if last_candle['Bullish_Engulfing']:
-        reason += "Bullish Engulfing, "
+        reason.append("Bullish Engulfing")
     if last_candle['Hammer']:
-        reason += "Hammer, "
+        reason.append("Hammer")
     if last_candle['Three_White_Soldiers']:
-        reason += "Three White Soldiers, "
+        reason.append("Three White Soldiers")
     if (last_candle['EMA_3'] > last_candle['EMA_5'] and prev_candle['EMA_3'] < prev_candle['EMA_5']):
-        reason += "EMA3 cross EMA5 ke atas, "
+        reason.append("EMA3 cross EMA5 ke atas")
     if last_candle['Morning_Star']:
-        reason += "Morning Star, "
+        reason.append("Morning Star")
     if last_candle['Marubozu'] and last_candle['close'] > last_candle['open']:
-        reason += "Marubozu bullish, "
+        reason.append("Marubozu bullish")
     if last_candle['Bearish_Engulfing']:
-        reason += "Bearish Engulfing, "
+        reason.append("Bearish Engulfing")
     if last_candle['Shooting_Star']:
-        reason += "Shooting Star, "
+        reason.append("Shooting Star")
     if last_candle['Three_Black_Crows']:
-        reason += "Three Black Crows, "
+        reason.append("Three Black Crows")
     if (last_candle['EMA_3'] < last_candle['EMA_5'] and prev_candle['EMA_3'] > prev_candle['EMA_5']):
-        reason += "EMA3 cross EMA5 ke bawah, "
+        reason.append("EMA3 cross EMA5 ke bawah")
     if last_candle['Evening_Star']:
-        reason += "Evening Star, "
+        reason.append("Evening Star")
     if last_candle['Marubozu'] and last_candle['close'] < last_candle['open']:
-        reason += "Marubozu bearish, "
+        reason.append("Marubozu bearish")
     if last_candle['Doji']:
-        reason += "Doji terdeteksi, "
+        reason.append("Doji terdeteksi")
     if last_candle['Spinning_Top']:
-        reason += "Spinning Top terdeteksi, "
+        reason.append("Spinning Top terdeteksi")
     if breakout_bull:
-        reason += "Breakout bullish pada BB_Lower, "
+        reason.append("Breakout bullish pada BB_Lower")
     if breakout_bear:
-        reason += "Breakout bearish pada BB_Upper, "
+        reason.append("Breakout bearish pada BB_Upper")
     if divergence_warning:
-        reason += divergence_warning
-
-    # Tambahan pola candlestick
+        reason.append(divergence_warning.strip())  # tambahkan warning
+    
+    # Pola tambahan
     if last_candle['Tweezer_Top']:
-        reason += "Tweezer Top, "
+        reason.append("Tweezer Top")
     if last_candle['Tweezer_Bottom']:
-        reason += "Tweezer Bottom, "
+        reason.append("Tweezer Bottom")
     if last_candle['Railroad_Tracks']:
-        reason += "Railroad Tracks, "
+        reason.append("Railroad Tracks")
     if last_candle['Three_Inside']:
-        reason += "Three Inside, "
+        reason.append("Three Inside")
     if last_candle['Fakey_Pattern']:
-        reason += "Fakey Pattern, "
+        reason.append("Fakey Pattern")
     if last_candle['Rising_Wedge']:
-        reason += "Rising Wedge, "
+        reason.append("Rising Wedge")
     if last_candle['Falling_Wedge']:
-        reason += "Falling Wedge, "
+        reason.append("Falling Wedge")
     if last_candle['Dragonfly_Doji']:
-        reason += "Dragonfly Doji, "
+        reason.append("Dragonfly Doji")
     if last_candle['Gravestone_Doji']:
-        reason += "Gravestone Doji, "
+        reason.append("Gravestone Doji")
 
+    reason_str = ", ".join(reason) + ", " if reason else ""
+    
+    # Penentuan sinyal
     if bullish_primary:
         effective = confirmations_bull + (1 if breakout_bull else 0)
         max_possible = 5 if breakout_bull else 4
         strength_percent = (effective / max_possible) * 100
         signal = "BUY KUAT 📈" if (confirmations_bull >= 3 or breakout_bull) else "BUY LEMAH 📈"
-        return signal, "Konfirmasi bullish: " + reason, strength_percent
-
+        return signal, "Konfirmasi bullish: " + reason_str, strength_percent
+    
     if bearish_primary:
         effective = confirmations_bear + (1 if breakout_bear else 0)
         max_possible = 5 if breakout_bear else 4
         strength_percent = (effective / max_possible) * 100
         signal = "SELL KUAT 📉" if (confirmations_bear >= 3 or breakout_bear) else "SELL LEMAH 📉"
-        return signal, "Konfirmasi bearish: " + reason, strength_percent
-
-    return ("BUY 📈", "RSI di bawah 50, peluang kenaikan.", 50) if last_candle['RSI'] < 50 else ("SELL 📉", "RSI di atas 50, peluang penurunan.", 50)
-
+        return signal, "Konfirmasi bearish: " + reason_str, strength_percent
+    
+    # Default fallback
+    if last_candle['RSI'] < 50:
+        return ("BUY 📈", "RSI di bawah 50, peluang kenaikan.", 50)
+    else:
+        return ("SELL 📉", "RSI di atas 50, peluang penurunan.", 50)
+    
 def process_data():
     """
-    Ambil data harga, hitung indikator (dengan mengabaikan candle yang sedang berjalan, indeks 0),
-    kemudian evaluasi sinyal trading berdasarkan candle terakhir (indeks -1) dan candle sebelumnya (indeks -2).
+    Ambil data harga, lalu buang candle terakhir (yang dianggap masih berjalan).
+    Setelah itu, baru hitung indikator dan pola candlestick, lalu evaluasi sinyal.
     """
     candles = fetch_price_data()
-    if candles:
-        columns = ['time', 'open', 'close', 'high', 'low']
-        if 'volume' in candles[0]:
-            columns.append('volume')
-        df = pd.DataFrame(candles)
-        df['time'] = pd.to_datetime(df['created_at'])
-        df = df[columns]
-        for col in ['open', 'close', 'high', 'low']:
-            df[col] = df[col].astype(np.float64).round(8)
-        # Hitung indikator hanya pada candle lengkap (indeks >=1)
-        df = calculate_indicators(df)
-        
-        # Evaluasi sinyal berdasarkan candle terakhir dan sebelumnya
-        signal, reason, strength = check_entry_signals(df)
-        
-        trade_open = df.iloc[-1]['open']
-        trade_close = df.iloc[-2]['close']
-        if "BUY" in signal:
-            trade_success = trade_open > trade_close
-        elif "SELL" in signal:
-            trade_success = trade_open < trade_close
-        else:
-            trade_success = False
-        
-        st.session_state.last_trade_success = trade_success
-        log_message = (
-            f"\n{get_google_time().strftime('%H:%M:%S')} Sinyal Trading: {signal} | "
-            f"Kekuatan: {strength:.1f}% | Trade Success: {trade_success}\n"
-            f"Alasan: {reason} | Close Trade: {trade_close} | Open Trade: {trade_open}"
-        )
-        logging.info(log_message)
-        print(log_message)
-        return df, signal, reason, strength
-    return None, None, None, None
+    if not candles:
+        return None, None, None, None
+    
+    columns = ['time', 'open', 'close', 'high', 'low']
+    if 'volume' in candles[0]:
+        columns.append('volume')
+    
+    df = pd.DataFrame(candles)
+    df['time'] = pd.to_datetime(df['created_at'])
+    df = df[columns]
+    
+    # Pastikan data numerik
+    for col in ['open', 'close', 'high', 'low']:
+        df[col] = df[col].astype(np.float64).round(8)
+    
+    # Buang candle terakhir (yang sedang berjalan / incomplete)
+    # Sehingga df.iloc[-1] nanti adalah candle terakhir yang benar-benar sudah close.
+    df = df.iloc[:-1].reset_index(drop=True)
+    
+    # Hitung indikator
+    df = calculate_indicators(df)
+    
+    # Deteksi pola
+    df = detect_candlestick_patterns(df)
+    
+    # Evaluasi sinyal (candle terakhir => df.iloc[-1])
+    signal, reason, strength = check_entry_signals(df)
+    
+    # Simulasi outcome
+    trade_open = df.iloc[-1]['open']   # Candle terakhir
+    trade_close = df.iloc[-2]['close'] # Candle sebelumnya
+    if "BUY" in signal:
+        trade_success = (trade_open > trade_close)
+    elif "SELL" in signal:
+        trade_success = (trade_open < trade_close)
+    else:
+        trade_success = False
+    
+    st.session_state.last_trade_success = trade_success
+    log_message = (
+        f"\n{get_google_time().strftime('%H:%M:%S')} Sinyal Trading: {signal} | "
+        f"Kekuatan: {strength:.1f}% | Trade Success: {trade_success}\n"
+        f"Alasan: {reason} | Close Candle Sebelumnya: {trade_close} | Open Candle Terakhir: {trade_open}"
+    )
+    logging.info(log_message)
+    print(log_message)
+    
+    return df, signal, reason, strength
 
 # =============================================================================
 # FUNGSI UNTUK EKSEKUSI PERDAGANGAN (TRADING)
@@ -700,7 +754,7 @@ def display_dashboard(df, signal, reason, strength, trade_msg=""):
     with st.container():
         st.markdown(
             f"<div class='header-container'><span class='title'>Dashboard Analisis Trading</span> <br>"
-            f"<span class='subtitle'>Auto Trade : {'<b> Aktif </b>' if st.session_state.auto_trade else '<b>Nonaktif</b>'} <br> {current_time}</span></div>",
+            f"<span class='subtitle'>Auto Trade : {'<b>Aktif</b>' if st.session_state.auto_trade else '<b>Nonaktif</b>'} | Waktu: {current_time}</span></div>",
             unsafe_allow_html=True
         )
     
@@ -764,7 +818,7 @@ def main():
     Fungsi utama untuk menjalankan dashboard dan auto trade secara sistematis.
     Eksekusi trade hanya dilakukan jika waktu server (detik) berada di antara 0-20.
     Setelah login pertama kali, trade pertama hanya akan dieksekusi setelah pergantian menit.
-    Fitur kompensasi: jika trade menghasilkan loss atau break-even, bid berikutnya dikalikan dengan faktor 2.2,
+    Fitur kompensasi: jika trade menghasilkan loss atau break-even, bid berikutnya dikalikan dengan faktor kompensasi yang dapat diatur,
     dan jika profit, bid di-reset ke nilai awal.
     Trade baru akan dieksekusi setelah trade sebelumnya selesai, yang ditandai dengan pergantian menit.
     """
@@ -782,9 +836,7 @@ def main():
     # Variabel untuk menandai bahwa trade telah dieksekusi pada menit tertentu
     if "trade_executed_minute" not in st.session_state:
         st.session_state.trade_executed_minute = None
-
-    compensation_factor = 2.2
-
+    
     st.sidebar.title("Menu")
     _ = st.sidebar.button("Refresh Data")
     start_auto = st.sidebar.button("Start Auto Trade")
@@ -792,7 +844,9 @@ def main():
     auto_refresh = st.sidebar.checkbox("Auto Refresh (per menit)", value=True)
     
     account_type = st.sidebar.selectbox("Pilih Tipe Akun", ["Real", "Demo", "Tournament"], index=1)
-    initial_bid = st.sidebar.number_input("Bid Awal (Rp)", value=15000)
+    initial_bid = st.sidebar.number_input("Open Order Awal (Rp)", value=15000)
+    # Ambil faktor kompensasi dari input pengguna melalui sidebar
+    compensation_factor = st.sidebar.number_input("Faktor Kompensasi", value=2.2, min_value=1.0, step=0.1, format="%.1f")
     username_input = st.sidebar.text_input("Username", value="")
     password_input = st.sidebar.text_input("Password", value="", type="password")
     twofa_code = st.sidebar.text_input("Masukkan kode 2FA (jika diperlukan):", value="")
@@ -815,8 +869,6 @@ def main():
         if remaining_ms < 1000:
             remaining_ms = 100
         st_autorefresh(interval=remaining_ms, limit=1000, key="auto_refresh")
-
-    
     
     df, signal, reason, strength = process_data()
     if df is not None:
