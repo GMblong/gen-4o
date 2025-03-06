@@ -556,25 +556,27 @@ def set_bid(driver, bid_amount):
 def init_driver(twofa_code="", account_type="Demo", username_input="", password_input=""):
     """
     Inisialisasi driver Selenium dan lakukan login ke platform trading
-    dalam mode headless. Fungsi ini akan mendeteksi apakah dijalankan secara lokal
-    (misalnya Windows atau variabel lingkungan LOCAL_RUN diset ke "true") atau online
-    (misalnya Streamlit Cloud) dan menggunakan konfigurasi yang sesuai.
+    dalam mode headless. Fungsi ini mendeteksi apakah dijalankan secara lokal
+    (misalnya Windows atau variabel lingkungan LOCAL_RUN diset ke "true") atau online 
+    (misalnya Streamlit Cloud, di mana variabel STREAMLIT_CLOUD biasanya ada)
+    dan menggunakan konfigurasi yang sesuai.
     """
     options = webdriver.ChromeOptions()
     options.add_argument("--headless")  # Mode headless
-    # Jika Chrome versi baru mendukung, Anda dapat mencoba: options.add_argument("--headless=new")
+    # Jika menggunakan Chrome versi baru, Anda dapat mencoba: options.add_argument("--headless=new")
     options.add_argument("--no-sandbox")
     options.add_argument("--disable-dev-shm-usage")
     options.add_argument("--disable-gpu")
     options.add_argument("--remote-debugging-port=9222")
     options.add_argument("--disable-blink-features=AutomationControlled")
     
-    # Deteksi lingkungan: jika LOCAL_RUN="true" atau platform Windows, anggap sebagai lokal
-    local_run = os.environ.get("LOCAL_RUN", "false").lower() == "true" or sys.platform.startswith("win")
+    # Deteksi lingkungan: jika LOCAL_RUN="true" atau (platform Windows dan tidak di cloud) maka dianggap lokal.
+    online_env = os.environ.get("STREAMLIT_CLOUD", "false").lower() == "true"
+    local_run = (os.environ.get("LOCAL_RUN", "false").lower() == "true") or (sys.platform.startswith("win") and not online_env)
     
     if local_run:
         try:
-            # Gunakan chromedriver_autoinstaller terlebih dahulu
+            # Coba gunakan chromedriver_autoinstaller terlebih dahulu
             new_driver_path = chromedriver_autoinstaller.install(cwd='/tmp')
             service = Service(new_driver_path)
             driver = webdriver.Chrome(service=service, options=options)
@@ -588,7 +590,7 @@ def init_driver(twofa_code="", account_type="Demo", username_input="", password_
             service = Service(fallback_driver_path)
             driver = webdriver.Chrome(service=service, options=options)
     else:
-        # Asumsi online: gunakan driver otomatis tanpa fallback
+        # Online: gunakan driver otomatis tanpa fallback
         try:
             new_driver_path = chromedriver_autoinstaller.install(cwd='/tmp')
             service = Service(new_driver_path)
