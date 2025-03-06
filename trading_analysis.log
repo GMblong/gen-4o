@@ -6881,3 +6881,120 @@ Alasan: Konfirmasi bullish: Three White Soldiers,  | Close Trade: 641.86706785 |
 2025-03-06 14:02:27 - INFO - Balance ditemukan: 365456600
 2025-03-06 14:02:27 - INFO - Bid yang dimasukkan: Rp15000, seharusnya: Rp15000
 2025-03-06 14:02:28 - INFO - Trade BUY LEMAH \U0001f4c8 dengan bid Rp15000 dikirim.
+2025-03-06 14:03:28 - INFO - ATR: 6.329088884810878e-07, ADX: 42.599802561548024, EMA_3: 641.8670679169459, EMA_5: 641.8670677220725, RSI: 65.23110603195775, StochRSI_K: 65.24474455554437, MACD: 3.3371247809554916e-07, MACD_signal: 1.9237192741039723e-07, BB_Upper: 641.8670685511265, BB_Lower: 641.8670667528734
+2025-03-06 14:03:29 - INFO - 
+22:24:01 Sinyal Trading: BUY LEMAH \U0001f4c8 | Kekuatan: 25.0% | Trade Success: False
+Alasan: Konfirmasi bullish: Three White Soldiers,  | Close Trade: 641.86706836 | Open Trade: 641.8670683
+2025-03-06 14:03:29 - INFO - Balance ditemukan: 363956600
+2025-03-06 14:03:29 - INFO - Balance ditemukan: 363956600
+2025-03-06 14:03:29 - INFO - Bid yang dimasukkan: Rp330000, seharusnya: Rp33000
+2025-03-06 14:03:29 - WARNING - Bid numeric yang dimasukkan 330000 tidak sama dengan 33000.
+2025-03-06 14:03:29 - INFO - Mencoba ulang karena nilai bid tidak sesuai dan waktu server masih \u226420 detik.
+2025-03-06 14:03:29 - INFO - Trade BUY LEMAH \U0001f4c8 dengan bid Rp33000 dikirim.
+2025-03-06 14:04:28 - INFO - ATR: 6.543271145039323e-07, ADX: 36.36947062251808, EMA_3: 641.867067588473, EMA_5: 641.8670675680485, RSI: 45.951406760914416, StochRSI_K: 25.968086007415252, MACD: 2.323082526345388e-07, MACD_signal: 2.0035919245522556e-07, BB_Upper: 641.8670684408455, BB_Lower: 641.8670670351544
+2025-03-06 14:04:29 - INFO - 
+22:25:02 Sinyal Trading: BUY LEMAH \U0001f4c8 | Kekuatan: 25.0% | Trade Success: False
+Alasan: Konfirmasi bullish: Three White Soldiers, Bearish Engulfing, Terdeteksi bullish divergence, waspada pembalikan naik.  | Close Trade: 641.86706794 | Open Trade: 641.86706794
+2025-03-06 14:04:29 - INFO - Balance ditemukan: 360656600
+2025-03-06 14:04:29 - INFO - Balance ditemukan: 360656600
+2025-03-06 14:04:29 - INFO - Bid yang dimasukkan: Rp72600, seharusnya: Rp72600
+2025-03-06 14:04:29 - INFO - Trade BUY LEMAH \U0001f4c8 dengan bid Rp72600 dikirim.
+2025-03-06 14:05:28 - INFO - ATR: 7.63461700092151e-07, ADX: 34.13091463784292, EMA_3: 641.8670678592365, EMA_5: 641.8670677553657, RSI: 63.29912357244731, StochRSI_K: 61.30890435822681, MACD: 2.7553380732570076e-07, MACD_signal: 2.153941154293206e-07, BB_Upper: 641.8670685253785, BB_Lower: 641.8670672906214
+2025-03-06 14:05:29 - INFO - 
+22:26:02 Sinyal Trading: SELL LEMAH \U0001f4c9 | Kekuatan: 25.0% | Trade Success: True
+Alasan: Konfirmasi bearish: Three Black Crows,  | Close Trade: 641.86706726 | Open Trade: 641.86706722
+2025-03-06 14:05:29 - INFO - Balance ditemukan: 366827600
+2025-03-06 14:05:29 - INFO - Balance ditemukan: 366827600
+2025-03-06 14:05:29 - INFO - Bid yang dimasukkan: Rp15000, seharusnya: Rp15000
+2025-03-06 14:05:29 - INFO - Trade SELL LEMAH \U0001f4c9 dengan bid Rp15000 dikirim.
+2025-03-06 14:06:26 - INFO - ATR: 8.427693622164612e-07, ADX: 37.841677269873216, EMA_3: 641.8670684496183, EMA_5: 641.8670681835772, RSI: 74.14799088028394, StochRSI_K: 83.41024789545935, MACD: 4.0954785163194174e-07, MACD_signal: 2.5422486266984484e-07, BB_Upper: 641.8670691159259, BB_Lower: 641.8670671760742
+2025-03-06 14:06:27 - INFO - 
+22:27:00 Sinyal Trading: BUY LEMAH \U0001f4c8 | Kekuatan: 25.0% | Trade Success: False
+Alasan: Konfirmasi bullish: Bullish Engulfing, Three Black Crows,  | Close Trade: 641.86706813 | Open Trade: 641.8670681
+2025-03-06 14:06:27 - INFO - Balance ditemukan: 365327600
+2025-03-06 14:06:27 - INFO - Balance ditemukan: 365327600
+2025-03-06 14:06:27 - INFO - Bid yang dimasukkan: Rp33000, seharusnya: Rp33000
+2025-03-06 14:06:27 - INFO - Trade BUY LEMAH \U0001f4c8 dengan bid Rp33000 dikirim.
+2025-03-06 14:07:29 - INFO - ATR: 7.98215497190804e-07, ADX: 42.50394955070569, EMA_3: 641.8670686748092, EMA_5: 641.8670684223848, RSI: 70.1596523029125, StochRSI_K: 75.2851931279805, MACD: 4.5408171445160406e-07, MACD_signal: 2.941962330261967e-07, BB_Upper: 641.8670693503495, BB_Lower: 641.8670671576504
+2025-03-06 14:07:29 - INFO - 
+22:28:02 Sinyal Trading: BUY LEMAH \U0001f4c8 | Kekuatan: 25.0% | Trade Success: False
+Alasan: Konfirmasi bullish: Three White Soldiers,  | Close Trade: 641.86706904 | Open Trade: 641.86706902
+2025-03-06 14:07:29 - INFO - Balance ditemukan: 362027600
+2025-03-06 14:07:29 - INFO - Balance ditemukan: 362027600
+2025-03-06 14:07:30 - INFO - Bid yang dimasukkan: Rp726000, seharusnya: Rp72600
+2025-03-06 14:07:30 - WARNING - Bid numeric yang dimasukkan 726000 tidak sama dengan 72600.
+2025-03-06 14:07:30 - INFO - Mencoba ulang karena nilai bid tidak sesuai dan waktu server masih \u226420 detik.
+2025-03-06 14:07:30 - INFO - Trade BUY LEMAH \U0001f4c8 dengan bid Rp72600 dikirim.
+2025-03-06 14:07:54 - INFO - ATR: 7.98215497190804e-07, ADX: 42.50394955070569, EMA_3: 641.8670686748092, EMA_5: 641.8670684223848, RSI: 70.1596523029125, StochRSI_K: 75.2851931279805, MACD: 4.5408171445160406e-07, MACD_signal: 2.941962330261967e-07, BB_Upper: 641.8670693503495, BB_Lower: 641.8670671576504
+2025-03-06 14:07:54 - INFO - 
+22:28:27 Sinyal Trading: BUY LEMAH \U0001f4c8 | Kekuatan: 25.0% | Trade Success: False
+Alasan: Konfirmasi bullish: Three White Soldiers,  | Close Trade: 641.86706904 | Open Trade: 641.86706902
+2025-03-06 14:08:14 - INFO - ATR: 7.98215497190804e-07, ADX: 42.50394955070569, EMA_3: 641.8670686748092, EMA_5: 641.8670684223848, RSI: 70.1596523029125, StochRSI_K: 75.2851931279805, MACD: 4.5408171445160406e-07, MACD_signal: 2.941962330261967e-07, BB_Upper: 641.8670693503495, BB_Lower: 641.8670671576504
+2025-03-06 14:08:14 - INFO - 
+22:28:47 Sinyal Trading: BUY LEMAH \U0001f4c8 | Kekuatan: 25.0% | Trade Success: False
+Alasan: Konfirmasi bullish: Three White Soldiers,  | Close Trade: 641.86706904 | Open Trade: 641.86706902
+2025-03-06 14:08:28 - INFO - ATR: 7.405724104554175e-07, ADX: 46.23376737537167, EMA_3: 641.8670689024045, EMA_5: 641.8670686582566, RSI: 73.12792360713682, StochRSI_K: 81.33216392639582, MACD: 4.913677003060002e-07, MACD_signal: 3.336305264821574e-07, BB_Upper: 641.8670696831601, BB_Lower: 641.86706730084
+2025-03-06 14:08:28 - INFO - 
+22:29:01 Sinyal Trading: BUY LEMAH \U0001f4c8 | Kekuatan: 25.0% | Trade Success: False
+Alasan: Konfirmasi bullish: Three White Soldiers, Bearish Engulfing, Shooting Star, Spinning Top terdeteksi, Terdeteksi bullish divergence, waspada pembalikan naik.  | Close Trade: 641.8670689 | Open Trade: 641.8670689
+2025-03-06 14:08:28 - INFO - Downloading chromedriver (134.0.6998.35)...
+2025-03-06 14:08:52 - INFO - ATR: 7.405724104554175e-07, ADX: 46.23376737537167, EMA_3: 641.8670689024045, EMA_5: 641.8670686582566, RSI: 73.12792360713682, StochRSI_K: 81.33216392639582, MACD: 4.913677003060002e-07, MACD_signal: 3.336305264821574e-07, BB_Upper: 641.8670696831601, BB_Lower: 641.86706730084
+2025-03-06 14:08:52 - INFO - 
+22:29:25 Sinyal Trading: BUY LEMAH \U0001f4c8 | Kekuatan: 25.0% | Trade Success: False
+Alasan: Konfirmasi bullish: Three White Soldiers, Bearish Engulfing, Shooting Star, Spinning Top terdeteksi, Terdeteksi bullish divergence, waspada pembalikan naik.  | Close Trade: 641.8670689 | Open Trade: 641.8670689
+2025-03-06 14:08:54 - INFO - ATR: 7.405724104554175e-07, ADX: 46.23376737537167, EMA_3: 641.8670689024045, EMA_5: 641.8670686582566, RSI: 73.12792360713682, StochRSI_K: 81.33216392639582, MACD: 4.913677003060002e-07, MACD_signal: 3.336305264821574e-07, BB_Upper: 641.8670696831601, BB_Lower: 641.86706730084
+2025-03-06 14:08:54 - INFO - 
+22:29:25 Sinyal Trading: BUY LEMAH \U0001f4c8 | Kekuatan: 25.0% | Trade Success: False
+Alasan: Konfirmasi bullish: Three White Soldiers, Bearish Engulfing, Shooting Star, Spinning Top terdeteksi, Terdeteksi bullish divergence, waspada pembalikan naik.  | Close Trade: 641.8670689 | Open Trade: 641.8670689
+2025-03-06 14:08:55 - INFO - Chromedriver is already installed.
+2025-03-06 14:09:03 - INFO - ATR: 7.405724104554175e-07, ADX: 46.23376737537167, EMA_3: 641.8670689024045, EMA_5: 641.8670686582566, RSI: 73.12792360713682, StochRSI_K: 81.33216392639582, MACD: 4.913677003060002e-07, MACD_signal: 3.336305264821574e-07, BB_Upper: 641.8670696831601, BB_Lower: 641.86706730084
+2025-03-06 14:09:03 - INFO - 
+22:29:36 Sinyal Trading: BUY LEMAH \U0001f4c8 | Kekuatan: 25.0% | Trade Success: False
+Alasan: Konfirmasi bullish: Three White Soldiers, Bearish Engulfing, Shooting Star, Spinning Top terdeteksi, Terdeteksi bullish divergence, waspada pembalikan naik.  | Close Trade: 641.8670689 | Open Trade: 641.8670689
+2025-03-06 14:09:04 - INFO - Chromedriver is already installed.
+2025-03-06 14:10:11 - INFO - ATR: 7.124579326088366e-07, ADX: 50.102233708378115, EMA_3: 641.8670689112023, EMA_5: 641.8670687455044, RSI: 65.67230567192716, StochRSI_K: 66.14355772513892, MACD: 4.6461241254291963e-07, MACD_signal: 3.5982690369430984e-07, BB_Upper: 641.8670694224363, BB_Lower: 641.8670682255638
+2025-03-06 14:10:16 - INFO - ATR: 7.124579326088366e-07, ADX: 50.102233708378115, EMA_3: 641.8670689112023, EMA_5: 641.8670687455044, RSI: 65.67230567192716, StochRSI_K: 66.14355772513892, MACD: 4.6461241254291963e-07, MACD_signal: 3.5982690369430984e-07, BB_Upper: 641.8670694224363, BB_Lower: 641.8670682255638
+2025-03-06 14:10:17 - INFO - 
+22:30:43 Sinyal Trading: BUY LEMAH \U0001f4c8 | Kekuatan: 25.0% | Trade Success: True
+Alasan: Konfirmasi bullish: Bullish Engulfing, Hammer, Three White Soldiers, Tweezer Bottom, Rising Wedge,  | Close Trade: 641.86706913 | Open Trade: 641.86706918
+2025-03-06 14:10:18 - INFO - ATR: 7.124579326088366e-07, ADX: 50.102233708378115, EMA_3: 641.8670689112023, EMA_5: 641.8670687455044, RSI: 65.67230567192716, StochRSI_K: 66.14355772513892, MACD: 4.6461241254291963e-07, MACD_signal: 3.5982690369430984e-07, BB_Upper: 641.8670694224363, BB_Lower: 641.8670682255638
+2025-03-06 14:10:20 - INFO - 
+22:30:54 Sinyal Trading: BUY LEMAH \U0001f4c8 | Kekuatan: 25.0% | Trade Success: True
+Alasan: Konfirmasi bullish: Bullish Engulfing, Hammer, Three White Soldiers, Tweezer Bottom, Rising Wedge,  | Close Trade: 641.86706913 | Open Trade: 641.86706918
+2025-03-06 14:10:22 - INFO - ATR: 7.124579326088366e-07, ADX: 50.102233708378115, EMA_3: 641.8670689112023, EMA_5: 641.8670687455044, RSI: 65.67230567192716, StochRSI_K: 66.14355772513892, MACD: 4.6461241254291963e-07, MACD_signal: 3.5982690369430984e-07, BB_Upper: 641.8670694224363, BB_Lower: 641.8670682255638
+2025-03-06 14:10:22 - INFO - 
+22:30:54 Sinyal Trading: BUY LEMAH \U0001f4c8 | Kekuatan: 25.0% | Trade Success: True
+Alasan: Konfirmasi bullish: Bullish Engulfing, Hammer, Three White Soldiers, Tweezer Bottom, Rising Wedge,  | Close Trade: 641.86706913 | Open Trade: 641.86706918
+2025-03-06 14:10:23 - INFO - Chromedriver is already installed.
+2025-03-06 14:10:28 - INFO - ATR: 6.699663572032773e-07, ADX: 48.24551175117227, EMA_3: 641.8670689256012, EMA_5: 641.8670688103364, RSI: 66.0839541975771, StochRSI_K: 66.98216928004406, MACD: 4.3065642785222735e-07, MACD_signal: 3.739928085258933e-07, BB_Upper: 641.8670691307935, BB_Lower: 641.8670688412066
+2025-03-06 14:10:29 - INFO - 
+22:30:54 Sinyal Trading: SELL LEMAH \U0001f4c9 | Kekuatan: 50.0% | Trade Success: False
+Alasan: Konfirmasi bearish: Bearish Engulfing, Shooting Star, Three Black Crows, Rising Wedge,  | Close Trade: 641.86706892 | Open Trade: 641.86706896
+2025-03-06 14:10:29 - INFO - Chromedriver is already installed.
+2025-03-06 14:10:34 - INFO - ATR: 6.699663572032773e-07, ADX: 48.24551175117227, EMA_3: 641.8670689256012, EMA_5: 641.8670688103364, RSI: 66.0839541975771, StochRSI_K: 66.98216928004406, MACD: 4.3065642785222735e-07, MACD_signal: 3.739928085258933e-07, BB_Upper: 641.8670691307935, BB_Lower: 641.8670688412066
+2025-03-06 14:10:35 - INFO - 
+22:31:08 Sinyal Trading: SELL LEMAH \U0001f4c9 | Kekuatan: 50.0% | Trade Success: False
+Alasan: Konfirmasi bearish: Bearish Engulfing, Shooting Star, Three Black Crows, Rising Wedge,  | Close Trade: 641.86706892 | Open Trade: 641.86706896
+2025-03-06 14:10:36 - INFO - Chromedriver is already installed.
+2025-03-06 14:10:36 - INFO - ATR: 6.699663572032773e-07, ADX: 48.24551175117227, EMA_3: 641.8670689256012, EMA_5: 641.8670688103364, RSI: 66.0839541975771, StochRSI_K: 66.98216928004406, MACD: 4.3065642785222735e-07, MACD_signal: 3.739928085258933e-07, BB_Upper: 641.8670691307935, BB_Lower: 641.8670688412066
+2025-03-06 14:10:36 - INFO - 
+22:31:08 Sinyal Trading: SELL LEMAH \U0001f4c9 | Kekuatan: 50.0% | Trade Success: False
+Alasan: Konfirmasi bearish: Bearish Engulfing, Shooting Star, Three Black Crows, Rising Wedge,  | Close Trade: 641.86706892 | Open Trade: 641.86706896
+2025-03-06 14:10:42 - INFO - ATR: 6.699663572032773e-07, ADX: 48.24551175117227, EMA_3: 641.8670689256012, EMA_5: 641.8670688103364, RSI: 66.0839541975771, StochRSI_K: 66.98216928004406, MACD: 4.3065642785222735e-07, MACD_signal: 3.739928085258933e-07, BB_Upper: 641.8670691307935, BB_Lower: 641.8670688412066
+2025-03-06 14:10:43 - INFO - 
+22:31:08 Sinyal Trading: SELL LEMAH \U0001f4c9 | Kekuatan: 50.0% | Trade Success: False
+Alasan: Konfirmasi bearish: Bearish Engulfing, Shooting Star, Three Black Crows, Rising Wedge,  | Close Trade: 641.86706892 | Open Trade: 641.86706896
+2025-03-06 14:11:10 - INFO - ATR: 6.699663572032773e-07, ADX: 48.24551175117227, EMA_3: 641.8670689256012, EMA_5: 641.8670688103364, RSI: 66.0839541975771, StochRSI_K: 66.98216928004406, MACD: 4.3065642785222735e-07, MACD_signal: 3.739928085258933e-07, BB_Upper: 641.8670691307935, BB_Lower: 641.8670688412066
+2025-03-06 14:11:10 - INFO - 
+22:31:43 Sinyal Trading: SELL LEMAH \U0001f4c9 | Kekuatan: 50.0% | Trade Success: False
+Alasan: Konfirmasi bearish: Bearish Engulfing, Shooting Star, Three Black Crows, Rising Wedge,  | Close Trade: 641.86706892 | Open Trade: 641.86706896
+2025-03-06 14:11:11 - INFO - Downloading chromedriver (134.0.6998.35)...
+2025-03-06 14:11:27 - INFO - ATR: 6.079730746669029e-07, ADX: 47.36016199459027, EMA_3: 641.8670689328005, EMA_5: 641.8670688535576, RSI: 66.0839541975771, StochRSI_K: 60.0460472611694, MACD: 3.9120368455769494e-07, MACD_signal: 3.7743498373225367e-07, BB_Upper: 641.8670691052477, BB_Lower: 641.8670688267522
+2025-03-06 14:11:28 - INFO - 
+22:32:01 Sinyal Trading: BUY LEMAH \U0001f4c8 | Kekuatan: 25.0% | Trade Success: True
+Alasan: Konfirmasi bullish: Three White Soldiers, Shooting Star, Doji terdeteksi, Terdeteksi bearish divergence, waspada pembalikan turun. Rising Wedge,  | Close Trade: 641.86706894 | Open Trade: 641.86706898
+2025-03-06 14:11:28 - INFO - Chromedriver is already installed.
+2025-03-06 14:11:28 - INFO - ATR: 6.079730746669029e-07, ADX: 47.36016199459027, EMA_3: 641.8670689328005, EMA_5: 641.8670688535576, RSI: 66.0839541975771, StochRSI_K: 60.0460472611694, MACD: 3.9120368455769494e-07, MACD_signal: 3.7743498373225367e-07, BB_Upper: 641.8670691052477, BB_Lower: 641.8670688267522
+2025-03-06 14:11:29 - INFO - 
+22:32:01 Sinyal Trading: BUY LEMAH \U0001f4c8 | Kekuatan: 25.0% | Trade Success: True
+Alasan: Konfirmasi bullish: Three White Soldiers, Shooting Star, Doji terdeteksi, Terdeteksi bearish divergence, waspada pembalikan turun. Rising Wedge,  | Close Trade: 641.86706894 | Open Trade: 641.86706898

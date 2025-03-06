@@ -502,8 +502,9 @@ def set_bid(driver, bid_amount):
 def init_driver(twofa_code="", account_type="Demo", username_input="", password_input=""):
     """
     Inisialisasi driver Selenium dan lakukan login ke platform trading.
+    Jika chromedriver terbaru gagal digunakan, maka akan menggunakan driver dari path fallback.
     """
-    driver_path = chromedriver_autoinstaller.install(cwd='/tmp')
+    # Konfigurasi opsi untuk Chrome
     options = webdriver.ChromeOptions()
     # options.add_argument("--headless")  # Nonaktifkan headless jika perlu debugging
     options.add_argument("--no-sandbox")
@@ -512,13 +513,23 @@ def init_driver(twofa_code="", account_type="Demo", username_input="", password_
                          "AppleWebKit/537.36 Chrome/114.0.5735.90 Safari/537.36")
     options.add_argument("--disable-blink-features=AutomationControlled")
     
+    # Jika ada Chromium atau Google Chrome di lokasi default Linux
     if os.path.exists('/usr/bin/chromium-browser'):
         options.binary_location = '/usr/bin/chromium-browser'
     elif os.path.exists('/usr/bin/google-chrome'):
         options.binary_location = '/usr/bin/google-chrome'
     
-    service = Service(driver_path)
-    driver = webdriver.Chrome(service=service, options=options)
+    # Coba gunakan chromedriver terbaru dari instalasi otomatis
+    try:
+        new_driver_path = chromedriver_autoinstaller.install(cwd='/tmp', version="133.0.0.0")
+        service = Service(new_driver_path)
+        driver = webdriver.Chrome(service=service, options=options)
+        logging.info("Menggunakan chromedriver terbaru dari instalasi otomatis.")
+    except Exception as e:
+        logging.error(f"Driver terbaru tidak bisa digunakan: {e}. Menggunakan driver dari path fallback.")
+        fallback_driver_path = r'D:\aplikasi\gen-4o\133\chromedriver.exe'
+        service = Service(fallback_driver_path)
+        driver = webdriver.Chrome(service=service, options=options)
     
     wait = WebDriverWait(driver, 10)
     driver.get("https://binomo2.com/trading")
@@ -611,6 +622,7 @@ def init_driver(twofa_code="", account_type="Demo", username_input="", password_
         logging.info("2FA tidak diperlukan atau sudah ditangani.")
     
     return driver
+
 
 def check_balance(driver):
     """
