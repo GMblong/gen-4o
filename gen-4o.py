@@ -551,27 +551,26 @@ def set_bid(driver, bid_amount):
             return False
     return True
 
-
-
 def init_driver(twofa_code="", account_type="Demo", username_input="", password_input=""):
     """
-    Inisialisasi driver Selenium dan lakukan login ke platform trading.
-    Jika chromedriver terbaru gagal digunakan, maka akan menggunakan driver dari path fallback.
+    Inisialisasi driver Selenium dan lakukan login ke platform trading
+    dalam mode headless agar berjalan di lingkungan Streamlit Cloud.
     """
     # Konfigurasi opsi untuk Chrome
     options = webdriver.ChromeOptions()
-    options.add_argument("--headless")
+    options.add_argument("--headless")  # Mode headless
+    # Jika menggunakan Chrome versi baru, Anda bisa coba: options.add_argument("--headless=new")
     options.add_argument("--no-sandbox")
     options.add_argument("--disable-dev-shm-usage")
-    options.add_argument("user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
-                         "AppleWebKit/537.36 Chrome/114.0.5735.90 Safari/537.36")
+    options.add_argument("--disable-gpu")
+    options.add_argument("--remote-debugging-port=9222")
     options.add_argument("--disable-blink-features=AutomationControlled")
     
-    # Jika ada Chromium atau Google Chrome di lokasi default Linux
-    if os.path.exists('/usr/bin/chromium-browser'):
-        options.binary_location = '/usr/bin/chromium-browser'
-    elif os.path.exists('/usr/bin/google-chrome'):
-        options.binary_location = '/usr/bin/google-chrome'
+    # Hapus atau komentar pengaturan binary_location agar menggunakan default path
+    # if os.path.exists('/usr/bin/chromium-browser'):
+    #     options.binary_location = '/usr/bin/chromium-browser'
+    # elif os.path.exists('/usr/bin/google-chrome'):
+    #     options.binary_location = '/usr/bin/google-chrome'
     
     # Coba gunakan chromedriver terbaru dari instalasi otomatis
     try:
