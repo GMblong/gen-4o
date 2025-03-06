@@ -551,28 +551,23 @@ def set_bid(driver, bid_amount):
             return False
     return True
 
+# Fungsi init_driver: Jalankan Chrome dalam mode headless untuk Streamlit Cloud
 def init_driver(twofa_code="", account_type="Demo", username_input="", password_input=""):
-    """
-    Inisialisasi driver Selenium dan lakukan login ke platform trading
-    dalam mode headless agar berjalan di lingkungan Streamlit Cloud.
-    """
-    # Konfigurasi opsi untuk Chrome
     options = webdriver.ChromeOptions()
-    options.add_argument("--headless")  # Mode headless
-    # Jika menggunakan Chrome versi baru, Anda bisa coba: options.add_argument("--headless=new")
+    options.add_argument("--headless")  # Pastikan headless mode aktif
     options.add_argument("--no-sandbox")
     options.add_argument("--disable-dev-shm-usage")
     options.add_argument("--disable-gpu")
     options.add_argument("--remote-debugging-port=9222")
     options.add_argument("--disable-blink-features=AutomationControlled")
     
-    # Hapus atau komentar pengaturan binary_location agar menggunakan default path
+    # Jika di lingkungan Streamlit Cloud, sebaiknya jangan mengatur binary_location
+    # Jika diperlukan, Anda bisa mengomentari bagian berikut:
     # if os.path.exists('/usr/bin/chromium-browser'):
     #     options.binary_location = '/usr/bin/chromium-browser'
     # elif os.path.exists('/usr/bin/google-chrome'):
     #     options.binary_location = '/usr/bin/google-chrome'
     
-    # Coba gunakan chromedriver terbaru dari instalasi otomatis
     try:
         new_driver_path = chromedriver_autoinstaller.install(cwd='/tmp', version="133.0.0.0")
         service = Service(new_driver_path)
@@ -593,7 +588,6 @@ def init_driver(twofa_code="", account_type="Demo", username_input="", password_
         logging.error(f"Error menunggu body muncul: {e}")
         driver.quit()
         return None
-    
     time.sleep(10)
     
     username_xpath = '/html/body/binomo-root/platform-ui-scroll/div/div/ng-component/ng-component/div/div/auth-form/sa-auth-form/div[2]/div/app-sign-in/div/form/div[1]/platform-forms-input/way-input/div/div[1]/way-input-text/input'
@@ -609,23 +603,19 @@ def init_driver(twofa_code="", account_type="Demo", username_input="", password_
         logging.error(f"Error menemukan field username: {e}")
         driver.quit()
         return None
-    
     try:
         driver.find_element(By.XPATH, password_xpath).send_keys(password)
     except Exception as e:
         logging.error(f"Error menemukan field password: {e}")
         driver.quit()
         return None
-    
     try:
         wait.until(EC.element_to_be_clickable((By.XPATH, login_button_xpath))).click()
     except Exception as e:
         logging.error(f"Error pada tombol login: {e}")
         driver.quit()
         return None
-    
     time.sleep(2)
-    
     try:
         account_switcher = WebDriverWait(driver, 10).until(
             EC.presence_of_element_located((By.XPATH, '//*[@id="account"]'))
@@ -675,7 +665,6 @@ def init_driver(twofa_code="", account_type="Demo", username_input="", password_
         logging.info("2FA tidak diperlukan atau sudah ditangani.")
     
     return driver
-
 
 def check_balance(driver):
     """
@@ -734,14 +723,22 @@ def execute_trade_action(driver, signal, bid_amount):
 # =============================================================================
 # FUNGSI UNTUK MENAMPILKAN DASHBOARD
 # =============================================================================
+# Fungsi check_balance
+def check_balance(driver):
+    try:
+        balance_element = WebDriverWait(driver, 10).until(
+            EC.presence_of_element_located((By.XPATH, "//*[@id='qa_trading_balance']"))
+        )
+        balance_text = balance_element.text
+        balance_numeric = int(re.sub(r"[^\d]", "", balance_text))
+        logging.info(f"Balance ditemukan: {balance_numeric}")
+        return balance_numeric
+    except Exception as e:
+        logging.error(f"Gagal memeriksa balance: {e}")
+        return None
+
+# Fungsi display_dashboard dengan penambahan new balance
 def display_dashboard(df, signal, reason, strength, trade_msg=""):
-    """
-    Tampilkan dashboard analisa dan grafik dengan tampilan yang lebih rapi.
-    Warna box sinyal akan disesuaikan:
-      - BUY: Hijau
-      - SELL: Merah
-    Juga menampilkan saldo terbaru (new balance) jika tersedia.
-    """
     current_time = get_google_time().strftime('%H:%M:%S')
     
     if "BUY" in signal.upper():
@@ -757,7 +754,6 @@ def display_dashboard(df, signal, reason, strength, trade_msg=""):
             f"<span class='subtitle'>Auto Trade : {'<b>Aktif</b>' if st.session_state.auto_trade else '<b>Nonaktif</b>'} | Waktu: {current_time}</span></div>",
             unsafe_allow_html=True
         )
-
     
     with st.container():
         st.markdown("### Sinyal Trading")
@@ -780,18 +776,15 @@ def display_dashboard(df, signal, reason, strength, trade_msg=""):
             f"<div class='reason-box mt-5'><span class='subheader'>Alasan:</span><br> {reason}</div>",
             unsafe_allow_html=True
         )
-
-        # Tampilkan balance (saldo) terbaru jika tersedia
-    if "prev_balance" in st.session_state and st.session_state.prev_balance is not None:
-        # Konversi nilai balance dari integer ke float dengan dua desimal (dengan asumsi nilai awal dalam satuan rupiah * 100)
-        balance_value = st.session_state.prev_balance / 100.0
-        # Format dengan pemisah ribuan koma dan titik desimal (misal "3,896,072.60")
+    
+    # Tampilkan new balance (saldo terbaru) jika tersedia
+    if "new_balance" in st.session_state and st.session_state.new_balance is not None:
+        balance_value = st.session_state.new_balance / 100.0
         balance_str = f"{balance_value:,.2f}"
-        # Tukar tanda koma dan titik untuk format Indonesia: "3.896.072,60"
         balance_str = balance_str.replace(",", "X").replace(".", ",").replace("X", ".")
         st.markdown(
             f"<div class='info-box' style='background-color: #FFAA0000; color: #FFFFFFFF; border-radius: 8px; border: 1px solid #FFFFFF4F; text-align: left; margin-bottom: 20px;'>"
-            f"<span class='header'>Balance:</span><br> <span class='title'>Rp{balance_str}</span></div>",
+            f"<span class='header'>New Balance:</span><br> <span class='title'>Rp{balance_str}</span></div>",
             unsafe_allow_html=True
         )
     
@@ -825,10 +818,7 @@ def display_dashboard(df, signal, reason, strength, trade_msg=""):
         )
         st.plotly_chart(fig, use_container_width=True)
 
-
-# =============================================================================
-# FUNGSI UTAMA
-# =============================================================================
+# Fungsi utama
 def main():
     """
     Fungsi utama untuk menjalankan dashboard dan auto trade secara sistematis.
@@ -849,7 +839,8 @@ def main():
         st.session_state.prev_balance = None
     if "current_bid" not in st.session_state:
         st.session_state.current_bid = None
-    # Variabel untuk menandai bahwa trade telah dieksekusi pada menit tertentu
+    if "new_balance" not in st.session_state:
+        st.session_state.new_balance = None
     if "trade_executed_minute" not in st.session_state:
         st.session_state.trade_executed_minute = None
     
@@ -861,7 +852,6 @@ def main():
     
     account_type = st.sidebar.selectbox("Pilih Tipe Akun", ["Real", "Demo", "Tournament"], index=1)
     initial_bid = st.sidebar.number_input("Open Order Awal (Rp)", value=15000)
-    # Ambil faktor kompensasi dari input pengguna melalui sidebar
     compensation_factor = st.sidebar.number_input("Faktor Kompensasi", value=2.2, min_value=1.0, step=0.1, format="%.1f")
     username_input = st.sidebar.text_input("Username", value="")
     password_input = st.sidebar.text_input("Password", value="", type="password")
@@ -881,7 +871,6 @@ def main():
     if auto_refresh:
         current_google_time = get_google_time()
         remaining_ms = int((60 - current_google_time.second) * 1000 - current_google_time.microsecond / 1000)
-        # Jika sisa waktu kurang dari 1 detik, gunakan delay minimal (misalnya 100 ms)
         if remaining_ms < 1000:
             remaining_ms = 100
         st_autorefresh(interval=remaining_ms, limit=1000, key="auto_refresh")
@@ -892,7 +881,6 @@ def main():
         
         if st.session_state.auto_trade:
             current_time = get_google_time()
-            
             # Jika driver belum ada, lakukan login dan inisialisasi
             if st.session_state.driver is None:
                 driver = init_driver(twofa_code, account_type=account_type, username_input=username_input, password_input=password_input)
@@ -901,13 +889,19 @@ def main():
                     return
                 st.session_state.driver = driver
                 st.session_state.login_time = get_google_time()
-                st.session_state.prev_balance = check_balance(driver)
+                balance = check_balance(driver)
+                if balance is not None:
+                    st.session_state.prev_balance = balance
+                    st.session_state.new_balance = balance
                 st.session_state.current_bid = initial_bid
                 st.info("Login berhasil. Menunggu pergantian menit untuk trade pertama.")
             else:
-                # Jika trade sudah dieksekusi sebelumnya dan menit telah berganti, cek hasil trade dan langsung eksekusi trade baru
+                # Update new balance setiap auto refresh jika driver sudah ada
+                new_balance = check_balance(st.session_state.driver)
+                if new_balance is not None:
+                    st.session_state.new_balance = new_balance
+                # Jika trade sudah dieksekusi sebelumnya dan menit telah berganti, cek hasil trade dan eksekusi trade baru
                 if st.session_state.trade_executed_minute is not None and current_time.minute != st.session_state.trade_executed_minute:
-                    new_balance = check_balance(st.session_state.driver)
                     if new_balance is not None:
                         if new_balance > st.session_state.prev_balance:
                             st.session_state.current_bid = initial_bid
@@ -917,10 +911,8 @@ def main():
                             st.info(f"Loss atau break-even. Bid selanjutnya: Rp{st.session_state.current_bid}")
                         else:
                             st.info(f"Tidak ada perubahan pada saldo. Bid tetap: Rp{st.session_state.current_bid}")
-
                         st.session_state.prev_balance = new_balance
                         st.session_state.trade_executed_minute = None
-                        # Setelah update bid, jika kondisi waktu terpenuhi, langsung eksekusi trade baru
                         if current_time.second <= 20:
                             st.write("Eksekusi trade baru: Waktu server berada di antara 0-20 detik.")
                             trade_msg = execute_trade_action(st.session_state.driver, signal, st.session_state.current_bid)
@@ -930,7 +922,6 @@ def main():
                                 st.success(f"Eksekusi perdagangan otomatis berhasil: {trade_msg}")
                                 st.session_state.trade_executed_minute = get_google_time().minute
                 else:
-                    # Jika belum ada trade yang dieksekusi pada menit ini, periksa waktu dan eksekusi trade jika syarat terpenuhi
                     if st.session_state.login_time and current_time.minute == st.session_state.login_time.minute:
                         st.info("Menunggu pergantian menit untuk eksekusi trade pertama.")
                     else:
