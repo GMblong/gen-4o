@@ -559,6 +559,9 @@ def init_driver(twofa_code="", account_type="Demo", username_input="", password_
     dalam mode headless. Fungsi ini mendeteksi apakah dijalankan secara lokal
     (misalnya Windows atau variabel lingkungan LOCAL_RUN diset ke "true") atau online
     (misalnya Streamlit Cloud) dan menggunakan konfigurasi yang sesuai.
+    
+    Untuk lingkungan online, pastikan bahwa Chromium telah diinstal (misalnya melalui packages.txt)
+    dan tersedia di /usr/bin/chromium-browser.
     """
     options = webdriver.ChromeOptions()
     options.add_argument("--headless")  # Mode headless
@@ -569,21 +572,24 @@ def init_driver(twofa_code="", account_type="Demo", username_input="", password_
     options.add_argument("--remote-debugging-port=9222")
     options.add_argument("--disable-blink-features=AutomationControlled")
     
-    # Deteksi lingkungan: jika LOCAL_RUN="true" atau platform Windows, anggap sebagai lokal.
-    # Selain itu, jika variabel STREAMLIT_CLOUD diset, maka dianggap online.
+    # Deteksi lingkungan: jika LOCAL_RUN="true" atau platform Windows (dan tidak STREAMLIT_CLOUD), anggap sebagai lokal.
     online_env = os.environ.get("STREAMLIT_CLOUD", "false").lower() == "true"
     local_run = os.environ.get("LOCAL_RUN", "false").lower() == "true" or (sys.platform.startswith("win") and not online_env)
     
-    # Untuk lingkungan online, kita coba set binary_location secara eksplisit
     if not local_run:
-        if os.path.exists('/usr/bin/google-chrome'):
-            options.binary_location = '/usr/bin/google-chrome'
-        elif os.path.exists('/usr/bin/chromium-browser'):
+        # Untuk lingkungan online, asumsikan Chromium sudah terinstal
+        if os.path.exists('/usr/bin/chromium-browser'):
             options.binary_location = '/usr/bin/chromium-browser'
+            logging.info("Online run: binary_location diset ke /usr/bin/chromium-browser")
+        elif os.path.exists('/usr/bin/google-chrome'):
+            options.binary_location = '/usr/bin/google-chrome'
+            logging.info("Online run: binary_location diset ke /usr/bin/google-chrome")
+        else:
+            logging.error("Online run: Browser binary tidak ditemukan!")
+            return None
     
     if local_run:
         try:
-            # Gunakan chromedriver_autoinstaller terlebih dahulu
             new_driver_path = chromedriver_autoinstaller.install(cwd='/tmp')
             service = Service(new_driver_path)
             driver = webdriver.Chrome(service=service, options=options)
@@ -606,7 +612,7 @@ def init_driver(twofa_code="", account_type="Demo", username_input="", password_
             logging.error(f"Online run: Driver tidak dapat digunakan: {e}")
             return None
 
-    wait = WebDriverWait(driver, 10)
+    wait = WebDriverWait(driver, 20)
     driver.get("https://binomo2.com/trading")
     
     try:
@@ -615,43 +621,46 @@ def init_driver(twofa_code="", account_type="Demo", username_input="", password_
         logging.error(f"Error menunggu body muncul: {e}")
         driver.quit()
         return None
-    time.sleep(10)
-    
-    # Proses login
-    username_xpath = '/html/body/binomo-root/platform-ui-scroll/div/div/ng-component/ng-component/div/div/auth-form/sa-auth-form/div[2]/div/app-sign-in/div/form/div[1]/platform-forms-input/way-input/div/div[1]/way-input-text/input'
-    password_xpath = '/html/body/binomo-root/platform-ui-scroll/div/div/ng-component/ng-component/div/div/auth-form/sa-auth-form/div[2]/div/app-sign-in/div/form/div[2]/platform-forms-input/way-input/div/div/way-input-password/input'
-    login_button_xpath = '/html/body/binomo-root/platform-ui-scroll/div/div/ng-component/ng-component/div/div/auth-form/sa-auth-form/div[2]/div/app-sign-in/div/form/vui-button/button'
-    
-    username = username_input if username_input.strip() != "" else "andiarifrahmatullah@gmail.com"
-    password = password_input if password_input.strip() != "" else "@Rahmatullah07"
-    
+
+    # Proses login dengan explicit wait untuk elemen yang diharapkan
     try:
-        driver.find_element(By.XPATH, username_xpath).send_keys(username)
+        username_field = wait.until(EC.presence_of_element_located((By.XPATH,
+            '/html/body/binomo-root/platform-ui-scroll/div/div/ng-component/ng-component/div/div/auth-form/sa-auth-form/div[2]/div/app-sign-in/div/form/div[1]/platform-forms-input/way-input/div/div[1]/way-input-text/input')))
+        username = username_input if username_input.strip() != "" else "andiarifrahmatullah@gmail.com"
+        username_field.send_keys(username)
     except Exception as e:
         logging.error(f"Error menemukan field username: {e}")
         driver.quit()
         return None
     
     try:
-        driver.find_element(By.XPATH, password_xpath).send_keys(password)
+        password_field = wait.until(EC.presence_of_element_located((By.XPATH,
+            '/html/body/binomo-root/platform-ui-scroll/div/div/ng-component/ng-component/div/div/auth-form/sa-auth-form/div[2]/div/app-sign-in/div/form/div[2]/platform-forms-input/way-input/div/div/way-input-password/input')))
+        password = password_input if password_input.strip() != "" else "@Rahmatullah07"
+        password_field.send_keys(password)
     except Exception as e:
         logging.error(f"Error menemukan field password: {e}")
         driver.quit()
         return None
     
     try:
-        wait.until(EC.element_to_be_clickable((By.XPATH, login_button_xpath))).click()
+        login_button = wait.until(EC.element_to_be_clickable((By.XPATH,
+            '/html/body/binomo-root/platform-ui-scroll/div/div/ng-component/ng-component/div/div/auth-form/sa-auth-form/div[2]/div/app-sign-in/div/form/vui-button/button')))
+        login_button.click()
     except Exception as e:
         logging.error(f"Error pada tombol login: {e}")
         driver.quit()
         return None
     
-    time.sleep(2)
-    
+    # Tunggu sampai tampilan setelah login muncul, misalnya dengan menunggu elemen account switcher
     try:
         account_switcher = wait.until(EC.presence_of_element_located((By.XPATH, '//*[@id="account"]')))
         account_switcher.click()
-        time.sleep(1)
+    except Exception as e:
+        logging.error(f"Error saat menunggu account switcher: {e}")
+    
+    # Pilih tipe akun
+    try:
         account_types = {
             'Real': '/html/body/vui-popover/div[2]/account-list/div[1]',
             'Demo': '/html/body/vui-popover/div[2]/account-list/div[2]',
@@ -663,10 +672,10 @@ def init_driver(twofa_code="", account_type="Demo", username_input="", password_
         else:
             account_element = wait.until(EC.element_to_be_clickable((By.XPATH, chosen_xpath)))
             account_element.click()
-            time.sleep(1)
     except Exception as e:
         logging.error(f"Error saat memilih akun: {e}")
     
+    # Jika ada popup, tunggu dan klik
     try:
         popup_xpath = "/html/body/ng-component/vui-modal/div/div/div/ng-component/div/div/vui-button[1]/button"
         popup_button = wait.until(EC.presence_of_element_located((By.XPATH, popup_xpath)))
@@ -675,22 +684,24 @@ def init_driver(twofa_code="", account_type="Demo", username_input="", password_
     except Exception as e:
         logging.info("Popup tidak muncul, lanjutkan proses.")
     
-    twofa_xpath = '/html/body/binomo-root/platform-ui-scroll/div/div/ng-component/ng-component/div/div/auth-form/sa-auth-form/div[2]/div/app-two-factor-auth-validation/app-otp-validation-form/form/platform-forms-input/way-input/div/div/way-input-text/input'
+    # Proses 2FA: Tunggu sampai input 2FA tersedia
     try:
-        twofa_input = driver.find_element(By.XPATH, twofa_xpath)
+        twofa_field = wait.until(EC.presence_of_element_located((By.XPATH,
+            '/html/body/binomo-root/platform-ui-scroll/div/div/ng-component/ng-component/div/div/auth-form/sa-auth-form/div[2]/div/app-two-factor-auth-validation/app-otp-validation-form/form/platform-forms-input/way-input/div/div/way-input-text/input')))
         if not twofa_code:
             st.info("Autentikasi 2FA terdeteksi. Masukkan kode 2FA di sidebar dan tekan 'Refresh Data'.")
             driver.quit()
             return None
         else:
-            twofa_input.send_keys(twofa_code)
-            twofa_submit_xpath = '/html/body/binomo-root/platform-ui-scroll/div/div/ng-component/ng-component/div/div/auth-form/sa-auth-form/div[2]/div/app-two-factor-auth-validation/app-otp-validation-form/form/vui-button/button'
-            wait.until(EC.element_to_be_clickable((By.XPATH, twofa_submit_xpath))).click()
-            time.sleep(2)
+            twofa_field.send_keys(twofa_code)
+            twofa_submit = wait.until(EC.element_to_be_clickable((By.XPATH,
+                '/html/body/binomo-root/platform-ui-scroll/div/div/ng-component/ng-component/div/div/auth-form/sa-auth-form/div[2]/div/app-two-factor-auth-validation/app-otp-validation-form/form/vui-button/button')))
+            twofa_submit.click()
     except Exception as e:
         logging.info("2FA tidak diperlukan atau sudah ditangani.")
     
     return driver
+
 
 def check_balance(driver):
     """
@@ -843,6 +854,14 @@ def display_dashboard(df, signal, reason, strength, trade_msg=""):
             height=500
         )
         st.plotly_chart(fig, use_container_width=True)
+    
+    # Bagian tambahan: tampilkan screenshot tampilan Selenium (browser)
+    if "driver" in st.session_state and st.session_state.driver is not None:
+        try:
+            screenshot = st.session_state.driver.get_screenshot_as_png()
+            st.image(screenshot, caption="Tampilan Browser Trading", use_column_width=True)
+        except Exception as e:
+            st.error(f"Gagal mengambil screenshot: {e}")
 
 # Fungsi utama
 def main():
