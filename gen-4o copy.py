@@ -560,7 +560,7 @@ def init_driver(twofa_code="", account_type="Demo", username_input="", password_
     """
     # Konfigurasi opsi untuk Chrome
     options = webdriver.ChromeOptions()
-    options.add_argument("--headless")  # Nonaktifkan headless jika perlu debugging
+    # options.add_argument("--headless")  # Nonaktifkan headless jika perlu debugging
     options.add_argument("--no-sandbox")
     options.add_argument("--disable-dev-shm-usage")
     options.add_argument("user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) "

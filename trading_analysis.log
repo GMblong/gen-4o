@@ -12469,3 +12469,31 @@ Stacktrace:
 	RtlClearBits [0x77E1C26F+191]
 	(No symbol) [0x00000000]
 
+2025-03-07 01:52:50 - INFO - ATR: 5.870541082272634e-07, ADX: 52.96080419900102, EMA_3: 641.8670657824321, EMA_5: 641.8670659357549, RSI: 25.959192639393578, StochRSI_K: 7.942087172687996, MACD: -2.4058192593656713e-07, MACD_signal: -5.670877368141956e-08, BB_Upper: 641.8670662817159, BB_Lower: 641.8670655342843
+2025-03-07 01:52:51 - INFO - 
+10:13:23 Sinyal Trading: SELL LEMAH \U0001f4c9 | Kekuatan: 25.0% | Trade Success: False
+Alasan: Konfirmasi bearish: Bearish Engulfing, Three Black Crows, Falling Wedge,  | Close Candle Sebelumnya: 641.86706601 | Open Candle Terakhir: 641.86706606
+2025-03-07 01:53:27 - INFO - ATR: 6.396432850157336e-07, ADX: 59.869302713552905, EMA_3: 641.8670653912161, EMA_5: 641.8670656238367, RSI: 18.27839094898175, StochRSI_K: 0.0, MACD: -3.35847971655312e-07, MACD_signal: -1.1253661327619805e-07, BB_Upper: 641.8670664332324, BB_Lower: 641.8670650107676
+2025-03-07 01:53:27 - INFO - 
+10:14:01 Sinyal Trading: SELL LEMAH \U0001f4c9 | Kekuatan: 25.0% | Trade Success: False
+Alasan: Konfirmasi bearish: Three Black Crows, Breakout bullish pada BB_Lower, Falling Wedge,  | Close Candle Sebelumnya: 641.86706554 | Open Candle Terakhir: 641.86706558
+2025-03-07 01:54:30 - INFO - ATR: 5.877146200900004e-07, ADX: 65.39610152519442, EMA_3: 641.867065205608, EMA_5: 641.8670654225577, RSI: 19.382699003458526, StochRSI_K: 2.376905911545363, MACD: -3.760264917218592e-07, MACD_signal: -1.6523458896533028e-07, BB_Upper: 641.8670661759396, BB_Lower: 641.8670647880605
+2025-03-07 01:54:30 - INFO - 
+10:15:03 Sinyal Trading: BUY KUAT \U0001f4c8 | Kekuatan: 75.0% | Trade Success: True
+Alasan: Konfirmasi bullish: Bullish Engulfing, Hammer, Three Black Crows, Doji terdeteksi, Terdeteksi bearish divergence, waspada pembalikan turun.,  | Close Candle Sebelumnya: 641.867065 | Open Candle Terakhir: 641.86706501
+2025-03-07 01:55:28 - INFO - ATR: 5.821716939702382e-07, ADX: 70.26784116816695, EMA_3: 641.867065102804, EMA_5: 641.8670652817052, RSI: 19.06073815802536, StochRSI_K: 1.6839193543126285, MACD: -3.8641883293166757e-07, MACD_signal: -2.0947143775859774e-07, BB_Upper: 641.867065992795, BB_Lower: 641.867064635205
+2025-03-07 01:55:28 - INFO - 
+10:16:02 Sinyal Trading: BUY KUAT \U0001f4c8 | Kekuatan: 75.0% | Trade Success: False
+Alasan: Konfirmasi bullish: Hammer, Three Black Crows, Doji terdeteksi, Falling Wedge,  | Close Candle Sebelumnya: 641.86706502 | Open Candle Terakhir: 641.86706496
+2025-03-07 01:56:28 - INFO - ATR: 5.397373456670377e-07, ADX: 73.03446888053307, EMA_3: 641.867065046402, EMA_5: 641.8670651844702, RSI: 18.864888388423623, StochRSI_K: 1.2623735064362158, MACD: -3.770331886698841e-07, MACD_signal: -2.42983787940855e-07, BB_Upper: 641.8670654709476, BB_Lower: 641.8670647490524
+2025-03-07 01:56:28 - INFO - 
+10:17:02 Sinyal Trading: SELL LEMAH \U0001f4c9 | Kekuatan: 25.0% | Trade Success: False
+Alasan: Konfirmasi bearish: Bearish Engulfing, Shooting Star, Three Black Crows, Evening Star, Doji terdeteksi, Terdeteksi bullish divergence, waspada pembalikan naik.,  | Close Candle Sebelumnya: 641.867065 | Open Candle Terakhir: 641.86706502
+2025-03-07 01:57:27 - INFO - ATR: 5.877898865989572e-07, ADX: 64.54699745344752, EMA_3: 641.8670652132009, EMA_5: 641.8670652496469, RSI: 45.94263260550247, StochRSI_K: 71.8895157490931, MACD: -3.0335911560541717e-07, MACD_signal: -2.550588534737675e-07, BB_Upper: 641.8670653317781, BB_Lower: 641.8670648242219
+2025-03-07 01:57:27 - INFO - 
+10:18:00 Sinyal Trading: BUY LEMAH \U0001f4c8 | Kekuatan: 50.0% | Trade Success: False
+Alasan: Konfirmasi bullish: Bullish Engulfing, Three White Soldiers, Breakout bearish pada BB_Upper, Fakey Pattern,  | Close Candle Sebelumnya: 641.86706499 | Open Candle Terakhir: 641.86706496
+2025-03-07 01:58:28 - INFO - ATR: 6.022319230430657e-07, ADX: 54.29848525578454, EMA_3: 641.8670656016004, EMA_5: 641.8670654964312, RSI: 67.28747665681175, StochRSI_K: 100.0, MACD: -1.6505680378031684e-07, MACD_signal: -2.3705844353507735e-07, BB_Upper: 641.8670659229739, BB_Lower: 641.867064629026
+2025-03-07 01:58:28 - INFO - 
+10:19:02 Sinyal Trading: BUY LEMAH \U0001f4c8 | Kekuatan: 50.0% | Trade Success: True
+Alasan: Konfirmasi bullish: Three White Soldiers, EMA3 cross EMA5 ke atas, Breakout bearish pada BB_Upper,  | Close Candle Sebelumnya: 641.86706538 | Open Candle Terakhir: 641.8670654
