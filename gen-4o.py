@@ -447,7 +447,7 @@ def process_data():
     
     # Buang candle terakhir (yang sedang berjalan / incomplete)
     # Sehingga df.iloc[-1] nanti adalah candle terakhir yang benar-benar sudah close.
-    df = df.iloc[:-1].reset_index(drop=True)
+    df = df.iloc[:0].reset_index(drop=True)
     
     # Hitung indikator
     df = calculate_indicators(df)
@@ -927,7 +927,7 @@ def main():
                     if current_balance is not None:
                         if current_balance > st.session_state.prev_balance:
                             st.session_state.current_bid = initial_bid
-                            st.info(f"Profit terjadi. Reset bid ke nilai awal: Rp{initial_bid}")
+                            st.success(f"Profit terjadi. Reset bid ke nilai awal: Rp{initial_bid}")
                             trade_msg = execute_trade_action(st.session_state.driver, signal, initial_bid)
                         elif current_balance < st.session_state.prev_balance:
                             compensated_bid = int(st.session_state.current_bid * compensation_factor)
@@ -946,12 +946,12 @@ def main():
                         st.session_state.trade_executed_minute = current_time.minute
                         if current_balance is not None:
                             st.session_state.prev_balance = current_balance
-                        st.info(f"Eksekusi perdagangan otomatis berhasil: {trade_msg}")
+                        st.success(f"Eksekusi perdagangan otomatis berhasil: {trade_msg}")
                     else:
                         st.error(f"Eksekusi perdagangan otomatis gagal: {trade_msg}")
                 else:
                     if st.session_state.login_time and current_time.minute == st.session_state.login_time.minute:
-                        st.info("Menunggu pergantian menit untuk eksekusi trade pertama.")
+                        st.warning("Menunggu pergantian menit untuk eksekusi trade pertama.")
                     else:
                         st.warning("Menunggu pergantian menit berikutnya. Eksekusi trade hanya dilakukan pada detik 0-20 dan jika trade belum dieksekusi pada menit ini.")
     else:
