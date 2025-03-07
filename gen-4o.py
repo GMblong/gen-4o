@@ -72,12 +72,12 @@ st.markdown(
 # =============================================================================
 # KONFIGURASI LOGGING & SESSION REQUESTS
 # =============================================================================
-logging.basicConfig(
-    filename="trading_analysis.log",
-    level=logging.INFO,
-    format="%(asctime)s - %(levelname)s - %(message)s",
-    datefmt="%Y-%m-%d %H:%M:%S"
-)
+# logging.basicConfig(
+#     filename="trading_analysis.log",
+#     level=logging.INFO,
+#     format="%(asctime)s - %(levelname)s - %(message)s",
+#     datefmt="%Y-%m-%d %H:%M:%S"
+# )
 session = requests.Session()
 
 # =============================================================================
@@ -156,13 +156,6 @@ def calculate_indicators(df):
     
     # Log candle terakhir
     last_candle = df.iloc[-1]
-    logging.info(
-        f"ATR: {last_candle['ATR']}, ADX: {last_candle['ADX']}, "
-        f"EMA_3: {last_candle['EMA_3']}, EMA_5: {last_candle['EMA_5']}, "
-        f"RSI: {last_candle['RSI']}, StochRSI_K: {last_candle['StochRSI_K']}, "
-        f"MACD: {last_candle['MACD']}, MACD_signal: {last_candle['MACD_signal']}, "
-        f"BB_Upper: {last_candle['BB_Upper']}, BB_Lower: {last_candle['BB_Lower']}"
-    )
     return df
 
 def detect_candlestick_patterns(df):
@@ -481,7 +474,6 @@ def process_data():
         f"Kekuatan: {strength:.1f}% | Trade Success: {trade_success}\n"
         f"Alasan: {reason} | Close Candle Sebelumnya: {trade_close} | Open Candle Terakhir: {trade_open}"
     )
-    logging.info(log_message)
     print(log_message)
     
     return df, signal, reason, strength
@@ -513,33 +505,18 @@ def set_bid(driver, bid_amount):
     def attempt_set_bid():
         try:
             bid_element.clear()
-            # time.sleep(1)
             bid_element.send_keys(bid_value_str)
-            # time.sleep(1)
             return True
         except Exception as ex:
             logging.error(f"Error saat clear atau mengirim bid: {ex}")
             return False
 
-    # # Lakukan percobaan pertama
-    # if not attempt_set_bid():
-    #     current_time = get_google_time()
-    #     if current_time.second <= 20:
-    #         logging.info("Percobaan pertama gagal, mencoba ulang karena waktu server masih ≤20 detik.")
-    #         if not attempt_set_bid():
-    #             return False
-    #     else:
-    #         return False
-
     entered_bid = bid_element.get_attribute('value')
-    logging.info(f"Bid yang dimasukkan: {entered_bid}, seharusnya: {bid_value_str}")
     entered_bid_numeric = int(re.sub(r"[^\d]", "", entered_bid))
     expected_bid_numeric = int(re.sub(r"[^\d]", "", bid_value_str))
     if entered_bid_numeric != expected_bid_numeric:
-        logging.warning(f"Bid numeric yang dimasukkan {entered_bid_numeric} tidak sama dengan {expected_bid_numeric}.")
         current_time = get_google_time()
         if current_time.second <= 20:
-            logging.info("Mencoba ulang karena nilai bid tidak sesuai dan waktu server masih ≤20 detik.")
             if not attempt_set_bid():
                 return False
             entered_bid = bid_element.get_attribute('value')
@@ -584,12 +561,9 @@ def init_driver(twofa_code="", account_type="Demo", username_input="", password_
             new_driver_path = chromedriver_autoinstaller.install(cwd='/tmp')
             service = ChromeService(new_driver_path)
             driver = webdriver.Chrome(service=service, options=options)
-            logging.info("Local run: Menggunakan Chrome driver otomatis.")
         except Exception as e:
-            logging.error(f"Local run: Chromedriver otomatis gagal: {e}. Menggunakan fallback driver.")
             fallback_driver_path = r'D:\aplikasi\gen-4o\133\chromedriver.exe'
             if not os.path.exists(fallback_driver_path):
-                logging.error(f"Fallback driver path tidak valid: {fallback_driver_path}")
                 return None
             service = ChromeService(fallback_driver_path)
             driver = webdriver.Chrome(service=service, options=options)
@@ -607,9 +581,7 @@ def init_driver(twofa_code="", account_type="Demo", username_input="", password_
             # Asumsikan geckodriver sudah ada di PATH (misalnya diinstal melalui seleniumbase)
             service = FirefoxService()  # Jika geckodriver sudah di PATH, Service() tanpa parameter cukup
             driver = webdriver.Firefox(service=service, options=opts)
-            logging.info("Online run: Menggunakan Firefox ESR.")
         except Exception as e:
-            logging.error(f"Online run: Gagal inisialisasi driver Firefox: {e}")
             return None
 
     wait = WebDriverWait(driver, 20)
@@ -618,7 +590,6 @@ def init_driver(twofa_code="", account_type="Demo", username_input="", password_
     try:
         wait.until(EC.presence_of_element_located((By.TAG_NAME, "body")))
     except Exception as e:
-        logging.error(f"Error menunggu body muncul: {e}")
         driver.quit()
         return None
 
@@ -629,7 +600,6 @@ def init_driver(twofa_code="", account_type="Demo", username_input="", password_
         username_val = username_input if username_input.strip() != "" else "andiarifrahmatullah@gmail.com"
         username_field.send_keys(username_val)
     except Exception as e:
-        logging.error(f"Error menemukan field username: {e}")
         driver.quit()
         return None
 
@@ -639,7 +609,6 @@ def init_driver(twofa_code="", account_type="Demo", username_input="", password_
         password_val = password_input if password_input.strip() != "" else "@Rahmatullah07"
         password_field.send_keys(password_val)
     except Exception as e:
-        logging.error(f"Error menemukan field password: {e}")
         driver.quit()
         return None
 
@@ -648,7 +617,6 @@ def init_driver(twofa_code="", account_type="Demo", username_input="", password_
             '/html/body/binomo-root/platform-ui-scroll/div/div/ng-component/ng-component/div/div/auth-form/sa-auth-form/div[2]/div/app-sign-in/div/form/vui-button/button')))
         login_button.click()
     except Exception as e:
-        logging.error(f"Error pada tombol login: {e}")
         driver.quit()
         return None
 
@@ -680,7 +648,6 @@ def init_driver(twofa_code="", account_type="Demo", username_input="", password_
         popup_xpath = "/html/body/ng-component/vui-modal/div/div/div/ng-component/div/div/vui-button[1]/button"
         popup_button = wait.until(EC.presence_of_element_located((By.XPATH, popup_xpath)))
         popup_button.click()
-        logging.info("Popup dengan xpath telah diklik.")
     except Exception as e:
         logging.info("Popup tidak muncul, lanjutkan proses.")
     
@@ -716,10 +683,8 @@ def check_balance(driver):
         )
         balance_text = balance_element.text
         balance_numeric = int(re.sub(r"[^\d]", "", balance_text))
-        logging.info(f"Balance ditemukan: {balance_numeric}")
         return balance_numeric
     except Exception as e:
-        logging.error(f"Gagal memeriksa balance: {e}")
         return None
 
 def execute_trade_action(driver, signal, bid_amount):
@@ -736,7 +701,6 @@ def execute_trade_action(driver, signal, bid_amount):
         return f"Balance tidak mencukupi: Balance saat ini Rp{current_balance}, dibutuhkan Rp{bid_amount}."
 
     if not set_bid(driver, bid_amount):
-        logging.warning(f"Bid Rp{bid_amount} gagal ditetapkan.")
         return f"Bid Rp{bid_amount} gagal ditetapkan."
     
     wait = WebDriverWait(driver, 5)
@@ -745,35 +709,15 @@ def execute_trade_action(driver, signal, bid_amount):
     elif "SELL" in signal.upper():
         button_xpath = '/html/body/binomo-root/platform-ui-scroll/div/div/ng-component/main/div/app-panel/ng-component/section/binary-info/div[2]/div/trading-buttons/vui-button[2]/button'
     else:
-        logging.error("Signal tidak dikenali.")
         return "Signal tidak dikenali."
     
     try:
         wait.until(EC.element_to_be_clickable((By.XPATH, button_xpath))).click()
-        logging.info(f"Trade {signal} dengan bid Rp{bid_amount} dikirim.")
     except Exception as e:
         error_msg = f"Error pada eksekusi trade: {e}"
-        logging.error(error_msg)
         return error_msg
     
     return "Trade dieksekusi."
-
-# =============================================================================
-# FUNGSI UNTUK MENAMPILKAN DASHBOARD
-# =============================================================================
-# Fungsi check_balance
-def check_balance(driver):
-    try:
-        balance_element = WebDriverWait(driver, 10).until(
-            EC.presence_of_element_located((By.XPATH, "//*[@id='qa_trading_balance']"))
-        )
-        balance_text = balance_element.text
-        balance_numeric = int(re.sub(r"[^\d]", "", balance_text))
-        logging.info(f"Balance ditemukan: {balance_numeric}")
-        return balance_numeric
-    except Exception as e:
-        logging.error(f"Gagal memeriksa balance: {e}")
-        return None
 
 def display_dashboard(df, signal, reason, strength, trade_msg=""):
     current_time = get_google_time().strftime('%H:%M:%S')
@@ -950,25 +894,24 @@ def main():
                 # 1. Detik server ≤ 20
                 # 2. Trade belum dieksekusi pada menit ini (flag trade_executed_minute == None)
                 if current_time.second <= 20 and st.session_state.trade_executed_minute is None:
-                    # Cek saldo terlebih dahulu sebelum eksekusi trade
+                    # Tentukan bid dan pesan info berdasarkan perbandingan saldo
                     if current_balance is not None:
                         if current_balance > st.session_state.prev_balance:
-                            st.session_state.current_bid = initial_bid
-                            st.info(f"Profit terjadi. Reset bid ke nilai awal: Rp{initial_bid}")
-                            trade_msg = execute_trade_action(st.session_state.driver, signal, initial_bid)
+                            new_bid = initial_bid
+                            info_msg = f"Profit terjadi. Reset bid ke nilai awal: Rp{initial_bid}"
                         elif current_balance < st.session_state.prev_balance:
-                            compensated_bid = int(st.session_state.current_bid * compensation_factor)
-                            st.session_state.current_bid = compensated_bid
-                            st.info(f"Loss atau break-even terdeteksi. Menjalankan trade kompensasi dengan bid: Rp{compensated_bid}")
-                            trade_msg = execute_trade_action(st.session_state.driver, signal, compensated_bid)
+                            new_bid = int(st.session_state.current_bid * compensation_factor)
+                            info_msg = f"Loss atau break-even terdeteksi. Menjalankan trade kompensasi dengan bid: Rp{new_bid}"
                         else:
-                            st.info(f"Tidak ada perubahan pada saldo. Eksekusi trade dengan bid: Rp{st.session_state.current_bid}")
-                            trade_msg = execute_trade_action(st.session_state.driver, signal, st.session_state.current_bid)
+                            new_bid = st.session_state.current_bid
+                            info_msg = f"Tidak ada perubahan pada saldo. Eksekusi trade dengan bid: Rp{new_bid}"
                     else:
-                        st.info(f"Tidak dapat memverifikasi saldo. Eksekusi trade dengan bid: Rp{st.session_state.current_bid}")
-                        trade_msg = execute_trade_action(st.session_state.driver, signal, st.session_state.current_bid)
-
-                    # Tangani hasil eksekusi trade
+                        new_bid = st.session_state.current_bid
+                        info_msg = f"Tidak dapat memverifikasi saldo. Eksekusi trade dengan bid: Rp{new_bid}"
+                    
+                    st.info(info_msg)
+                    trade_msg = execute_trade_action(st.session_state.driver, signal, new_bid)
+                    
                     if "Error" not in trade_msg and "Gagal" not in trade_msg:
                         st.session_state.trade_executed_minute = current_time.minute
                         if current_balance is not None:
@@ -976,6 +919,7 @@ def main():
                         st.success(f"Eksekusi perdagangan otomatis berhasil: {trade_msg}")
                     else:
                         st.error(f"Eksekusi perdagangan otomatis gagal: {trade_msg}")
+
 
                 else:
                     if st.session_state.login_time and current_time.minute == st.session_state.login_time.minute:
