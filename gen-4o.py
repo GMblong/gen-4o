@@ -493,7 +493,7 @@ def set_bid(driver, bid_amount):
     bid_xpath = '/html/body/binomo-root/platform-ui-scroll/div/div/ng-component/main/div/app-panel/ng-component/section/div/way-input-controls/div/input'
     
     try:
-        bid_element = WebDriverWait(driver, 15).until(
+        bid_element = WebDriverWait(driver, 5).until(
             EC.presence_of_element_located((By.XPATH, bid_xpath))
         )
     except Exception as e:
@@ -532,31 +532,39 @@ def init_driver(twofa_code="", account_type="Demo", username_input="", password_
     """
     Inisialisasi driver Selenium dan lakukan login ke platform trading
     dalam mode headless.
-    
+
     - Jika dijalankan secara lokal (misalnya Windows atau variabel LOCAL_RUN="true"),
       maka akan menggunakan Chrome dengan chromedriver_autoinstaller.
     - Jika dijalankan di lingkungan online (misalnya Streamlit Cloud, variabel STREAMLIT_CLOUD="true"),
       maka akan menggunakan Chromium dan chromium-driver yang sudah diinstal melalui packages.txt.
-    
+
     Pastikan di lingkungan online, paket-paket berikut sudah terinstal:
       chromium
       chromium-driver
     dan executable Chromium ada di /usr/bin/chromium-browser (atau sesuaikan dengan lokasi binary Anda).
     """
+    import os, sys, logging
+    from selenium import webdriver
+    from selenium.webdriver.common.by import By
+    from selenium.webdriver.support.ui import WebDriverWait
+    from selenium.webdriver.support import expected_conditions as EC
 
     # Tentukan apakah lingkungan online atau lokal
     online_env = os.environ.get("STREAMLIT_CLOUD", "false").lower() == "true"
     local_run = os.environ.get("LOCAL_RUN", "false").lower() == "true" or (sys.platform.startswith("win") and not online_env)
-    
-    driver = None  # inisialisasi driver
-    
+
+    driver = None
+
     if online_env:
         # Konfigurasi Chromium untuk lingkungan online
         from selenium.webdriver.chrome.options import Options as ChromeOptions
         from selenium.webdriver.chrome.service import Service as ChromeService
         options = ChromeOptions()
-        # Pastikan binary chromium terletak di /usr/bin/chromium-browser (atau sesuaikan)
-        options.binary_location = "/usr/bin/chromium"
+        # Jika /usr/bin/chromium-browser ada, gunakan itu; jika tidak, gunakan /usr/bin/chromium
+        if os.path.exists("/usr/bin/chromium-browser"):
+            options.binary_location = "/usr/bin/chromium-browser"
+        else:
+            options.binary_location = "/usr/bin/chromium"
         options.add_argument("--headless")
         options.add_argument("--no-sandbox")
         options.add_argument("--disable-dev-shm-usage")
@@ -576,7 +584,7 @@ def init_driver(twofa_code="", account_type="Demo", username_input="", password_
         from selenium.webdriver.chrome.options import Options as ChromeOptions
         from selenium.webdriver.chrome.service import Service as ChromeService
         options = ChromeOptions()
-        options.add_argument("--headless=new")  # gunakan mode headless baru jika mendukung
+        options.add_argument("--headless=new")
         options.add_argument("--no-sandbox")
         options.add_argument("--disable-dev-shm-usage")
         options.add_argument("--disable-gpu")
@@ -596,7 +604,6 @@ def init_driver(twofa_code="", account_type="Demo", username_input="", password_
             service = ChromeService(fallback_driver_path)
             driver = webdriver.Chrome(service=service, options=options)
     else:
-        # Jika tidak memenuhi kriteria online atau lokal, kembalikan None
         return None
 
     # Tunggu hingga halaman utama termuat
@@ -655,14 +662,12 @@ def init_driver(twofa_code="", account_type="Demo", username_input="", password_
     except Exception as e:
         logging.info("2FA tidak diperlukan atau tidak muncul dalam waktu 5 detik.")
 
-    # Tunggu sampai tampilan setelah login muncul, misalnya account switcher
     try:
         account_switcher = wait.until(EC.presence_of_element_located((By.XPATH, '//*[@id="account"]')))
         account_switcher.click()
     except Exception as e:
         logging.error(f"Error saat menunggu account switcher: {e}")
-    
-    # Pilih tipe akun
+
     try:
         account_types = {
             'Real': '/html/body/vui-popover/div[2]/account-list/div[1]',
@@ -677,8 +682,7 @@ def init_driver(twofa_code="", account_type="Demo", username_input="", password_
             account_element.click()
     except Exception as e:
         logging.error(f"Error saat memilih akun: {e}")
-    
-    # Jika ada popup, tunggu dan klik
+
     try:
         popup_xpath = "/html/body/ng-component/vui-modal/div/div/div/ng-component/div/div/vui-button[1]/button"
         popup_button = wait.until(EC.presence_of_element_located((By.XPATH, popup_xpath)))
@@ -686,8 +690,9 @@ def init_driver(twofa_code="", account_type="Demo", username_input="", password_
         logging.info("Popup dengan xpath telah diklik.")
     except Exception as e:
         logging.info("Popup tidak muncul, lanjutkan proses.")
-    
+
     return driver
+
 
 
 def check_balance(driver):
