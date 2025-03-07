@@ -560,15 +560,13 @@ def init_driver(twofa_code="", account_type="Demo", username_input="", password_
             options.binary_location = "/usr/bin/chromium-browser"
         else:
             options.binary_location = "/usr/bin/chromium"
-
         options.add_argument("--headless")
         options.add_argument("--no-sandbox")
         options.add_argument("--disable-dev-shm-usage")
         options.add_argument("--disable-gpu")
-        options.add_argument("--disable-features=NetworkService")
-        options.add_argument("--window-size=1920x1080")
-        options.add_argument("--disable-features=VizDisplayCompositor")
-        options.add_argument('--ignore-certificate-errors')
+        options.add_argument("--disable-blink-features=AutomationControlled")
+        options.add_argument("--user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36")
+        options.add_argument("--proxy-server=socks5://127.0.0.1:9050")
         
         try:
             # Asumsi chromium-driver sudah ada di PATH
@@ -754,7 +752,7 @@ def display_dashboard(df, signal, reason, strength, trade_msg=""):
     with st.container():
         st.markdown(
             f"<div class='header-container'><span class='title'>Dashboard Analisis Trading</span> <br>"
-            f"<span class='subtitle'>{current_time}</span></div>",
+            f"<span class='subtitle'>Auto Trade : {'<b>Aktif</b>' if st.session_state.auto_trade else '<b>Nonaktif</b>'} | Waktu: {current_time}</span></div>",
             unsafe_allow_html=True
         )
     
@@ -851,8 +849,7 @@ def main():
     _ = st.sidebar.button("Refresh Data")
     start_auto = st.sidebar.button("Start Auto Trade")
     stop_auto = st.sidebar.button("Stop Auto Trade")
-    auto_refresh = st.sidebar.checkbox("Auto Refresh", value=True)
-    st.sidebar.write(f"Auto Trade : {'Aktif' if st.session_state.auto_trade else 'Nonaktif'}")
+    auto_refresh = st.sidebar.checkbox("Auto Refresh (per menit)", value=True)
 
     account_type = st.sidebar.selectbox("Pilih Tipe Akun", ["Real", "Demo", "Tournament"], index=1)
     initial_bid = st.sidebar.number_input("Open Order Awal (Rp)", value=15000)
@@ -869,6 +866,8 @@ def main():
             st.session_state.driver.quit()
             st.session_state.driver = None
             st.session_state.login_time = None
+
+    st.sidebar.write(f"Auto Trade: {'Aktif' if st.session_state.auto_trade else 'Nonaktif'}")
 
     # Auto refresh berdasarkan sisa waktu menuju pergantian menit
     if auto_refresh:
