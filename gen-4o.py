@@ -892,11 +892,6 @@ def main():
         display_dashboard(df, signal, reason, strength)
 
         if st.session_state.auto_trade:
-            # Tambahan print status driver
-            if st.session_state.driver is None:
-                st.info("Status Driver: Belum terbaca.")
-            else:
-                st.info("Status Driver: Sudah berhasil terbaca.")
 
             current_time = get_google_time()
 
@@ -937,10 +932,10 @@ def main():
                         elif current_balance < st.session_state.prev_balance:
                             compensated_bid = int(st.session_state.current_bid * compensation_factor)
                             st.session_state.current_bid = compensated_bid
-                            st.info(f"Loss atau break-even terdeteksi. Menjalankan trade kompensasi dengan bid: Rp{compensated_bid}")
+                            st.error(f"Loss atau break-even terdeteksi. Menjalankan trade kompensasi dengan bid: Rp{compensated_bid}")
                             trade_msg = execute_trade_action(st.session_state.driver, signal, compensated_bid)
                         else:
-                            st.info(f"Tidak ada perubahan pada saldo. Eksekusi trade dengan bid: Rp{st.session_state.current_bid}")
+                            st.warning(f"Tidak ada perubahan pada saldo. Eksekusi trade dengan bid: Rp{st.session_state.current_bid}")
                             trade_msg = execute_trade_action(st.session_state.driver, signal, st.session_state.current_bid)
                     else:
                         st.info(f"Tidak dapat memverifikasi saldo. Eksekusi trade dengan bid: Rp{st.session_state.current_bid}")
@@ -951,7 +946,7 @@ def main():
                         st.session_state.trade_executed_minute = current_time.minute
                         if current_balance is not None:
                             st.session_state.prev_balance = current_balance
-                        st.success(f"Eksekusi perdagangan otomatis berhasil: {trade_msg}")
+                        st.info(f"Eksekusi perdagangan otomatis berhasil: {trade_msg}")
                     else:
                         st.error(f"Eksekusi perdagangan otomatis gagal: {trade_msg}")
                 else:
