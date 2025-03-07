@@ -531,11 +531,13 @@ def set_bid(driver, bid_amount):
 def init_driver(twofa_code="", account_type="Demo", username_input="", password_input=""):
     """
     Inisialisasi driver Selenium dengan penanganan error yang lebih baik.
-    Pastikan lingkungan online (misalnya Streamlit Cloud) memiliki Chromium dan chromium-driver.
+    Lingkungan ditentukan berdasarkan variabel lingkungan dan platform.
     """
-    # Tentukan apakah lingkungan online atau lokal
+    # Tentukan apakah lingkungan online (misalnya Streamlit Cloud) atau lokal
     online_env = os.environ.get("STREAMLIT_CLOUD", "false").lower() == "true"
-    local_run = os.environ.get("LOCAL_RUN", "false").lower() == "true" or (sys.platform.startswith("win") and not online_env)
+    local_run = os.environ.get("LOCAL_RUN", "false").lower() == "true" or (
+        sys.platform.startswith("win") or sys.platform.startswith("linux") or sys.platform.startswith("darwin")
+    )
     driver = None
 
     if online_env:
