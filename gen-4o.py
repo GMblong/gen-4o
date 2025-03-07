@@ -820,7 +820,6 @@ def display_dashboard(df, signal, reason, strength, trade_msg=""):
         )
         st.plotly_chart(fig, use_container_width=True)
 
-# Fungsi main tanpa fitur screenshot untuk mengurangi beban refresh
 def main():
     """
     Fungsi utama untuk menjalankan dashboard dan auto trade secara sistematis.
@@ -884,6 +883,12 @@ def main():
         display_dashboard(df, signal, reason, strength)
 
         if st.session_state.auto_trade:
+            # Tambahan print status driver
+            if st.session_state.driver is None:
+                st.info("Status Driver: Belum terbaca.")
+            else:
+                st.info("Status Driver: Sudah berhasil terbaca.")
+
             current_time = get_google_time()
 
             # Reset flag trade_executed_minute jika sudah terjadi pergantian menit
