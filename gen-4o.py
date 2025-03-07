@@ -521,15 +521,15 @@ def set_bid(driver, bid_amount):
             logging.error(f"Error saat clear atau mengirim bid: {ex}")
             return False
 
-    # Lakukan percobaan pertama
-    if not attempt_set_bid():
-        current_time = get_google_time()
-        if current_time.second <= 20:
-            logging.info("Percobaan pertama gagal, mencoba ulang karena waktu server masih ≤20 detik.")
-            if not attempt_set_bid():
-                return False
-        else:
-            return False
+    # # Lakukan percobaan pertama
+    # if not attempt_set_bid():
+    #     current_time = get_google_time()
+    #     if current_time.second <= 20:
+    #         logging.info("Percobaan pertama gagal, mencoba ulang karena waktu server masih ≤20 detik.")
+    #         if not attempt_set_bid():
+    #             return False
+    #     else:
+    #         return False
 
     entered_bid = bid_element.get_attribute('value')
     logging.info(f"Bid yang dimasukkan: {entered_bid}, seharusnya: {bid_value_str}")
@@ -574,12 +574,10 @@ def init_driver(twofa_code="", account_type="Demo", username_input="", password_
         from selenium.webdriver.chrome.options import Options as ChromeOptions
         from selenium.webdriver.chrome.service import Service as ChromeService
         options = ChromeOptions()
-        options.add_argument("--headless")
-        # Jika menggunakan Chrome versi baru, Anda dapat mencoba: options.add_argument("--headless=new")
+        options.add_argument("--headless=new")  # gunakan mode headless baru jika mendukung
         options.add_argument("--no-sandbox")
         options.add_argument("--disable-dev-shm-usage")
         options.add_argument("--disable-gpu")
-        options.add_argument("--remote-debugging-port=9222")
         options.add_argument("--disable-blink-features=AutomationControlled")
         
         try:
@@ -741,7 +739,7 @@ def execute_trade_action(driver, signal, bid_amount):
         logging.warning(f"Bid Rp{bid_amount} gagal ditetapkan.")
         return f"Bid Rp{bid_amount} gagal ditetapkan."
     
-    wait = WebDriverWait(driver, 10)
+    wait = WebDriverWait(driver, 5)
     if "BUY" in signal.upper():
         button_xpath = '/html/body/binomo-root/platform-ui-scroll/div/div/ng-component/main/div/app-panel/ng-component/section/binary-info/div[2]/div/trading-buttons/vui-button[1]/button'
     elif "SELL" in signal.upper():
@@ -777,7 +775,6 @@ def check_balance(driver):
         logging.error(f"Gagal memeriksa balance: {e}")
         return None
 
-# Fungsi display_dashboard dengan penambahan new balance
 def display_dashboard(df, signal, reason, strength, trade_msg=""):
     current_time = get_google_time().strftime('%H:%M:%S')
     
@@ -833,8 +830,7 @@ def display_dashboard(df, signal, reason, strength, trade_msg=""):
         df_last30 = df[df['time'] >= time_threshold]
         st.dataframe(df_last30)
     
-    with st.container():
-        st.markdown("### Grafik Candlestick dan Indikator")
+    with st.expander("### Grafik Candlestick dan Indikator"):
         time_threshold = df['time'].max() - pd.Timedelta(minutes=15)
         df_last30 = df[df['time'] >= time_threshold]
         fig = go.Figure(data=[go.Candlestick(
@@ -857,26 +853,18 @@ def display_dashboard(df, signal, reason, strength, trade_msg=""):
             height=500
         )
         st.plotly_chart(fig, use_container_width=True)
-    
-    # Bagian tambahan: tampilkan screenshot tampilan Selenium (browser)
-    if "driver" in st.session_state and st.session_state.driver is not None:
-        try:
-            screenshot = st.session_state.driver.get_screenshot_as_png()
-            st.image(screenshot, caption="Tampilan Browser Trading", use_column_width=True)
-        except Exception as e:
-            st.error(f"Gagal mengambil screenshot: {e}")
 
-# Fungsi utama
+# Fungsi main tanpa fitur screenshot untuk mengurangi beban refresh
 def main():
     """
     Fungsi utama untuk menjalankan dashboard dan auto trade secara sistematis.
     Eksekusi trade hanya dilakukan jika waktu server (detik) berada di antara 0-20.
     Setelah login pertama kali, trade pertama hanya akan dieksekusi setelah pergantian menit.
-    Fitur kompensasi: jika trade menghasilkan loss atau break-even, bid berikutnya dikalikan dengan faktor kompensasi yang dapat diatur,
-    dan jika profit, bid di-reset ke nilai awal.
+    Fitur kompensasi: jika trade sebelumnya menghasilkan loss atau break-even, trade kompensasi langsung dijalankan
+    dengan bid dikalikan dengan faktor kompensasi, dan jika profit, bid di-reset ke nilai awal.
     Trade baru akan dieksekusi setelah trade sebelumnya selesai, yang ditandai dengan pergantian menit.
     """
-    # Inisialisasi status session
+    # Inisialisasi session state
     if "auto_trade" not in st.session_state:
         st.session_state.auto_trade = False
     if "driver" not in st.session_state:
@@ -891,20 +879,21 @@ def main():
         st.session_state.new_balance = None
     if "trade_executed_minute" not in st.session_state:
         st.session_state.trade_executed_minute = None
-    
+
+    # Sidebar untuk pengaturan
     st.sidebar.title("Menu")
     _ = st.sidebar.button("Refresh Data")
     start_auto = st.sidebar.button("Start Auto Trade")
     stop_auto = st.sidebar.button("Stop Auto Trade")
     auto_refresh = st.sidebar.checkbox("Auto Refresh (per menit)", value=True)
-    
+
     account_type = st.sidebar.selectbox("Pilih Tipe Akun", ["Real", "Demo", "Tournament"], index=1)
     initial_bid = st.sidebar.number_input("Open Order Awal (Rp)", value=15000)
     compensation_factor = st.sidebar.number_input("Faktor Kompensasi", value=2.2, min_value=1.0, step=0.1, format="%.1f")
     username_input = st.sidebar.text_input("Username", value="")
     password_input = st.sidebar.text_input("Password", value="", type="password")
     twofa_code = st.sidebar.text_input("Masukkan kode 2FA (jika diperlukan):", value="")
-    
+
     if start_auto:
         st.session_state.auto_trade = True
     if stop_auto:
@@ -915,74 +904,84 @@ def main():
             st.session_state.login_time = None
 
     st.sidebar.write(f"Auto Trade: {'Aktif' if st.session_state.auto_trade else 'Nonaktif'}")
-    
+
+    # Auto refresh berdasarkan sisa waktu menuju pergantian menit
     if auto_refresh:
         current_google_time = get_google_time()
         remaining_ms = int((60 - current_google_time.second) * 1000 - current_google_time.microsecond / 1000)
         if remaining_ms < 1000:
             remaining_ms = 100
         st_autorefresh(interval=remaining_ms, limit=1000, key="auto_refresh")
-    
+
+    # Proses data dan tampilkan dashboard
     df, signal, reason, strength = process_data()
     if df is not None:
         display_dashboard(df, signal, reason, strength)
-        
+
         if st.session_state.auto_trade:
             current_time = get_google_time()
-            # Jika driver belum ada, lakukan login dan inisialisasi
+
+            # Reset flag trade_executed_minute jika sudah terjadi pergantian menit
+            if st.session_state.trade_executed_minute is not None and current_time.minute != st.session_state.trade_executed_minute:
+                st.session_state.trade_executed_minute = None
+
+            # Jika driver belum diinisialisasi, lakukan login dan setup awal
             if st.session_state.driver is None:
                 driver = init_driver(twofa_code, account_type=account_type, username_input=username_input, password_input=password_input)
                 if driver is None:
                     st.error("Login gagal. Pastikan kode 2FA dan kredensial telah dimasukkan.")
                     return
                 st.session_state.driver = driver
-                st.session_state.login_time = get_google_time()
+                st.session_state.login_time = current_time
                 balance = check_balance(driver)
                 if balance is not None:
                     st.session_state.prev_balance = balance
                     st.session_state.new_balance = balance
                 st.session_state.current_bid = initial_bid
                 st.info("Login berhasil. Menunggu pergantian menit untuk trade pertama.")
+
             else:
-                # Update new balance setiap auto refresh jika driver sudah ada
-                new_balance = check_balance(st.session_state.driver)
-                if new_balance is not None:
-                    st.session_state.new_balance = new_balance
-                # Jika trade sudah dieksekusi sebelumnya dan menit telah berganti, cek hasil trade dan eksekusi trade baru
-                if st.session_state.trade_executed_minute is not None and current_time.minute != st.session_state.trade_executed_minute:
-                    if new_balance is not None:
-                        if new_balance > st.session_state.prev_balance:
+                # Perbarui saldo terbaru sebelum eksekusi trade
+                current_balance = check_balance(st.session_state.driver)
+                if current_balance is not None:
+                    st.session_state.new_balance = current_balance
+
+                # Eksekusi trade hanya jika:
+                # 1. Detik server ≤ 20
+                # 2. Trade belum dieksekusi pada menit ini (flag trade_executed_minute == None)
+                if current_time.second <= 20 and st.session_state.trade_executed_minute is None:
+                    # Cek saldo terlebih dahulu sebelum eksekusi trade
+                    if current_balance is not None:
+                        if current_balance > st.session_state.prev_balance:
                             st.session_state.current_bid = initial_bid
                             st.info(f"Profit terjadi. Reset bid ke nilai awal: Rp{initial_bid}")
-                        elif new_balance < st.session_state.prev_balance:
-                            st.session_state.current_bid = int(st.session_state.current_bid * compensation_factor)
-                            st.info(f"Loss atau break-even. Bid selanjutnya: Rp{st.session_state.current_bid}")
+                            trade_msg = execute_trade_action(st.session_state.driver, signal, initial_bid)
+                        elif current_balance < st.session_state.prev_balance:
+                            compensated_bid = int(st.session_state.current_bid * compensation_factor)
+                            st.session_state.current_bid = compensated_bid
+                            st.info(f"Loss atau break-even terdeteksi. Menjalankan trade kompensasi dengan bid: Rp{compensated_bid}")
+                            trade_msg = execute_trade_action(st.session_state.driver, signal, compensated_bid)
                         else:
-                            st.info(f"Tidak ada perubahan pada saldo. Bid tetap: Rp{st.session_state.current_bid}")
-                        st.session_state.prev_balance = new_balance
-                        st.session_state.trade_executed_minute = None
-                        if current_time.second <= 20:
-                            st.write("Eksekusi trade baru: Waktu server berada di antara 0-20 detik.")
+                            st.info(f"Tidak ada perubahan pada saldo. Eksekusi trade dengan bid: Rp{st.session_state.current_bid}")
                             trade_msg = execute_trade_action(st.session_state.driver, signal, st.session_state.current_bid)
-                            if "Error" in trade_msg or "Gagal" in trade_msg:
-                                st.error(f"Eksekusi perdagangan otomatis gagal: {trade_msg}")
-                            else:
-                                st.success(f"Eksekusi perdagangan otomatis berhasil: {trade_msg}")
-                                st.session_state.trade_executed_minute = get_google_time().minute
+                    else:
+                        st.info(f"Tidak dapat memverifikasi saldo. Eksekusi trade dengan bid: Rp{st.session_state.current_bid}")
+                        trade_msg = execute_trade_action(st.session_state.driver, signal, st.session_state.current_bid)
+
+                    # Tangani hasil eksekusi trade
+                    if "Error" not in trade_msg and "Gagal" not in trade_msg:
+                        st.session_state.trade_executed_minute = current_time.minute
+                        if current_balance is not None:
+                            st.session_state.prev_balance = current_balance
+                        st.success(f"Eksekusi perdagangan otomatis berhasil: {trade_msg}")
+                    else:
+                        st.error(f"Eksekusi perdagangan otomatis gagal: {trade_msg}")
+
                 else:
                     if st.session_state.login_time and current_time.minute == st.session_state.login_time.minute:
                         st.info("Menunggu pergantian menit untuk eksekusi trade pertama.")
                     else:
-                        if current_time.second <= 20 and st.session_state.trade_executed_minute is None:
-                            st.write("Eksekusi trade: Waktu server berada di antara 0-20 detik.")
-                            trade_msg = execute_trade_action(st.session_state.driver, signal, st.session_state.current_bid)
-                            if "Error" in trade_msg or "Gagal" in trade_msg:
-                                st.error(f"Eksekusi perdagangan otomatis gagal: {trade_msg}")
-                            else:
-                                st.success(f"Eksekusi perdagangan otomatis berhasil: {trade_msg}")
-                                st.session_state.trade_executed_minute = get_google_time().minute
-                        else:
-                            st.warning("Menunggu pergantian menit berikutnya. Eksekusi trade hanya dilakukan pada detik 0-20 dan setelah trade sebelumnya selesai.")
+                        st.warning("Menunggu pergantian menit berikutnya. Eksekusi trade hanya dilakukan pada detik 0-20 dan jika trade belum dieksekusi pada menit ini.")
     else:
         st.error("Tidak ada data harga yang tersedia.")
 
