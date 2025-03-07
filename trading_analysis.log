@@ -1,0 +1,34 @@
+2025-03-07 10:41:50 - INFO - Chromedriver is already installed.
+2025-03-07 10:41:52 - INFO - Local run: Menggunakan Chrome driver otomatis.
+2025-03-07 10:42:07 - INFO - 2FA tidak diperlukan atau tidak muncul dalam waktu 5 detik.
+2025-03-07 10:42:15 - ERROR - Error saat memilih akun: Message: element click intercepted: Element <div _ngcontent-lig-c136="" class="type ng-star-inserted">...</div> is not clickable at point (780, 228). Other element would receive the click: <div class="modal_wrapper__1DMZe">...</div>
+  (Session info: chrome=134.0.6998.35)
+Stacktrace:
+	GetHandleVerifier [0x0092CED3+25523]
+	(No symbol) [0x008B23B4]
+	(No symbol) [0x007806E3]
+	(No symbol) [0x007CEE10]
+	(No symbol) [0x007CD1B4]
+	(No symbol) [0x007CAD57]
+	(No symbol) [0x007CA041]
+	(No symbol) [0x007BE695]
+	(No symbol) [0x007ED7FC]
+	(No symbol) [0x007BE124]
+	(No symbol) [0x007EDA74]
+	(No symbol) [0x0080F273]
+	(No symbol) [0x007ED5F6]
+	(No symbol) [0x007BC55F]
+	(No symbol) [0x007BD8A4]
+	GetHandleVerifier [0x00C32713+3193843]
+	GetHandleVerifier [0x00C469E9+3276489]
+	GetHandleVerifier [0x00C40F0C+3253228]
+	GetHandleVerifier [0x009CB0C0+673184]
+	(No symbol) [0x008BB43D]
+	(No symbol) [0x008B8568]
+	(No symbol) [0x008B8709]
+	(No symbol) [0x008AAE90]
+	BaseThreadInitThunk [0x76737BA9+25]
+	RtlInitializeExceptionChain [0x7784C2EB+107]
+	RtlClearBits [0x7784C26F+191]
+
+2025-03-07 10:42:17 - INFO - Popup dengan xpath telah diklik.

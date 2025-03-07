@@ -713,16 +713,17 @@ def execute_trade_action(driver, signal, bid_amount):
       2. Tetapkan bid dengan nilai bid_amount.
       3. Klik tombol trade sesuai sinyal.
     """
-    current_balance = check_balance(driver)
-    if current_balance is None:
-        return "Gagal mengambil balance."
-    if current_balance < bid_amount:
-        return f"Balance tidak mencukupi: Balance saat ini Rp{current_balance}, dibutuhkan Rp{bid_amount}."
+    wait = WebDriverWait(driver, 1)
+
+    # current_balance = check_balance(driver)
+    # if current_balance is None:
+    #     return "Gagal mengambil balance."
+    # if current_balance < bid_amount:
+    #     return f"Balance tidak mencukupi: Balance saat ini Rp{current_balance}, dibutuhkan Rp{bid_amount}."
 
     if not set_bid(driver, bid_amount):
         return f"Bid Rp{bid_amount} gagal ditetapkan."
     
-    wait = WebDriverWait(driver, 5)
     if "BUY" in signal.upper():
         button_xpath = '/html/body/binomo-root/platform-ui-scroll/div/div/ng-component/main/div/app-panel/ng-component/section/binary-info/div[2]/div/trading-buttons/vui-button[1]/button'
     elif "SELL" in signal.upper():
@@ -913,24 +914,25 @@ def main():
                 # 1. Detik server ≤ 20
                 # 2. Trade belum dieksekusi pada menit ini (flag trade_executed_minute == None)
                 if current_time.second <= 20 and st.session_state.trade_executed_minute is None:
-                    # Tentukan bid dan pesan info berdasarkan perbandingan saldo
+                    # Cek saldo terlebih dahulu sebelum eksekusi trade
                     if current_balance is not None:
                         if current_balance > st.session_state.prev_balance:
-                            new_bid = initial_bid
-                            info_msg = f"Profit terjadi. Reset bid ke nilai awal: Rp{initial_bid}"
+                            st.session_state.current_bid = initial_bid
+                            st.info(f"Profit terjadi. Reset bid ke nilai awal: Rp{initial_bid}")
+                            trade_msg = execute_trade_action(st.session_state.driver, signal, initial_bid)
                         elif current_balance < st.session_state.prev_balance:
-                            new_bid = int(st.session_state.current_bid * compensation_factor)
-                            info_msg = f"Loss atau break-even terdeteksi. Menjalankan trade kompensasi dengan bid: Rp{new_bid}"
+                            compensated_bid = int(st.session_state.current_bid * compensation_factor)
+                            st.session_state.current_bid = compensated_bid
+                            st.info(f"Loss atau break-even terdeteksi. Menjalankan trade kompensasi dengan bid: Rp{compensated_bid}")
+                            trade_msg = execute_trade_action(st.session_state.driver, signal, compensated_bid)
                         else:
-                            new_bid = st.session_state.current_bid
-                            info_msg = f"Tidak ada perubahan pada saldo. Eksekusi trade dengan bid: Rp{new_bid}"
+                            st.info(f"Tidak ada perubahan pada saldo. Eksekusi trade dengan bid: Rp{st.session_state.current_bid}")
+                            trade_msg = execute_trade_action(st.session_state.driver, signal, st.session_state.current_bid)
                     else:
-                        new_bid = st.session_state.current_bid
-                        info_msg = f"Tidak dapat memverifikasi saldo. Eksekusi trade dengan bid: Rp{new_bid}"
-                    
-                    st.info(info_msg)
-                    trade_msg = execute_trade_action(st.session_state.driver, signal, new_bid)
-                    
+                        st.info(f"Tidak dapat memverifikasi saldo. Eksekusi trade dengan bid: Rp{st.session_state.current_bid}")
+                        trade_msg = execute_trade_action(st.session_state.driver, signal, st.session_state.current_bid)
+
+                    # Tangani hasil eksekusi trade
                     if "Error" not in trade_msg and "Gagal" not in trade_msg:
                         st.session_state.trade_executed_minute = current_time.minute
                         if current_balance is not None:
