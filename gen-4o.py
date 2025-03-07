@@ -541,13 +541,8 @@ def init_driver(twofa_code="", account_type="Demo", username_input="", password_
     Pastikan di lingkungan online, paket-paket berikut sudah terinstal:
       chromium
       chromium-driver
-    dan executable Chromium ada di /usr/bin/chromium-browser (atau sesuaikan dengan lokasi binary Anda).
+    dan executable Chromium ada di /usr/bin/chromium-browser (atau, jika tidak ada, di /usr/bin/chromium).
     """
-    import os, sys, logging
-    from selenium import webdriver
-    from selenium.webdriver.common.by import By
-    from selenium.webdriver.support.ui import WebDriverWait
-    from selenium.webdriver.support import expected_conditions as EC
 
     # Tentukan apakah lingkungan online atau lokal
     online_env = os.environ.get("STREAMLIT_CLOUD", "false").lower() == "true"
@@ -560,7 +555,7 @@ def init_driver(twofa_code="", account_type="Demo", username_input="", password_
         from selenium.webdriver.chrome.options import Options as ChromeOptions
         from selenium.webdriver.chrome.service import Service as ChromeService
         options = ChromeOptions()
-        # Jika /usr/bin/chromium-browser ada, gunakan itu; jika tidak, gunakan /usr/bin/chromium
+        # Gunakan /usr/bin/chromium-browser jika ada, jika tidak gunakan /usr/bin/chromium
         if os.path.exists("/usr/bin/chromium-browser"):
             options.binary_location = "/usr/bin/chromium-browser"
         else:
@@ -692,7 +687,6 @@ def init_driver(twofa_code="", account_type="Demo", username_input="", password_
         logging.info("Popup tidak muncul, lanjutkan proses.")
 
     return driver
-
 
 
 def check_balance(driver):
