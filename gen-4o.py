@@ -555,7 +555,7 @@ def init_driver(twofa_code="", account_type="Demo", username_input="", password_
         from selenium.webdriver.chrome.options import Options as ChromeOptions
         from selenium.webdriver.chrome.service import Service as ChromeService
         options = ChromeOptions()
-        # Gunakan /usr/bin/chromium-browser jika ada, jika tidak gunakan /usr/bin/chromium
+        # Tentukan binary Chromium
         if os.path.exists("/usr/bin/chromium-browser"):
             options.binary_location = "/usr/bin/chromium-browser"
         else:
@@ -687,7 +687,6 @@ def init_driver(twofa_code="", account_type="Demo", username_input="", password_
         logging.info("Popup tidak muncul, lanjutkan proses.")
 
     return driver
-
 
 def check_balance(driver):
     """
@@ -902,7 +901,6 @@ def main():
                     st.session_state.new_balance = balance
                 st.session_state.current_bid = initial_bid
                 st.info("Login berhasil. Menunggu pergantian menit untuk trade pertama.")
-
             else:
                 # Perbarui saldo terbaru sebelum eksekusi trade
                 current_balance = check_balance(st.session_state.driver)
@@ -939,8 +937,6 @@ def main():
                         st.success(f"Eksekusi perdagangan otomatis berhasil: {trade_msg}")
                     else:
                         st.error(f"Eksekusi perdagangan otomatis gagal: {trade_msg}")
-
-
                 else:
                     if st.session_state.login_time and current_time.minute == st.session_state.login_time.minute:
                         st.info("Menunggu pergantian menit untuk eksekusi trade pertama.")
