@@ -1,3 +1,4 @@
+import streamlit as st
 import subprocess
 
 def get_binary_location(binary_names=["chromium-browser", "chromium"]):
@@ -17,9 +18,9 @@ def get_binary_location(binary_names=["chromium-browser", "chromium"]):
 def main():
     chromium_location = get_binary_location()
     if chromium_location:
-        print("Lokasi Chromium:", chromium_location)
+        st.write("Lokasi Chromium:", chromium_location)
     else:
-        print("Chromium tidak ditemukan di PATH.")
+        st.write("Chromium tidak ditemukan di PATH.")
 
 if __name__ == "__main__":
     main()
