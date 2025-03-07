@@ -50,7 +50,7 @@ st.markdown(
         color: #000000FF;
         height: 100%;
         border-radius: 8px;
-        margin-top: 10px;
+        margin-top: 5px;
         margin-bottom: 20px;
     }
     .subheader {
@@ -63,6 +63,8 @@ st.markdown(
     }
     .subtitle {
         font-size: 1.2rem;
+        font-weight: normal;
+        font-style: italic;
     }
     </style>
     """,
@@ -762,13 +764,13 @@ def display_dashboard(df, signal, reason, strength, trade_msg=""):
     
     with st.container():
         st.markdown(
-            f"<div class='header-container'><span class='title'>Dashboard Analisis Trading</span> <br>"
+            f"<div class='header-container'><span class='title'>Analisis Trading</span> <br>"
             f"<span class='subtitle'>{current_time}</span></div>",
             unsafe_allow_html=True
         )
     
     with st.container():
-        st.markdown("### Sinyal Trading")
+        # st.markdown("### Sinyal Trading")
         col1, col2 = st.columns([1, 1])
         with col1:
             st.markdown(
