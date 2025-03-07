@@ -447,7 +447,7 @@ def process_data():
     
     # Buang candle terakhir (yang sedang berjalan / incomplete)
     # Sehingga df.iloc[-1] nanti adalah candle terakhir yang benar-benar sudah close.
-    df = df.iloc[:1].reset_index(drop=True)
+    # df = df.iloc[:1].reset_index(drop=True)
     
     # Hitung indikator
     df = calculate_indicators(df)
