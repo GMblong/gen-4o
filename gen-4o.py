@@ -556,7 +556,7 @@ def init_driver(twofa_code="", account_type="Demo", username_input="", password_
         from selenium.webdriver.chrome.service import Service as ChromeService
         options = ChromeOptions()
         # Pastikan binary chromium terletak di /usr/bin/chromium-browser (atau sesuaikan)
-        options.binary_location = "/usr/bin/chromium-browser"
+        options.binary_location = "/usr/bin/chromium"
         options.add_argument("--headless")
         options.add_argument("--no-sandbox")
         options.add_argument("--disable-dev-shm-usage")
