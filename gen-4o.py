@@ -620,6 +620,24 @@ def init_driver(twofa_code="", account_type="Demo", username_input="", password_
         driver.quit()
         return None
 
+    # Proses 2FA: Gunakan timeout pendek untuk menunggu elemen 2FA. Jika tidak muncul, lanjutkan.
+    try:
+        twofa_field = WebDriverWait(driver, 5).until(
+            EC.presence_of_element_located((By.XPATH,
+            '/html/body/binomo-root/platform-ui-scroll/div/div/ng-component/ng-component/div/div/auth-form/sa-auth-form/div[2]/div/app-two-factor-auth-validation/app-otp-validation-form/form/platform-forms-input/way-input/div/div/way-input-text/input'))
+        )
+        # Jika elemen 2FA muncul, periksa apakah kode diberikan.
+        if twofa_field:
+            if twofa_code:
+                twofa_field.send_keys(twofa_code)
+                twofa_submit = wait.until(EC.element_to_be_clickable((By.XPATH,
+                    '/html/body/binomo-root/platform-ui-scroll/div/div/ng-component/ng-component/div/div/auth-form/sa-auth-form/div[2]/div/app-two-factor-auth-validation/app-otp-validation-form/form/vui-button/button')))
+                twofa_submit.click()
+            else:
+                logging.info("2FA muncul, namun kode tidak diberikan. Menganggap 2FA tidak diperlukan.")
+    except Exception as e:
+        logging.info("2FA tidak diperlukan atau tidak muncul dalam waktu 5 detik.")
+
     # Tunggu sampai tampilan setelah login muncul, misalnya account switcher
     try:
         account_switcher = wait.until(EC.presence_of_element_located((By.XPATH, '//*[@id="account"]')))
@@ -650,24 +668,6 @@ def init_driver(twofa_code="", account_type="Demo", username_input="", password_
         popup_button.click()
     except Exception as e:
         logging.info("Popup tidak muncul, lanjutkan proses.")
-    
-    # Proses 2FA: Gunakan timeout pendek untuk menunggu elemen 2FA. Jika tidak muncul, lanjutkan.
-    try:
-        twofa_field = WebDriverWait(driver, 5).until(
-            EC.presence_of_element_located((By.XPATH,
-            '/html/body/binomo-root/platform-ui-scroll/div/div/ng-component/ng-component/div/div/auth-form/sa-auth-form/div[2]/div/app-two-factor-auth-validation/app-otp-validation-form/form/platform-forms-input/way-input/div/div/way-input-text/input'))
-        )
-        # Jika elemen 2FA muncul, periksa apakah kode diberikan.
-        if twofa_field:
-            if twofa_code:
-                twofa_field.send_keys(twofa_code)
-                twofa_submit = wait.until(EC.element_to_be_clickable((By.XPATH,
-                    '/html/body/binomo-root/platform-ui-scroll/div/div/ng-component/ng-component/div/div/auth-form/sa-auth-form/div[2]/div/app-two-factor-auth-validation/app-otp-validation-form/form/vui-button/button')))
-                twofa_submit.click()
-            else:
-                logging.info("2FA muncul, namun kode tidak diberikan. Menganggap 2FA tidak diperlukan.")
-    except Exception as e:
-        logging.info("2FA tidak diperlukan atau tidak muncul dalam waktu 5 detik.")
     
     return driver
 
