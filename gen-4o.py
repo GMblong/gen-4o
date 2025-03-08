@@ -547,7 +547,6 @@ def init_driver(twofa_code="", account_type="Demo", username_input="", password_
         return None
 
     driver.implicitly_wait(10)
-
     wait = WebDriverWait(driver, 20)
     driver.get("https://binomo2.com/trading")
     try:
@@ -556,10 +555,9 @@ def init_driver(twofa_code="", account_type="Demo", username_input="", password_
         driver.quit()
         return None
 
-    # Lanjutkan proses login (sama seperti sebelumnya)
+    # Field Username dengan XPath sederhana
     try:
-        username_field = wait.until(EC.presence_of_element_located((By.XPATH,
-            '/html/body/binomo-root/platform-ui-scroll/div/div/ng-component/ng-component/div/div/auth-form/sa-auth-form/div[2]/div/app-sign-in/div/form/div[1]/platform-forms-input/way-input/div/div[1]/way-input-text/input')))
+        username_field = wait.until(EC.presence_of_element_located((By.XPATH, "//input[@type='text']")))
         username_val = username_input if username_input.strip() != "" else "andiarifrahmatullah@gmail.com"
         username_field.send_keys(username_val)
     except Exception as e:
@@ -567,9 +565,9 @@ def init_driver(twofa_code="", account_type="Demo", username_input="", password_
         driver.quit()
         return None
 
+    # Field Password dengan XPath sederhana
     try:
-        password_field = wait.until(EC.presence_of_element_located((By.XPATH,
-            '/html/body/binomo-root/platform-ui-scroll/div/div/ng-component/ng-component/div/div/auth-form/sa-auth-form/div[2]/div/app-sign-in/div/form/div[2]/platform-forms-input/way-input/div/div/way-input-password/input')))
+        password_field = wait.until(EC.presence_of_element_located((By.XPATH, "//input[@type='password']")))
         password_val = password_input if password_input.strip() != "" else "@Rahmatullah07"
         password_field.send_keys(password_val)
     except Exception as e:
@@ -577,9 +575,9 @@ def init_driver(twofa_code="", account_type="Demo", username_input="", password_
         driver.quit()
         return None
 
+    # Tombol Login dengan XPath sederhana
     try:
-        login_button = wait.until(EC.element_to_be_clickable((By.XPATH,
-            '/html/body/binomo-root/platform-ui-scroll/div/div/ng-component/ng-component/div/div/auth-form/sa-auth-form/div[2]/div/app-sign-in/div/form/vui-button/button')))
+        login_button = wait.until(EC.element_to_be_clickable((By.XPATH, "//button[@type='submit']")))
         login_button.click()
     except Exception as e:
         logging.error(f"Error pada tombol login: {e}")
@@ -633,6 +631,7 @@ def init_driver(twofa_code="", account_type="Demo", username_input="", password_
         logging.info("Popup tidak muncul, lanjutkan proses.")
 
     return driver
+
 
 def get_cached_balance_element(driver):
     """
