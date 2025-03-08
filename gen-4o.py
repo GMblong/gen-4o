@@ -9,6 +9,7 @@ import pandas as pd
 from datetime import datetime
 import streamlit as st
 import plotly.graph_objects as go
+from numba import jit
 import chromedriver_autoinstaller
 from selenium import webdriver
 from selenium.webdriver.support.ui import WebDriverWait
@@ -108,7 +109,7 @@ def fetch_price_data():
     """
     base_url = "https://api.binomo2.com/candles/v1"
     symbol = "Z-CRY%2FIDX"
-    interval = "60"
+    interval = "60"  # Data 1 menit
     locale = "en"
     current_time = get_google_time()
     formatted_time = current_time.strftime('%Y-%m-%dT00:00:00')
@@ -123,52 +124,51 @@ def fetch_price_data():
         logging.error("Gagal mengambil data harga.")
     return []
 
+
 def calculate_indicators(df):
     """
     Hitung indikator teknikal: ATR, ADX, EMA, RSI, StochRSI, Bollinger Bands, MACD.
-    DIHAPUS: pembuangan candle terakhir di sini.
-    Kita asumsikan df yang diterima sudah TIDAK mencakup candle yang sedang berjalan.
+    Optimalkan untuk data 1 menit dengan parameter lebih sensitif.
     """
     df = df.copy()
     
-    df['ATR'] = ta.volatility.average_true_range(df['high'], df['low'], df['close'], window=5)
-    df['ADX'] = ta.trend.adx(df['high'], df['low'], df['close'], window=5)
+    # Gunakan window lebih kecil untuk data 1 menit
+    df['ATR'] = ta.volatility.average_true_range(df['high'], df['low'], df['close'], window=3)
+    df['ADX'] = ta.trend.adx(df['high'], df['low'], df['close'], window=3)
     df['EMA_3'] = ta.trend.ema_indicator(df['close'], window=3)
     df['EMA_5'] = ta.trend.ema_indicator(df['close'], window=5)
-    df['RSI'] = ta.momentum.rsi(df['close'], window=5)
+    df['RSI'] = ta.momentum.rsi(df['close'], window=3)
     
-    # StochRSI
-    min_rsi = df['RSI'].rolling(window=14).min()
-    max_rsi = df['RSI'].rolling(window=14).max()
+    # StochRSI dengan window 7 (lebih cepat) daripada default 14
+    min_rsi = df['RSI'].rolling(window=7).min()
+    max_rsi = df['RSI'].rolling(window=7).max()
     df['StochRSI_K'] = np.where(
         (max_rsi - min_rsi) == 0,
         0.5,
         (df['RSI'] - min_rsi) / (max_rsi - min_rsi)
     ) * 100
     
-    # Bollinger Bands
-    rolling_mean = df['close'].rolling(5).mean()
-    rolling_std = df['close'].rolling(5).std()
-    df['BB_Upper'] = rolling_mean + (rolling_std * 1.5)
-    df['BB_Lower'] = rolling_mean - (rolling_std * 1.5)
+    # Bollinger Bands: gunakan rolling window 3 dan multiplier 1.2
+    rolling_mean = df['close'].rolling(3).mean()
+    rolling_std = df['close'].rolling(3).std()
+    df['BB_Upper'] = rolling_mean + (rolling_std * 1.2)
+    df['BB_Lower'] = rolling_mean - (rolling_std * 1.2)
     
-    # MACD
-    df['MACD'] = ta.trend.macd(df['close'], window_slow=12, window_fast=6)
-    df['MACD_signal'] = ta.trend.macd_signal(df['close'], window_slow=12, window_fast=6, window_sign=9)
+    # MACD dengan parameter lebih sensitif: window_slow=6, window_fast=3, window_sign=4
+    df['MACD'] = ta.trend.macd(df['close'], window_slow=6, window_fast=3)
+    df['MACD_signal'] = ta.trend.macd_signal(df['close'], window_slow=6, window_fast=3, window_sign=4)
     
-    # Log candle terakhir
-    last_candle = df.iloc[-1]
     return df
+
 
 def detect_candlestick_patterns(df):
     """
     Deteksi pola candlestick pada data.
-    DIHAPUS: pembuangan candle terakhir di sini.
-    Kita asumsikan df yang diterima sudah TIDAK mencakup candle yang sedang berjalan.
+    Optimalkan untuk data 1 menit dengan penyesuaian toleransi.
     """
     df = df.copy()
     
-    # Pola-pola dasar
+    # Pola dasar
     df['Hammer'] = ((df['high'] - df['low']) > 2 * abs(df['close'] - df['open'])) & (df['close'] > df['open'])
     df['Shooting_Star'] = ((df['high'] - df['low']) > 2 * abs(df['close'] - df['open'])) & (df['open'] > df['close'])
     df['Bullish_Engulfing'] = (df['close'].shift(1) < df['open'].shift(1)) & (df['close'] > df['open'])
@@ -197,15 +197,15 @@ def detect_candlestick_patterns(df):
         (abs(df['close'] - df['open']) <= 0.3 * (df['high'] - df['low']))
     )
     
-    # Marubozu
-    tolerance = 0.05 * (df['high'] - df['low'])
+    # Marubozu dengan toleransi dikurangi (0.03)
+    tolerance = 0.03 * (df['high'] - df['low'])
     bullish_marubozu = (df['close'] > df['open']) & ((df['open'] - df['low']) <= tolerance) & ((df['high'] - df['close']) <= tolerance)
     bearish_marubozu = (df['close'] < df['open']) & ((df['high'] - df['open']) <= tolerance) & ((df['close'] - df['low']) <= tolerance)
     df['Marubozu'] = bullish_marubozu | bearish_marubozu
 
-    # Pola tambahan
-    # 1. Tweezer Top & Bottom
-    tol = 0.05 * (df['high'] - df['low'])
+    # Pola tambahan dengan toleransi disesuaikan
+    # 1. Tweezer Top & Bottom (toleransi 0.03)
+    tol = 0.03 * (df['high'] - df['low'])
     df['Tweezer_Top'] = (
         (abs(df['high'] - df['high'].shift(1)) <= tol) &
         (df['close'].shift(1) > df['open'].shift(1)) & (df['close'] < df['open'])
@@ -215,8 +215,8 @@ def detect_candlestick_patterns(df):
         (df['close'].shift(1) < df['open'].shift(1)) & (df['close'] > df['open'])
     )
     
-    # 2. Railroad Tracks
-    tol_rt = 0.05 * (df['high'] - df['low'])
+    # 2. Railroad Tracks (toleransi 0.03)
+    tol_rt = 0.03 * (df['high'] - df['low'])
     df['Railroad_Tracks'] = (
         (abs(df['open'] - df['open'].shift(1)) <= tol_rt) &
         (abs(df['close'] - df['close'].shift(1)) <= tol_rt) &
@@ -255,7 +255,7 @@ def detect_candlestick_patterns(df):
     )
     df['Fakey_Pattern'] = df['Fakey_Bullish'] | df['Fakey_Bearish']
     
-    # 5. Rising & Falling Wedge (5 candle)
+    # 5. Rising & Falling Wedge (window 5)
     df['Rising_Wedge'] = False
     df['Falling_Wedge'] = False
     window = 5
@@ -267,10 +267,10 @@ def detect_candlestick_patterns(df):
         x = np.arange(window)
         slope_high = np.polyfit(x, highs, 1)[0]
         slope_low = np.polyfit(x, lows, 1)[0]
-        # Rising Wedge
+        # Rising Wedge: kedua slope positif dan slope_low lebih besar daripada slope_high
         if (slope_high > 0) and (slope_low > 0) and (slope_low > slope_high):
             df.at[df.index[i], 'Rising_Wedge'] = True
-        # Falling Wedge
+        # Falling Wedge: kedua slope negatif dan slope_high lebih besar daripada slope_low
         if (slope_high < 0) and (slope_low < 0) and (slope_high > slope_low):
             df.at[df.index[i], 'Falling_Wedge'] = True
     
@@ -292,17 +292,14 @@ def detect_candlestick_patterns(df):
 def check_entry_signals(df):
     """
     Tentukan sinyal entry berdasarkan pola candlestick dan indikator teknikal.
-    df yang diterima sudah TIDAK berisi candle terakhir yang belum selesai,
-    sehingga df.iloc[-1] adalah candle final terakhir (lengkap).
+    df yang diterima sudah TIDAK berisi candle terakhir yang belum selesai.
     """
-    # Asumsikan df sudah melewati detect_candlestick_patterns
     last_candle = df.iloc[-1]
     prev_candle = df.iloc[-2]
     
     adx_threshold = 20
     atr_threshold = df['ATR'].mean() * 0.5
-
-    # Syarat bullish & bearish
+    
     bullish_primary = (
         last_candle['Bullish_Engulfing'] or
         last_candle['Hammer'] or
@@ -322,7 +319,6 @@ def check_entry_signals(df):
     if last_candle['Marubozu']:
         bullish_primary = (last_candle['close'] > last_candle['open'])
     
-    # Konfirmasi
     confirmations_bull = sum([
         last_candle['RSI'] < 50,
         last_candle['StochRSI_K'] < 20,
@@ -339,14 +335,12 @@ def check_entry_signals(df):
     breakout_bull = (last_candle['close'] < last_candle['BB_Lower'])
     breakout_bear = (last_candle['close'] > last_candle['BB_Upper'])
     
-    # Divergence
     divergence_warning = ""
     if (last_candle['close'] < prev_candle['close']) and (last_candle['MACD'] > prev_candle['MACD']):
         divergence_warning = "Terdeteksi bullish divergence, waspada pembalikan naik. "
     if (last_candle['close'] > prev_candle['close']) and (last_candle['MACD'] < prev_candle['MACD']):
         divergence_warning = "Terdeteksi bearish divergence, waspada pembalikan turun. "
     
-    # Alasan
     reason = []
     if last_candle['Bullish_Engulfing']:
         reason.append("Bullish Engulfing")
@@ -354,7 +348,7 @@ def check_entry_signals(df):
         reason.append("Hammer")
     if last_candle['Three_White_Soldiers']:
         reason.append("Three White Soldiers")
-    if (last_candle['EMA_3'] > last_candle['EMA_5'] and prev_candle['EMA_3'] < prev_candle['EMA_5']):
+    if (last_candle['EMA_3'] > last_candle['EMA_5'] and prev_candle['EMA_3'] < prev_candle['EMA_3']):
         reason.append("EMA3 cross EMA5 ke atas")
     if last_candle['Morning_Star']:
         reason.append("Morning Star")
@@ -381,7 +375,7 @@ def check_entry_signals(df):
     if breakout_bear:
         reason.append("Breakout bearish pada BB_Upper")
     if divergence_warning:
-        reason.append(divergence_warning.strip())  # tambahkan warning
+        reason.append(divergence_warning.strip())
     
     # Pola tambahan
     if last_candle['Tweezer_Top']:
@@ -402,10 +396,9 @@ def check_entry_signals(df):
         reason.append("Dragonfly Doji")
     if last_candle['Gravestone_Doji']:
         reason.append("Gravestone Doji")
-
+    
     reason_str = ", ".join(reason) + ", " if reason else ""
     
-    # Penentuan sinyal
     if bullish_primary:
         effective = confirmations_bull + (1 if breakout_bull else 0)
         max_possible = 5 if breakout_bull else 4
@@ -420,16 +413,17 @@ def check_entry_signals(df):
         signal = "SELL KUAT 📉" if (confirmations_bear >= 3 or breakout_bear) else "SELL LEMAH 📉"
         return signal, "Konfirmasi bearish: " + reason_str, strength_percent
     
-    # Default fallback
     if last_candle['RSI'] < 50:
         return ("BUY 📈", "RSI di bawah 50, peluang kenaikan.", 50)
     else:
         return ("SELL 📉", "RSI di atas 50, peluang penurunan.", 50)
-    
+
+
 def process_data():
     """
     Ambil data harga, lalu buang candle terakhir (yang dianggap masih berjalan).
-    Setelah itu, baru hitung indikator dan pola candlestick, lalu evaluasi sinyal.
+    Setelah itu, hitung indikator dan pola candlestick, lalu evaluasi sinyal.
+    Optimalkan untuk data 1 menit.
     """
     candles = fetch_price_data()
     if not candles:
@@ -443,25 +437,20 @@ def process_data():
     df['time'] = pd.to_datetime(df['created_at'])
     df = df[columns]
     
-    # Pastikan data numerik
+    # Pastikan kolom numerik memiliki tipe data float64
     for col in ['open', 'close', 'high', 'low']:
         df[col] = df[col].astype(np.float64).round(8)
     
-    # Buang candle terakhir (yang sedang berjalan / incomplete)
-    # Sehingga df.iloc[-1] nanti adalah candle terakhir yang benar-benar sudah close.
-    # df = df.iloc[:1].reset_index(drop=True)
+    # Opsional: Buang candle terakhir yang belum lengkap
+    # df = df.iloc[:-1].reset_index(drop=True)
     
-    # Hitung indikator
     df = calculate_indicators(df)
-    
-    # Deteksi pola
     df = detect_candlestick_patterns(df)
     
-    # Evaluasi sinyal (candle terakhir => df.iloc[-1])
     signal, reason, strength = check_entry_signals(df)
     
-    # Simulasi outcome
-    trade_open = df.iloc[-1]['open']   # Candle terakhir
+    # Simulasi outcome trading
+    trade_open = df.iloc[-1]['open']   # Candle terakhir (close)
     trade_close = df.iloc[-2]['close'] # Candle sebelumnya
     if "BUY" in signal:
         trade_success = (trade_open > trade_close)
@@ -480,6 +469,7 @@ def process_data():
     
     return df, signal, reason, strength
 
+
 # =============================================================================
 # FUNGSI UNTUK EKSEKUSI PERDAGANGAN (TRADING)
 # =============================================================================
@@ -495,7 +485,7 @@ def set_bid(driver, bid_amount):
     bid_xpath = '/html/body/binomo-root/platform-ui-scroll/div/div/ng-component/main/div/app-panel/ng-component/section/div/way-input-controls/div/input'
     
     try:
-        bid_element = WebDriverWait(driver, 5).until(
+        bid_element = WebDriverWait(driver, 2).until(
             EC.presence_of_element_located((By.XPATH, bid_xpath))
         )
     except Exception as e:
@@ -590,6 +580,7 @@ def init_driver(twofa_code="", account_type="Demo", username_input="", password_
         options.add_argument("--disable-dev-shm-usage")
         options.add_argument("--disable-gpu")
         options.add_argument("--disable-blink-features=AutomationControlled")
+        options.add_argument("--window-size=1920x1080")
         
         try:
             import chromedriver_autoinstaller
@@ -779,7 +770,7 @@ def display_dashboard(df, signal, reason, strength, trade_msg=""):
             )
         with col2:
             st.markdown(
-                f"<div class='info-box' style='background-color: #FFFFFFFF; color: #000000;'><span class='subheader'>Kekuatan:</span><br> {strength:.1f}%</div>",
+                f"<div class='info-box' style='background-color: #FFFFFFFF; color: #000000FF;'><span class='subheader'>Kekuatan:</span><br> {strength:.1f}%</div>",
                 unsafe_allow_html=True
             )
         if trade_msg:
@@ -924,7 +915,9 @@ def main():
                 # Eksekusi trade hanya jika:
                 # 1. Detik server ≤ 20
                 # 2. Trade belum dieksekusi pada menit ini (flag trade_executed_minute == None)
-                if current_time.second <= 20 and st.session_state.trade_executed_minute is None:
+
+                # if current_time.second <= 20 and st.session_state.trade_executed_minute is None:
+                if current_time.second <= 20:
                     # Cek saldo terlebih dahulu sebelum eksekusi trade
                     if current_balance is not None:
                         if current_balance > st.session_state.prev_balance:
@@ -943,19 +936,20 @@ def main():
                         st.info(f"Tidak dapat memverifikasi saldo. Eksekusi trade dengan bid: Rp{st.session_state.current_bid}")
                         trade_msg = execute_trade_action(st.session_state.driver, signal, st.session_state.current_bid)
 
-                    # Tangani hasil eksekusi trade
-                    if "Error" not in trade_msg and "Gagal" not in trade_msg:
-                        st.session_state.trade_executed_minute = current_time.minute
-                        if current_balance is not None:
-                            st.session_state.prev_balance = current_balance
-                        st.success(f"Eksekusi perdagangan otomatis berhasil: {trade_msg}")
-                    else:
-                        st.error(f"Eksekusi perdagangan otomatis gagal: {trade_msg}")
                 else:
                     if st.session_state.login_time and current_time.minute == st.session_state.login_time.minute:
                         st.warning("Menunggu pergantian menit untuk eksekusi trade pertama.")
                     else:
                         st.warning("Menunggu pergantian menit berikutnya. Eksekusi trade hanya dilakukan pada detik 0-20 dan jika trade belum dieksekusi pada menit ini.")
+                
+            # Tangani hasil eksekusi trade
+            if "Error" not in trade_msg and "Gagal" not in trade_msg:
+                st.session_state.trade_executed_minute = current_time.minute
+                if current_balance is not None:
+                    st.session_state.prev_balance = current_balance
+                st.success(f"Eksekusi perdagangan otomatis berhasil: {trade_msg}")
+            else:
+                st.error(f"Eksekusi perdagangan otomatis gagal: {trade_msg}")
     else:
         st.error("Tidak ada data harga yang tersedia.")
 
