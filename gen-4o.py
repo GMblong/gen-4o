@@ -609,15 +609,15 @@ def init_driver(twofa_code="", account_type="Demo", username_input="", password_
 
     try:
         account_types = {
-            'Real': '/html/body/vui-popover/div[2]/account-list/div[1]',
-            'Demo': '/html/body/vui-popover/div[2]/account-list/div[2]',
-            'Tournament': '/html/body/vui-popover/div[2]/account-list/div[3]'
+            'Real': "//div[normalize-space()='Real account']",
+            'Demo': "//div[normalize-space()='Demo account']",
+            'Tournament': "//div[normalize-space()='Tournament account']"
         }
         chosen_xpath = account_types.get(account_type)
         if not chosen_xpath:
             logging.error("Tipe akun tidak dikenali.")
         else:
-            account_element = wait.until(EC.element_to_be_clickable((By.XPATH, chosen_xpath)))
+            account_element = wait.until(EC.presence_of_element_located((By.XPATH, chosen_xpath)))
             account_element.click()
     except Exception as e:
         logging.error(f"Error saat memilih akun: {e}")
