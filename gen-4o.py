@@ -460,82 +460,19 @@ def process_data():
     
     st.session_state.last_trade_success = trade_success
     log_message = (
-        f"\n{get_google_time().strftime('%H:%M:%S')} Sinyal Trading: {signal} | "
-        f"Kekuatan: {strength:.1f}% | Trade Success: {trade_success}\n"
-        f"Alasan: {reason} | Close Candle Sebelumnya: {trade_close} | Open Candle Terakhir: {trade_open}"
+        f"\n{get_google_time().strftime('%H:%M:%S')} Sinyal Trading : {signal} | "
+        f"Kekuatan: {strength:.1f}% | Trade Success : {trade_success}\n"
+        f"Alasan: {reason} | Close Candle Sebelumnya : {trade_close} | Open Candle Terakhir : {trade_open}"
     )
     print(log_message)
     
     return df, signal, reason, strength
 
-
-# =============================================================================
-# FUNGSI UNTUK EKSEKUSI PERDAGANGAN (TRADING)
-# =============================================================================
-def set_bid(driver, bid_amount):
-    """
-    Tetapkan nilai bid pada input field di halaman trading.
-    Clear terlebih dahulu field bid, baru masukkan nilai bid.
-    Jika terjadi kesalahan (misalnya gagal clear atau send), fungsi akan mencoba ulang satu kali lagi
-    selama waktu server (detik) belum melebihi 20.
-    """
-    if bid_amount <= 0:
-        raise ValueError("Bid amount must be greater than 0")
-    bid_xpath = '/html/body/binomo-root/platform-ui-scroll/div/div/ng-component/main/div/app-panel/ng-component/section/div/way-input-controls/div/input'
-    
-    try:
-        bid_element = WebDriverWait(driver, 2).until(
-            EC.presence_of_element_located((By.XPATH, bid_xpath))
-        )
-    except Exception as e:
-        logging.error(f"Error menemukan elemen bid: {e}")
-        return False
-
-    bid_value_str = f"Rp{bid_amount}"
-    
-    def attempt_set_bid():
-        try:
-            bid_element.clear()
-            bid_element.send_keys(bid_value_str)
-            return True
-        except Exception as ex:
-            logging.error(f"Error saat clear atau mengirim bid: {ex}")
-            return False
-
-    entered_bid = bid_element.get_attribute('value')
-    entered_bid_numeric = int(re.sub(r"[^\d]", "", entered_bid))
-    expected_bid_numeric = int(re.sub(r"[^\d]", "", bid_value_str))
-    if entered_bid_numeric != expected_bid_numeric:
-        current_time = get_google_time()
-        if current_time.second <= 20:
-            if not attempt_set_bid():
-                return False
-            entered_bid = bid_element.get_attribute('value')
-            entered_bid_numeric = int(re.sub(r"[^\d]", "", entered_bid))
-            if entered_bid_numeric != expected_bid_numeric:
-                logging.warning(f"Retry: Bid numeric {entered_bid_numeric} masih tidak sama dengan {expected_bid_numeric}.")
-                return False
-        else:
-            return False
-    return True
-
 def init_driver(twofa_code="", account_type="Demo", username_input="", password_input=""):
     """
     Inisialisasi driver Selenium dan lakukan login ke platform trading
     dalam mode headless.
-
-    - Jika dijalankan secara lokal (misalnya Windows atau variabel LOCAL_RUN="true"),
-      maka akan menggunakan Chrome dengan chromedriver_autoinstaller.
-    - Jika dijalankan di lingkungan online (misalnya Streamlit Cloud, variabel STREAMLIT_CLOUD="true"),
-      maka akan menggunakan Chromium dan chromium-driver yang sudah diinstal melalui packages.txt.
-
-    Pastikan di lingkungan online, paket-paket berikut sudah terinstal:
-      chromium
-      chromium-driver
-    dan executable Chromium ada di /usr/bin/chromium-browser (atau, jika tidak ada, di /usr/bin/chromium).
     """
-
-    # Tentukan apakah lingkungan online (misalnya Streamlit Cloud) atau lokal
     online_env = os.environ.get("STREAMLIT_CLOUD", "false").lower() == "true"
     local_run = os.environ.get("LOCAL_RUN", "false").lower() == "true" or (
         sys.platform.startswith("win") or sys.platform.startswith("linux") or sys.platform.startswith("darwin")
@@ -546,7 +483,7 @@ def init_driver(twofa_code="", account_type="Demo", username_input="", password_
         from selenium.webdriver.chrome.options import Options as ChromeOptions
         from selenium.webdriver.chrome.service import Service as ChromeService
         options = ChromeOptions()
-        # Periksa keberadaan binary Chromium
+        # Tentukan lokasi binary Chromium
         if os.path.exists("/usr/bin/chromium-browser"):
             options.binary_location = "/usr/bin/chromium-browser"
         elif os.path.exists("/usr/bin/chromium"):
@@ -555,15 +492,18 @@ def init_driver(twofa_code="", account_type="Demo", username_input="", password_
             logging.error("Binary Chromium tidak ditemukan di path yang diharapkan.")
             return None
 
+        # Opsi Headless dan optimasi
         options.add_argument("--headless")
         options.add_argument("--no-sandbox")
         options.add_argument("--disable-dev-shm-usage")
         options.add_argument("--disable-gpu")
+        options.add_argument("--disable-extensions")
+        options.add_argument("--disable-infobars")
+        options.add_argument("--blink-settings=imagesEnabled=false")  # nonaktifkan loading gambar
         options.add_argument("--window-size=1920x1080")
         options.add_argument('--ignore-certificate-errors')
         
         try:
-            # Asumsi chromium-driver sudah ada di PATH
             service = ChromeService()
             driver = webdriver.Chrome(service=service, options=options)
             logging.info("Online run: Menggunakan Chromium dan chromium-driver.")
@@ -579,6 +519,9 @@ def init_driver(twofa_code="", account_type="Demo", username_input="", password_
         options.add_argument("--disable-dev-shm-usage")
         options.add_argument("--disable-gpu")
         options.add_argument("--disable-blink-features=AutomationControlled")
+        options.add_argument("--disable-extensions")
+        options.add_argument("--disable-infobars")
+        options.add_argument("--blink-settings=imagesEnabled=false")
         options.add_argument("--window-size=1920x1080")
         
         try:
@@ -603,10 +546,8 @@ def init_driver(twofa_code="", account_type="Demo", username_input="", password_
         logging.error("Lingkungan tidak dikenali. Tidak dapat inisialisasi driver.")
         return None
 
-    # Set implicit wait untuk membantu pencarian elemen
     driver.implicitly_wait(10)
 
-    # Tunggu hingga halaman utama termuat
     wait = WebDriverWait(driver, 20)
     driver.get("https://binomo2.com/trading")
     try:
@@ -615,7 +556,7 @@ def init_driver(twofa_code="", account_type="Demo", username_input="", password_
         driver.quit()
         return None
 
-    # Proses login dengan explicit wait
+    # Lanjutkan proses login (sama seperti sebelumnya)
     try:
         username_field = wait.until(EC.presence_of_element_located((By.XPATH,
             '/html/body/binomo-root/platform-ui-scroll/div/div/ng-component/ng-component/div/div/auth-form/sa-auth-form/div[2]/div/app-sign-in/div/form/div[1]/platform-forms-input/way-input/div/div[1]/way-input-text/input')))
@@ -645,7 +586,7 @@ def init_driver(twofa_code="", account_type="Demo", username_input="", password_
         driver.quit()
         return None
 
-    # Proses 2FA: Gunakan timeout pendek untuk menunggu elemen 2FA. Jika tidak muncul, lanjutkan.
+    # Proses 2FA (jika diperlukan)
     try:
         twofa_field = WebDriverWait(driver, 5).until(
             EC.presence_of_element_located((By.XPATH,
@@ -693,58 +634,173 @@ def init_driver(twofa_code="", account_type="Demo", username_input="", password_
 
     return driver
 
+def get_cached_balance_element(driver):
+    """
+    Dapatkan elemen balance dengan caching. Jika elemen sudah disimpan dan masih valid,
+    gunakan elemen tersebut. Jika tidak, cari ulang dengan WebDriverWait.
+    """
+    if not hasattr(driver, "cached_balance_element"):
+        driver.cached_balance_element = None
+
+    if driver.cached_balance_element is not None:
+        try:
+            # Pastikan elemen masih tampil
+            driver.cached_balance_element.is_displayed()
+        except Exception:
+            driver.cached_balance_element = None
+
+    if driver.cached_balance_element is None:
+        balance_xpath = "//*[@id='qa_trading_balance']"
+        try:
+            balance_element = WebDriverWait(driver, 0.5).until(
+                EC.presence_of_element_located((By.XPATH, balance_xpath))
+            )
+            driver.cached_balance_element = balance_element
+        except Exception as e:
+            return None, f"Error menemukan elemen balance: {e}"
+    return driver.cached_balance_element, None
+
+
 def check_balance(driver):
     """
-    Periksa balance yang ada pada halaman trading menggunakan xpath:
-    //*[@id="qa_trading_balance"]
-    Mengembalikan nilai balance dalam bentuk integer atau None jika gagal.
+    Periksa balance di halaman trading dengan menggunakan elemen yang dicache.
     """
+    balance_element, error = get_cached_balance_element(driver)
+    if error:
+        return None
     try:
-        balance_element = WebDriverWait(driver, 10).until(
-            EC.presence_of_element_located((By.XPATH, "//*[@id='qa_trading_balance']"))
-        )
         balance_text = balance_element.text
         balance_numeric = int(re.sub(r"[^\d]", "", balance_text))
         return balance_numeric
     except Exception as e:
         return None
 
+
+def get_cached_bid_input(driver):
+    """
+    Dapatkan elemen input bid dengan caching. Jika elemen sudah disimpan dan masih valid,
+    gunakan elemen tersebut. Jika tidak, cari ulang.
+    """
+    if not hasattr(driver, "cached_bid_input"):
+        driver.cached_bid_input = None
+
+    if driver.cached_bid_input is not None:
+        try:
+            driver.cached_bid_input.is_enabled()
+        except Exception:
+            driver.cached_bid_input = None
+
+    if driver.cached_bid_input is None:
+        bid_xpath = '/html/body/binomo-root/platform-ui-scroll/div/div/ng-component/main/div/app-panel/ng-component/section/div/way-input-controls/div/input'
+        try:
+            bid_element = WebDriverWait(driver, 0.5).until(
+                EC.presence_of_element_located((By.XPATH, bid_xpath))
+            )
+            driver.cached_bid_input = bid_element
+        except Exception as e:
+            return None, f"Error menemukan elemen bid: {e}"
+    return driver.cached_bid_input, None
+
+
+def set_bid(driver, bid_amount):
+    """
+    Tetapkan nilai bid pada input field.
+    Menggunakan caching pada elemen bid untuk mempercepat eksekusi.
+    """
+    if bid_amount <= 0:
+        raise ValueError("Bid amount must be greater than 0")
+    
+    bid_value_str = f"Rp{bid_amount}"
+    bid_element, error = get_cached_bid_input(driver)
+    if error:
+        logging.error(error)
+        return False
+
+    def attempt_set_bid():
+        try:
+            bid_element.clear()
+            bid_element.send_keys(bid_value_str)
+            return True
+        except Exception as ex:
+            logging.error(f"Error saat clear atau mengirim bid: {ex}")
+            return False
+
+    entered_bid = bid_element.get_attribute('value')
+    entered_bid_numeric = int(re.sub(r"[^\d]", "", entered_bid))
+    expected_bid_numeric = int(re.sub(r"[^\d]", "", bid_value_str))
+    if entered_bid_numeric != expected_bid_numeric:
+        current_time = get_google_time()
+        if current_time.second <= 20:
+            if not attempt_set_bid():
+                return False
+            entered_bid = bid_element.get_attribute('value')
+            entered_bid_numeric = int(re.sub(r"[^\d]", "", entered_bid))
+            if entered_bid_numeric != expected_bid_numeric:
+                logging.warning(f"Retry: Bid numeric {entered_bid_numeric} tidak sama dengan {expected_bid_numeric}.")
+                return False
+        else:
+            return False
+    return True
+
+
+def get_cached_trade_button(driver, signal):
+    """
+    Caching tombol trade (BUY/SELL) agar tidak mencari ulang setiap eksekusi.
+    Jika elemen sudah stale, akan dicari ulang.
+    """
+    if not hasattr(driver, "cached_trade_buttons"):
+        driver.cached_trade_buttons = {}
+    trade_buttons = driver.cached_trade_buttons
+
+    if "BUY" in signal.upper():
+        key = "BUY"
+        xpath = '/html/body/binomo-root/platform-ui-scroll/div/div/ng-component/main/div/app-panel/ng-component/section/binary-info/div[2]/div/trading-buttons/vui-button[1]/button'
+    elif "SELL" in signal.upper():
+        key = "SELL"
+        xpath = '/html/body/binomo-root/platform-ui-scroll/div/div/ng-component/main/div/app-panel/ng-component/section/binary-info/div[2]/div/trading-buttons/vui-button[2]/button'
+    else:
+        return None, "Signal tidak dikenali."
+
+    button_element = trade_buttons.get(key, None)
+    if button_element:
+        try:
+            button_element.is_enabled()
+        except Exception:
+            button_element = None
+
+    if button_element is None:
+        try:
+            button_element = WebDriverWait(driver, 0.5).until(
+                EC.presence_of_element_located((By.XPATH, xpath))
+            )
+            trade_buttons[key] = button_element
+        except Exception as e:
+            return None, f"Error menemukan tombol {key}: {e}"
+    return button_element, None
+
+
 def execute_trade_action(driver, signal, bid_amount):
     """
-    Eksekusi trade berdasarkan sinyal BUY atau SELL:
-      1. Periksa balance terlebih dahulu.
-      2. Tetapkan bid dengan nilai bid_amount.
-      3. Klik tombol trade sesuai sinyal.
+    Eksekusi trade berdasarkan sinyal BUY/SELL:
+      1. Tetapkan bid.
+      2. Dapatkan tombol dari cache dan langsung klik dengan JavaScript.
     """
-    wait = WebDriverWait(driver, 1)
-
-    # current_balance = check_balance(driver)
-    # if current_balance is None:
-    #     return "Gagal mengambil balance."
-    # if current_balance < bid_amount:
-    #     return f"Balance tidak mencukupi: Balance saat ini Rp{current_balance}, dibutuhkan Rp{bid_amount}."
-
     if not set_bid(driver, bid_amount):
         return f"Bid Rp{bid_amount} gagal ditetapkan."
-    
-    if "BUY" in signal.upper():
-        button_xpath = '/html/body/binomo-root/platform-ui-scroll/div/div/ng-component/main/div/app-panel/ng-component/section/binary-info/div[2]/div/trading-buttons/vui-button[1]/button'
-    elif "SELL" in signal.upper():
-        button_xpath = '/html/body/binomo-root/platform-ui-scroll/div/div/ng-component/main/div/app-panel/ng-component/section/binary-info/div[2]/div/trading-buttons/vui-button[2]/button'
-    else:
-        return "Signal tidak dikenali."
-    
+
+    button_element, error = get_cached_trade_button(driver, signal)
+    if error:
+        return error
+
     try:
-        wait.until(EC.element_to_be_clickable((By.XPATH, button_xpath))).click()
+        driver.execute_script("arguments[0].click();", button_element)
     except Exception as e:
-        error_msg = f"Error pada eksekusi trade: {e}"
-        return error_msg
-    
+        return f"Error pada eksekusi trade: {e}"
+
     return "Trade dieksekusi."
 
 def display_dashboard(df, signal, reason, strength, trade_msg=""):
     current_time = get_google_time().strftime('%H:%M:%S')
-    
     if "BUY" in signal.upper():
         signal_color = "#28a745"
     elif "SELL" in signal.upper():
@@ -754,41 +810,38 @@ def display_dashboard(df, signal, reason, strength, trade_msg=""):
     
     with st.container():
         st.markdown(
-            f"<div class='header-container'><span class='title'>Analisis Trading</span> <br>"
+            f"<div class='header-container'><span class='title'>Analisis Trading</span><br>"
             f"<span class='subtitle'>{current_time}</span></div>",
             unsafe_allow_html=True
         )
     
     with st.container():
-        # st.markdown("### Sinyal Trading")
         col1, col2 = st.columns([1, 1])
         with col1:
             st.markdown(
-                f"<div class='info-box' style='background-color: {signal_color};'><span class='subheader'>Sinyal:</span><br> {signal}</div>",
+                f"<div class='info-box' style='background-color: {signal_color};'><span class='subheader'>Sinyal :</span><br>{signal}</div>",
                 unsafe_allow_html=True
             )
         with col2:
             st.markdown(
-                f"<div class='info-box' style='background-color: #FFFFFFFF; color: #000000FF;'><span class='subheader'>Kekuatan:</span><br> {strength:.1f}%</div>",
+                f"<div class='info-box' style='background-color: #FFFFFFFF; color: #000000FF;'><span class='subheader'>Kekuatan :</span><br>{strength:.1f}%</div>",
                 unsafe_allow_html=True
             )
         if trade_msg:
-            st.info(f"Info Trade: {trade_msg}")
+            st.info(f"Info Trade : {trade_msg}")
     
     with st.container():
         st.markdown(
-            f"<div class='reason-box mt-5'><span class='subheader'>Alasan:</span><br> {reason}</div>",
+            f"<div class='reason-box mt-5'><span class='subheader'>Alasan :</span><br>{reason}</div>",
             unsafe_allow_html=True
         )
     
-    # Tampilkan new balance (saldo terbaru) jika tersedia
     if "new_balance" in st.session_state and st.session_state.new_balance is not None:
         balance_value = st.session_state.new_balance / 100.0
-        balance_str = f"{balance_value:,.2f}"
-        balance_str = balance_str.replace(",", "X").replace(".", ",").replace("X", ".")
+        balance_str = f"{balance_value:,.2f}".replace(",", "X").replace(".", ",").replace("X", ".")
         st.markdown(
             f"<div class='info-box' style='background-color: #FFAA0000; color: #FFFFFFFF; border-radius: 8px; border: 1px solid #FFFFFF4F; text-align: left; margin-bottom: 20px;'>"
-            f"<span class='header'>Saldo Sekarang:</span><br> <span class='title'>Rp. {balance_str}</span></div>",
+            f"<span class='header'>Saldo Sekarang :</span><br><span class='title'>Rp. {balance_str}</span></div>",
             unsafe_allow_html=True
         )
     
@@ -823,14 +876,9 @@ def display_dashboard(df, signal, reason, strength, trade_msg=""):
 
 def main():
     """
-    Fungsi utama untuk menjalankan dashboard dan auto trade secara sistematis.
-    Eksekusi trade hanya dilakukan jika waktu server (detik) berada di antara 0-20.
-    Setelah login pertama kali, trade pertama hanya akan dieksekusi setelah pergantian menit.
-    Fitur kompensasi: jika trade sebelumnya menghasilkan loss atau break-even, trade kompensasi langsung dijalankan
-    dengan bid dikalikan dengan faktor kompensasi, dan jika profit, bid di-reset ke nilai awal.
-    Trade baru akan dieksekusi setelah trade sebelumnya selesai, yang ditandai dengan pergantian menit.
+    Fungsi utama untuk menjalankan dashboard dan auto trade.
+    Eksekusi trade dilakukan segera setelah pengecekan saldo dan kompensasi.
     """
-    # Inisialisasi session state
     if "auto_trade" not in st.session_state:
         st.session_state.auto_trade = False
     if "driver" not in st.session_state:
@@ -846,7 +894,6 @@ def main():
     if "trade_executed_minute" not in st.session_state:
         st.session_state.trade_executed_minute = None
 
-    # Sidebar untuk pengaturan
     st.sidebar.title("Menu")
     _ = st.sidebar.button("Refresh Data")
     start_auto = st.sidebar.button("Start Auto Trade")
@@ -870,7 +917,6 @@ def main():
             st.session_state.driver = None
             st.session_state.login_time = None
 
-    # Auto refresh berdasarkan sisa waktu menuju pergantian menit
     if auto_refresh:
         current_google_time = get_google_time()
         remaining_ms = int((60 - current_google_time.second) * 1000 - current_google_time.microsecond / 1000)
@@ -878,20 +924,15 @@ def main():
             remaining_ms = 100
         st_autorefresh(interval=remaining_ms, limit=1000, key="auto_refresh")
 
-    # Proses data dan tampilkan dashboard
     df, signal, reason, strength = process_data()
     if df is not None:
         display_dashboard(df, signal, reason, strength)
 
         if st.session_state.auto_trade:
-
             current_time = get_google_time()
-
-            # Reset flag trade_executed_minute jika sudah terjadi pergantian menit
             if st.session_state.trade_executed_minute is not None and current_time.minute != st.session_state.trade_executed_minute:
                 st.session_state.trade_executed_minute = None
 
-            # Jika driver belum diinisialisasi, lakukan login dan setup awal
             if st.session_state.driver is None:
                 driver = init_driver(twofa_code, account_type=account_type, username_input=username_input, password_input=password_input)
                 if driver is None:
@@ -906,18 +947,11 @@ def main():
                 st.session_state.current_bid = initial_bid
                 st.info("Login berhasil. Menunggu pergantian menit untuk trade pertama.")
             else:
-                # Perbarui saldo terbaru sebelum eksekusi trade
                 current_balance = check_balance(st.session_state.driver)
                 if current_balance is not None:
                     st.session_state.new_balance = current_balance
 
-                # Eksekusi trade hanya jika:
-                # 1. Detik server ≤ 20
-                # 2. Trade belum dieksekusi pada menit ini (flag trade_executed_minute == None)
-
-                # if current_time.second <= 20 and st.session_state.trade_executed_minute is None:
-                if current_time.second <= 20:
-                    # Cek saldo terlebih dahulu sebelum eksekusi trade
+                if current_time.second <= 20 and st.session_state.trade_executed_minute is None:
                     if current_balance is not None:
                         if current_balance > st.session_state.prev_balance:
                             st.session_state.current_bid = initial_bid
@@ -934,23 +968,18 @@ def main():
                     else:
                         st.info(f"Tidak dapat memverifikasi saldo. Eksekusi trade dengan order: Rp{st.session_state.current_bid}")
                         trade_msg = execute_trade_action(st.session_state.driver, signal, st.session_state.current_bid)
-
+                    
+                    st.session_state.trade_executed_minute = current_time.minute
+                    if current_balance is not None:
+                        st.session_state.prev_balance = current_balance
+                    st.success(f"Eksekusi perdagangan otomatis berhasil: {trade_msg}")
                 else:
                     if st.session_state.login_time and current_time.minute == st.session_state.login_time.minute:
                         st.warning("Menunggu pergantian menit untuk eksekusi trade pertama.")
                     else:
                         st.warning("Menunggu pergantian menit berikutnya. Eksekusi trade hanya dilakukan pada detik 0-20 dan jika trade belum dieksekusi pada menit ini.")
-                
-            # Tangani hasil eksekusi trade
-            if "Error" not in trade_msg and "Gagal" not in trade_msg:
-                st.session_state.trade_executed_minute = current_time.minute
-                if current_balance is not None:
-                    st.session_state.prev_balance = current_balance
-                st.success(f"Eksekusi perdagangan otomatis berhasil: {trade_msg}")
-            else:
-                st.error(f"Eksekusi perdagangan otomatis gagal: {trade_msg}")
     else:
         st.error("Tidak ada data harga yang tersedia.")
-
+        
 if __name__ == "__main__":
     main()
