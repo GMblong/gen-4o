@@ -9,7 +9,6 @@ import pandas as pd
 from datetime import datetime
 import streamlit as st
 import plotly.graph_objects as go
-from numba import jit
 import chromedriver_autoinstaller
 from selenium import webdriver
 from selenium.webdriver.support.ui import WebDriverWait
@@ -789,7 +788,7 @@ def display_dashboard(df, signal, reason, strength, trade_msg=""):
         balance_str = balance_str.replace(",", "X").replace(".", ",").replace("X", ".")
         st.markdown(
             f"<div class='info-box' style='background-color: #FFAA0000; color: #FFFFFFFF; border-radius: 8px; border: 1px solid #FFFFFF4F; text-align: left; margin-bottom: 20px;'>"
-            f"<span class='header'>New Balance:</span><br> <span class='title'>Rp{balance_str}</span></div>",
+            f"<span class='header'>Saldo Sekarang:</span><br> <span class='title'>Rp. {balance_str}</span></div>",
             unsafe_allow_html=True
         )
     
@@ -922,18 +921,18 @@ def main():
                     if current_balance is not None:
                         if current_balance > st.session_state.prev_balance:
                             st.session_state.current_bid = initial_bid
-                            st.success(f"Profit terjadi. Reset bid ke nilai awal: Rp{initial_bid}")
+                            st.success(f"Profit terjadi. Reset order ke nilai awal: Rp{initial_bid}")
                             trade_msg = execute_trade_action(st.session_state.driver, signal, initial_bid)
                         elif current_balance < st.session_state.prev_balance:
                             compensated_bid = int(st.session_state.current_bid * compensation_factor)
                             st.session_state.current_bid = compensated_bid
-                            st.error(f"Loss atau break-even terdeteksi. Menjalankan trade kompensasi dengan bid: Rp{compensated_bid}")
+                            st.error(f"Loss atau break-even terdeteksi. Menjalankan trade kompensasi dengan order: Rp{compensated_bid}")
                             trade_msg = execute_trade_action(st.session_state.driver, signal, compensated_bid)
                         else:
-                            st.warning(f"Tidak ada perubahan pada saldo. Eksekusi trade dengan bid: Rp{st.session_state.current_bid}")
+                            st.warning(f"Tidak ada perubahan pada saldo. Eksekusi trade dengan order: Rp{st.session_state.current_bid}")
                             trade_msg = execute_trade_action(st.session_state.driver, signal, st.session_state.current_bid)
                     else:
-                        st.info(f"Tidak dapat memverifikasi saldo. Eksekusi trade dengan bid: Rp{st.session_state.current_bid}")
+                        st.info(f"Tidak dapat memverifikasi saldo. Eksekusi trade dengan order: Rp{st.session_state.current_bid}")
                         trade_msg = execute_trade_action(st.session_state.driver, signal, st.session_state.current_bid)
 
                 else:
