@@ -91,7 +91,7 @@ def get_google_time():
     Ambil waktu dari header respons Google untuk mendapatkan waktu yang akurat.
     """
     try:
-        response = session.get("https://www.google.com", timeout=3)
+        response = session.get("https://binomo2.com/", timeout=3)
         date_header = response.headers.get("Date")
         if date_header:
             return datetime.strptime(date_header, "%a, %d %b %Y %H:%M:%S GMT")
@@ -129,11 +129,12 @@ def fetch_price_data():
 def calculate_indicators(df):
     """
     Hitung indikator teknikal: ATR, ADX, EMA, RSI, StochRSI, Bollinger Bands, MACD.
-    Optimalkan untuk data 1 menit dengan parameter lebih sensitif.
+    Optimalkan untuk data 1 menit dengan parameter yang lebih sensitif.
+    (Indikator volume tidak dihitung karena data volume tidak tersedia)
     """
     df = df.copy()
     
-    # Gunakan window yang lebih kecil agar lebih responsif untuk data 1 menit
+    # Indikator dasar dengan window kecil (sesuai untuk data 1 menit)
     df['ATR'] = ta.volatility.average_true_range(df['high'], df['low'], df['close'], window=3)
     df['ADX'] = ta.trend.adx(df['high'], df['low'], df['close'], window=3)
     df['EMA_3'] = ta.trend.ema_indicator(df['close'], window=3)
@@ -165,8 +166,9 @@ def calculate_indicators(df):
 def detect_candlestick_patterns(df):
     """
     Deteksi pola candlestick pada data.
-    Optimalkan untuk data 1 menit dengan penyesuaian toleransi agar lebih peka.
-    Termasuk pola tambahan seperti Harami, Piercing Line, Dark Cloud Cover, Belt Hold, Abandoned Baby, dan Kicker Pattern.
+    Termasuk pola dasar dan pola tambahan: Harami (termasuk Harami Cross),
+    Piercing Line, Dark Cloud Cover, Belt Hold, Abandoned Baby, dan Kicker Pattern.
+    Optimalkan untuk data 1 menit dengan penyesuaian toleransi.
     """
     df = df.copy()
     
@@ -213,16 +215,13 @@ def detect_candlestick_patterns(df):
     current_close = df['close']
     df['Harami_Bullish'] = (prev_open > prev_close) & (current_open < current_close) & (current_open > prev_close) & (current_close < prev_open)
     df['Harami_Bearish'] = (prev_open < prev_close) & (current_open > current_close) & (current_open < prev_close) & (current_close > prev_open)
-    # Harami Cross: kondisi yang sama dengan harami tetapi dengan candle kedua berupa doji
     df['Harami_Cross_Bullish'] = (prev_open > prev_close) & (abs(current_open - current_close) <= 0.1 * (df['high'] - df['low'])) & (current_open > prev_close) & (current_close < prev_open)
     df['Harami_Cross_Bearish'] = (prev_open < prev_close) & (abs(current_open - current_close) <= 0.1 * (df['high'] - df['low'])) & (current_open < prev_close) & (current_close > prev_open)
 
     # --- Piercing Line (Bullish Reversal) ---
-    prev_low = df['low'].shift(1)
     df['Piercing_Line'] = (prev_open > prev_close) & (current_open < current_close) & (current_open < df['low'].shift(1)) & (current_close > (prev_open + prev_close) / 2)
 
     # --- Dark Cloud Cover (Bearish Reversal) ---
-    prev_high = df['high'].shift(1)
     df['Dark_Cloud_Cover'] = (prev_open < prev_close) & (current_open > current_close) & (current_open > df['high'].shift(1)) & (current_close < (prev_open + prev_close) / 2)
 
     # --- Belt Hold ---
@@ -230,7 +229,6 @@ def detect_candlestick_patterns(df):
     df['Bearish_Belt_Hold'] = (df['open'] > df['close']) & ((df['high'] - df['open']) < 0.1 * (df['high'] - df['low']))
 
     # --- Abandoned Baby ---
-    # Pola tiga candle: Candle 1 (trend), Candle 2 doji (terpisah gap), Candle 3 reversal
     df['Abandoned_Baby_Bullish'] = (df['close'].shift(2) > df['open'].shift(2)) & (df['Doji'].shift(1)) & (df['open'] < df['close'].shift(1)) & (df['close'] > df['open'])
     df['Abandoned_Baby_Bearish'] = (df['close'].shift(2) < df['open'].shift(2)) & (df['Doji'].shift(1)) & (df['open'] > df['close'].shift(1)) & (df['close'] < df['open'])
     
@@ -272,19 +270,20 @@ def detect_candlestick_patterns(df):
     
     return df
 
-
 def check_entry_signals(df):
     """
     Tentukan sinyal entry berdasarkan pola candlestick dan indikator teknikal.
     Data df dianggap sudah tidak mengandung candle terakhir yang belum lengkap.
+    Fungsi ini menggunakan perhitungan kontinu untuk menentukan kekuatan sinyal (0-100%).
+    Jika kekuatan sinyal kurang dari ambang minimum, maka sinyal dianggap "NO SIGNAL".
     """
     last_candle = df.iloc[-1]
     prev_candle = df.iloc[-2]
     
     adx_threshold = 20
-    atr_threshold = df['ATR'].mean() * 0.5
-    
-    # Sinyal utama berdasarkan pola candlestick dan cross EMA
+    atr_threshold = df['ATR'].mean() * 0.5  # ambang ATR yang digunakan
+
+    # Pertama, tentukan sinyal dasar (boolean) dari pola candlestick
     bullish_primary = (
         last_candle['Bullish_Engulfing'] or
         last_candle['Hammer'] or
@@ -304,111 +303,54 @@ def check_entry_signals(df):
     if last_candle['Marubozu']:
         bullish_primary = (last_candle['close'] > last_candle['open'])
     
-    confirmations_bull = sum([
-        last_candle['RSI'] < 50,
-        last_candle['StochRSI_K'] < 20,
-        (last_candle['MACD'] > last_candle['MACD_signal'] and prev_candle['MACD'] < prev_candle['MACD_signal']),
-        (last_candle['ATR'] > atr_threshold and last_candle['ADX'] > adx_threshold)
-    ])
-    confirmations_bear = sum([
-        last_candle['RSI'] > 50,
-        last_candle['StochRSI_K'] > 80,
-        (last_candle['MACD'] < last_candle['MACD_signal'] and prev_candle['MACD'] > prev_candle['MACD_signal']),
-        (last_candle['ATR'] > atr_threshold and last_candle['ADX'] > adx_threshold)
-    ])
-    
-    breakout_bull = (last_candle['close'] < last_candle['BB_Lower'])
-    breakout_bear = (last_candle['close'] > last_candle['BB_Upper'])
-    
-    divergence_warning = ""
-    if (last_candle['close'] < prev_candle['close']) and (last_candle['MACD'] > prev_candle['MACD']):
-        divergence_warning = "Terdeteksi bullish divergence, waspada pembalikan naik. "
-    if (last_candle['close'] > prev_candle['close']) and (last_candle['MACD'] < prev_candle['MACD']):
-        divergence_warning = "Terdeteksi bearish divergence, waspada pembalikan turun. "
-    
-    reason = []
-    if last_candle['Bullish_Engulfing']:
-        reason.append("Bullish Engulfing")
-    if last_candle['Hammer']:
-        reason.append("Hammer")
-    if last_candle['Three_White_Soldiers']:
-        reason.append("Three White Soldiers")
-    if (last_candle['EMA_3'] > last_candle['EMA_5'] and prev_candle['EMA_3'] < prev_candle['EMA_5']):
-        reason.append("EMA3 cross EMA5 ke atas")
-    if last_candle['Morning_Star']:
-        reason.append("Morning Star")
-    if last_candle['Marubozu'] and last_candle['close'] > last_candle['open']:
-        reason.append("Marubozu bullish")
-    if last_candle['Bearish_Engulfing']:
-        reason.append("Bearish Engulfing")
-    if last_candle['Shooting_Star']:
-        reason.append("Shooting Star")
-    if last_candle['Three_Black_Crows']:
-        reason.append("Three Black Crows")
-    if (last_candle['EMA_3'] < last_candle['EMA_5'] and prev_candle['EMA_3'] > prev_candle['EMA_5']):
-        reason.append("EMA3 cross EMA5 ke bawah")
-    if last_candle['Evening_Star']:
-        reason.append("Evening Star")
-    if last_candle['Marubozu'] and last_candle['close'] < last_candle['open']:
-        reason.append("Marubozu bearish")
-    if last_candle['Doji']:
-        reason.append("Doji terdeteksi")
-    if last_candle['Spinning_Top']:
-        reason.append("Spinning Top terdeteksi")
-    if breakout_bull:
-        reason.append("Breakout bullish pada BB_Lower")
-    if breakout_bear:
-        reason.append("Breakout bearish pada BB_Upper")
-    if divergence_warning:
-        reason.append(divergence_warning.strip())
-    
-    # Pola tambahan
-    if last_candle.get('Harami_Bullish', False):
-        reason.append("Harami Bullish")
-    if last_candle.get('Harami_Bearish', False):
-        reason.append("Harami Bearish")
-    if last_candle.get('Harami_Cross_Bullish', False):
-        reason.append("Harami Cross Bullish")
-    if last_candle.get('Harami_Cross_Bearish', False):
-        reason.append("Harami Cross Bearish")
-    if last_candle.get('Piercing_Line', False):
-        reason.append("Piercing Line")
-    if last_candle.get('Dark_Cloud_Cover', False):
-        reason.append("Dark Cloud Cover")
-    if last_candle.get('Bullish_Belt_Hold', False):
-        reason.append("Bullish Belt Hold")
-    if last_candle.get('Bearish_Belt_Hold', False):
-        reason.append("Bearish Belt Hold")
-    if last_candle.get('Abandoned_Baby_Bullish', False):
-        reason.append("Abandoned Baby Bullish")
-    if last_candle.get('Abandoned_Baby_Bearish', False):
-        reason.append("Abandoned Baby Bearish")
-    if last_candle.get('Kicker_Bullish', False):
-        reason.append("Kicker Bullish")
-    if last_candle.get('Kicker_Bearish', False):
-        reason.append("Kicker Bearish")
-    
-    reason_str = ", ".join(reason) + ", " if reason else ""
-    
-    if bullish_primary:
-        effective = confirmations_bull + (1 if breakout_bull else 0)
-        max_possible = 5 if breakout_bull else 4
-        strength_percent = (effective / max_possible) * 100
-        signal = "BUY KUAT 📈" if (confirmations_bull >= 3 or breakout_bull) else "BUY LEMAH 📈"
-        return signal, "Konfirmasi bullish: " + reason_str, strength_percent
-    
-    if bearish_primary:
-        effective = confirmations_bear + (1 if breakout_bear else 0)
-        max_possible = 5 if breakout_bear else 4
-        strength_percent = (effective / max_possible) * 100
-        signal = "SELL KUAT 📉" if (confirmations_bear >= 3 or breakout_bear) else "SELL LEMAH 📉"
-        return signal, "Konfirmasi bearish: " + reason_str, strength_percent
-    
-    if last_candle['RSI'] < 50:
-        return ("BUY 📈", "RSI di bawah 50, peluang kenaikan.", 50)
-    else:
-        return ("SELL 📉", "RSI di atas 50, peluang penurunan.", 50)
+    # Kontribusi kontinu untuk sinyal bullish
+    rsi_contrib = max(0, (50 - last_candle['RSI']) / 50)  # 0-1
+    stoch_contrib = max(0, (20 - last_candle['StochRSI_K']) / 20)  # 0-1
+    macd_diff = last_candle['MACD'] - last_candle['MACD_signal']
+    macd_contrib = min(max(macd_diff / 0.5, 0), 1)  # jika perbedaan >= 0.5, kontribusi = 1
+    atr_adx_ratio = (last_candle['ATR'] / atr_threshold + last_candle['ADX'] / adx_threshold) / 2
+    atr_adx_contrib = min(atr_adx_ratio, 1)
+    breakout_contrib = 1 if (last_candle['close'] < last_candle['BB_Lower']) else 0
 
+    effective_bull = rsi_contrib + stoch_contrib + macd_contrib + atr_adx_contrib + breakout_contrib
+
+    # Kontribusi kontinu untuk sinyal bearish (nilai lebih tinggi = sinyal lebih kuat)
+    rsi_contrib_bear = max(0, (last_candle['RSI'] - 50) / 50)
+    stoch_contrib_bear = max(0, (last_candle['StochRSI_K'] - 80) / 20)
+    macd_diff_bear = last_candle['MACD_signal'] - last_candle['MACD']
+    macd_contrib_bear = min(max(macd_diff_bear / 0.5, 0), 1)
+    # Menggunakan indikator ATR/ADX yang sama untuk bearish
+    atr_adx_contrib_bear = atr_adx_contrib  
+    breakout_contrib_bear = 1 if (last_candle['close'] > last_candle['BB_Upper']) else 0
+
+    effective_bear = rsi_contrib_bear + stoch_contrib_bear + macd_contrib_bear + atr_adx_contrib_bear + breakout_contrib_bear
+
+    # Nilai maksimum jika semua indikator memberikan kontribusi penuh (5)
+    max_possible = 5
+
+    # Hitung persentase kekuatan sinyal
+    strength_bull = (effective_bull / max_possible) * 100
+    strength_bear = (effective_bear / max_possible) * 100
+
+    # Ambang minimum kekuatan sinyal (misalnya 40%)
+    min_strength_threshold = 30
+
+    # Tentukan sinyal akhir berdasarkan sinyal utama dan kekuatan konfirmasi
+    if bullish_primary and strength_bull >= min_strength_threshold:
+        signal = "BUY KUAT 📈" if (strength_bull >= 60) else "BUY LEMAH 📈"
+        reason_str = "Kontribusi: RSI=%.2f, StochRSI=%.2f, MACD=%.2f, ATR/ADX=%.2f, Breakout=%d" % (
+            rsi_contrib, stoch_contrib, macd_contrib, atr_adx_contrib, breakout_contrib)
+        return signal, "Konfirmasi bullish: " + reason_str, strength_bull
+    
+    if bearish_primary and strength_bear >= min_strength_threshold:
+        signal = "SELL KUAT 📉" if (strength_bear >= 60) else "SELL LEMAH 📉"
+        reason_str = "Kontribusi: RSI=%.2f, StochRSI=%.2f, MACD=%.2f, ATR/ADX=%.2f, Breakout=%d" % (
+            rsi_contrib_bear, stoch_contrib_bear, macd_contrib_bear, atr_adx_contrib_bear, breakout_contrib_bear)
+        return signal, "Konfirmasi bearish: " + reason_str, strength_bear
+
+    # Jika kekuatan sinyal tidak memenuhi ambang minimum, kembalikan NO SIGNAL
+    return ("NO SIGNAL", "Kekuatan sinyal rendah (%.1f%%), hindari trade." % 
+            max(strength_bull, strength_bear), max(strength_bull, strength_bear))
 
 def process_data():
     """
@@ -428,7 +370,7 @@ def process_data():
     df['time'] = pd.to_datetime(df['created_at'])
     df = df[columns]
     
-    # Pastikan kolom numerik bertipe float64
+    # Konversi kolom numerik ke tipe float
     for col in ['open', 'close', 'high', 'low']:
         df[col] = df[col].astype(np.float64).round(8)
     
@@ -440,7 +382,7 @@ def process_data():
     
     signal, reason, strength = check_entry_signals(df)
     
-    # Simulasi outcome trading: misalnya, bandingkan open candle terakhir dengan close candle sebelumnya
+    # Simulasi outcome trading: bandingkan open candle sebelumnya dengan close candle terakhir
     trade_open = df.iloc[-2]['open']
     trade_close = df.iloc[-1]['close']
     if "BUY" in signal:
@@ -459,7 +401,6 @@ def process_data():
     print(log_message)
     
     return df, signal, reason, strength
-
 
 def init_driver(twofa_code="", account_type="Demo", username_input="", password_input=""):
     """
