@@ -272,85 +272,59 @@ def detect_candlestick_patterns(df):
 
 def check_entry_signals(df):
     """
-    Tentukan sinyal entry berdasarkan pola candlestick dan indikator teknikal.
-    Data df dianggap sudah tidak mengandung candle terakhir yang belum lengkap.
-    Fungsi ini menggunakan perhitungan kontinu untuk menentukan kekuatan sinyal (0-100%).
-    Jika kekuatan sinyal kurang dari ambang minimum, maka sinyal dianggap "NO SIGNAL".
+    Tentukan sinyal entry berdasarkan perhitungan kontinu kontribusi indikator teknikal.
+    Sinyal akan dihasilkan jika kekuatan sinyal (0-100%) memenuhi ambang minimum (misalnya ≥25%).
+    Jika tidak, sinyal "NO SIGNAL" akan dikembalikan untuk menghindari false signal.
     """
     last_candle = df.iloc[-1]
     prev_candle = df.iloc[-2]
     
     adx_threshold = 20
-    atr_threshold = df['ATR'].mean() * 0.5  # ambang ATR yang digunakan
+    atr_threshold = df['ATR'].mean() * 0.5  # ambang ATR
 
-    # Pertama, tentukan sinyal dasar (boolean) dari pola candlestick
-    bullish_primary = (
-        last_candle['Bullish_Engulfing'] or
-        last_candle['Hammer'] or
-        last_candle['Three_White_Soldiers'] or
-        (last_candle['EMA_3'] > last_candle['EMA_5'] and prev_candle['EMA_3'] < prev_candle['EMA_5'])
-    )
-    bearish_primary = (
-        last_candle['Bearish_Engulfing'] or
-        last_candle['Shooting_Star'] or
-        last_candle['Three_Black_Crows'] or
-        (last_candle['EMA_3'] < last_candle['EMA_5'] and prev_candle['EMA_3'] > prev_candle['EMA_5'])
-    )
-    if last_candle['Morning_Star']:
-        bullish_primary = True
-    if last_candle['Evening_Star']:
-        bearish_primary = True
-    if last_candle['Marubozu']:
-        bullish_primary = (last_candle['close'] > last_candle['open'])
-    
-    # Kontribusi kontinu untuk sinyal bullish
-    rsi_contrib = max(0, (50 - last_candle['RSI']) / 50)  # 0-1
-    stoch_contrib = max(0, (20 - last_candle['StochRSI_K']) / 20)  # 0-1
+    # Hitung kontribusi indikator untuk sinyal bullish
+    rsi_contrib = max(0, (50 - last_candle['RSI']) / 50)      # Jika RSI < 50, kontribusi antara 0 dan 1
+    stoch_contrib = max(0, (20 - last_candle['StochRSI_K']) / 20)
     macd_diff = last_candle['MACD'] - last_candle['MACD_signal']
-    macd_contrib = min(max(macd_diff / 0.5, 0), 1)  # jika perbedaan >= 0.5, kontribusi = 1
+    macd_contrib = min(max(macd_diff / 0.5, 0), 1)  # Normalisasi dengan faktor 0.5
     atr_adx_ratio = (last_candle['ATR'] / atr_threshold + last_candle['ADX'] / adx_threshold) / 2
     atr_adx_contrib = min(atr_adx_ratio, 1)
     breakout_contrib = 1 if (last_candle['close'] < last_candle['BB_Lower']) else 0
 
     effective_bull = rsi_contrib + stoch_contrib + macd_contrib + atr_adx_contrib + breakout_contrib
+    strength_bull = (effective_bull / 5) * 100  # karena maksimum kontribusi adalah 5
 
-    # Kontribusi kontinu untuk sinyal bearish (nilai lebih tinggi = sinyal lebih kuat)
+    # Hitung kontribusi indikator untuk sinyal bearish
     rsi_contrib_bear = max(0, (last_candle['RSI'] - 50) / 50)
     stoch_contrib_bear = max(0, (last_candle['StochRSI_K'] - 80) / 20)
     macd_diff_bear = last_candle['MACD_signal'] - last_candle['MACD']
     macd_contrib_bear = min(max(macd_diff_bear / 0.5, 0), 1)
-    # Menggunakan indikator ATR/ADX yang sama untuk bearish
-    atr_adx_contrib_bear = atr_adx_contrib  
+    atr_adx_contrib_bear = atr_adx_contrib  # pakai indikator yang sama
     breakout_contrib_bear = 1 if (last_candle['close'] > last_candle['BB_Upper']) else 0
 
     effective_bear = rsi_contrib_bear + stoch_contrib_bear + macd_contrib_bear + atr_adx_contrib_bear + breakout_contrib_bear
+    strength_bear = (effective_bear / 5) * 100
 
-    # Nilai maksimum jika semua indikator memberikan kontribusi penuh (5)
-    max_possible = 5
+    # Tentukan ambang minimum kekuatan sinyal (misalnya 30%)
+    min_strength_threshold = 30  
+    min_effective = (min_strength_threshold / 100) * 5  # Konversi ke skala effective (0-5)
 
-    # Hitung persentase kekuatan sinyal
-    strength_bull = (effective_bull / max_possible) * 100
-    strength_bear = (effective_bear / max_possible) * 100
-
-    # Ambang minimum kekuatan sinyal (misalnya 25%)
-    min_strength_threshold = 25
-
-    # Tentukan sinyal akhir berdasarkan sinyal utama dan kekuatan konfirmasi
-    if bullish_primary and strength_bull >= min_strength_threshold:
-        signal = "BUY KUAT 📈" if (strength_bull >= 60) else "BUY LEMAH 📈"
+    # Pilih sinyal berdasarkan nilai effective yang lebih tinggi
+    if effective_bull >= min_effective and effective_bull >= effective_bear:
+        signal = "BUY KUAT 📈" if strength_bull >= 60 else "BUY LEMAH 📈"
         reason_str = "Kontribusi: RSI=%.2f, StochRSI=%.2f, MACD=%.2f, ATR/ADX=%.2f, Breakout=%d" % (
             rsi_contrib, stoch_contrib, macd_contrib, atr_adx_contrib, breakout_contrib)
         return signal, "Konfirmasi bullish: " + reason_str, strength_bull
-    
-    if bearish_primary and strength_bear >= min_strength_threshold:
-        signal = "SELL KUAT 📉" if (strength_bear >= 60) else "SELL LEMAH 📉"
+    elif effective_bear >= min_effective:
+        signal = "SELL KUAT 📉" if strength_bear >= 60 else "SELL LEMAH 📉"
         reason_str = "Kontribusi: RSI=%.2f, StochRSI=%.2f, MACD=%.2f, ATR/ADX=%.2f, Breakout=%d" % (
             rsi_contrib_bear, stoch_contrib_bear, macd_contrib_bear, atr_adx_contrib_bear, breakout_contrib_bear)
         return signal, "Konfirmasi bearish: " + reason_str, strength_bear
+    else:
+        # Jika tidak ada sinyal yang memenuhi ambang, kembalikan NO SIGNAL
+        overall_strength = max(strength_bull, strength_bear)
+        return ("NO SIGNAL", "Kekuatan sinyal rendah (%.1f%%), hindari trade." % overall_strength, overall_strength)
 
-    # Jika kekuatan sinyal tidak memenuhi ambang minimum, kembalikan NO SIGNAL
-    return ("NO SIGNAL", "Kekuatan sinyal rendah (%.1f%%), hindari trade." % 
-            max(strength_bull, strength_bear), max(strength_bull, strength_bear))
 
 def process_data():
     """
