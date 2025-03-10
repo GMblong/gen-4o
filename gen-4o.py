@@ -133,14 +133,14 @@ def calculate_indicators(df):
     """
     df = df.copy()
     
-    # Gunakan window lebih kecil untuk data 1 menit
+    # Gunakan window yang lebih kecil agar lebih responsif untuk data 1 menit
     df['ATR'] = ta.volatility.average_true_range(df['high'], df['low'], df['close'], window=3)
     df['ADX'] = ta.trend.adx(df['high'], df['low'], df['close'], window=3)
     df['EMA_3'] = ta.trend.ema_indicator(df['close'], window=3)
     df['EMA_5'] = ta.trend.ema_indicator(df['close'], window=5)
     df['RSI'] = ta.momentum.rsi(df['close'], window=3)
     
-    # StochRSI dengan window 7 (lebih cepat) daripada default 14
+    # StochRSI dengan window 7 agar deteksi lebih cepat
     min_rsi = df['RSI'].rolling(window=7).min()
     max_rsi = df['RSI'].rolling(window=7).max()
     df['StochRSI_K'] = np.where(
@@ -149,13 +149,13 @@ def calculate_indicators(df):
         (df['RSI'] - min_rsi) / (max_rsi - min_rsi)
     ) * 100
     
-    # Bollinger Bands: gunakan rolling window 3 dan multiplier 1.2
+    # Bollinger Bands: rolling window 3 dan multiplier 1.2
     rolling_mean = df['close'].rolling(3).mean()
     rolling_std = df['close'].rolling(3).std()
     df['BB_Upper'] = rolling_mean + (rolling_std * 1.2)
     df['BB_Lower'] = rolling_mean - (rolling_std * 1.2)
     
-    # MACD dengan parameter lebih sensitif: window_slow=6, window_fast=3, window_sign=4
+    # MACD dengan parameter sensitif: window_slow=6, window_fast=3, window_sign=4
     df['MACD'] = ta.trend.macd(df['close'], window_slow=6, window_fast=3)
     df['MACD_signal'] = ta.trend.macd_signal(df['close'], window_slow=6, window_fast=3, window_sign=4)
     
@@ -165,7 +165,8 @@ def calculate_indicators(df):
 def detect_candlestick_patterns(df):
     """
     Deteksi pola candlestick pada data.
-    Optimalkan untuk data 1 menit dengan penyesuaian toleransi.
+    Optimalkan untuk data 1 menit dengan penyesuaian toleransi agar lebih peka.
+    Termasuk pola tambahan seperti Harami, Piercing Line, Dark Cloud Cover, Belt Hold, Abandoned Baby, dan Kicker Pattern.
     """
     df = df.copy()
     
@@ -178,104 +179,86 @@ def detect_candlestick_patterns(df):
     df['Three_Black_Crows'] = df['close'].diff().rolling(3).sum() < 0
     df['Doji'] = abs(df['close'] - df['open']) <= 0.1 * (df['high'] - df['low'])
     
-    # Morning Star
+    # Morning Star & Evening Star
     bearish_first = df['close'].shift(2) < df['open'].shift(2)
     small_body_second = abs(df['close'].shift(1) - df['open'].shift(1)) <= 0.1 * (df['high'].shift(1) - df['low'].shift(1))
     bullish_third = df['close'] > df['open']
     close_above_mid_first = df['close'] > ((df['open'].shift(2) + df['close'].shift(2)) / 2)
     df['Morning_Star'] = bearish_first & small_body_second & bullish_third & close_above_mid_first
-    
-    # Evening Star
+
     bullish_first = df['close'].shift(2) > df['open'].shift(2)
     small_body_second = abs(df['close'].shift(1) - df['open'].shift(1)) <= 0.1 * (df['high'].shift(1) - df['low'].shift(1))
     bearish_third = df['close'] < df['open']
     close_below_mid_first = df['close'] < ((df['open'].shift(2) + df['close'].shift(2)) / 2)
     df['Evening_Star'] = bullish_first & small_body_second & bearish_third & close_below_mid_first
-    
+
     # Spinning Top
     df['Spinning_Top'] = (
         (abs(df['close'] - df['open']) > 0.1 * (df['high'] - df['low'])) &
         (abs(df['close'] - df['open']) <= 0.3 * (df['high'] - df['low']))
     )
     
-    # Marubozu dengan toleransi dikurangi (0.03)
+    # Marubozu
     tolerance = 0.03 * (df['high'] - df['low'])
     bullish_marubozu = (df['close'] > df['open']) & ((df['open'] - df['low']) <= tolerance) & ((df['high'] - df['close']) <= tolerance)
     bearish_marubozu = (df['close'] < df['open']) & ((df['high'] - df['open']) <= tolerance) & ((df['close'] - df['low']) <= tolerance)
     df['Marubozu'] = bullish_marubozu | bearish_marubozu
 
-    # Pola tambahan dengan toleransi disesuaikan
-    # 1. Tweezer Top & Bottom (toleransi 0.03)
-    tol = 0.03 * (df['high'] - df['low'])
-    df['Tweezer_Top'] = (
-        (abs(df['high'] - df['high'].shift(1)) <= tol) &
-        (df['close'].shift(1) > df['open'].shift(1)) & (df['close'] < df['open'])
-    )
-    df['Tweezer_Bottom'] = (
-        (abs(df['low'] - df['low'].shift(1)) <= tol) &
-        (df['close'].shift(1) < df['open'].shift(1)) & (df['close'] > df['open'])
-    )
+    # Pola tambahan
+
+    # --- Harami & Harami Cross ---
+    prev_open = df['open'].shift(1)
+    prev_close = df['close'].shift(1)
+    current_open = df['open']
+    current_close = df['close']
+    df['Harami_Bullish'] = (prev_open > prev_close) & (current_open < current_close) & (current_open > prev_close) & (current_close < prev_open)
+    df['Harami_Bearish'] = (prev_open < prev_close) & (current_open > current_close) & (current_open < prev_close) & (current_close > prev_open)
+    # Harami Cross: kondisi yang sama dengan harami tetapi dengan candle kedua berupa doji
+    df['Harami_Cross_Bullish'] = (prev_open > prev_close) & (abs(current_open - current_close) <= 0.1 * (df['high'] - df['low'])) & (current_open > prev_close) & (current_close < prev_open)
+    df['Harami_Cross_Bearish'] = (prev_open < prev_close) & (abs(current_open - current_close) <= 0.1 * (df['high'] - df['low'])) & (current_open < prev_close) & (current_close > prev_open)
+
+    # --- Piercing Line (Bullish Reversal) ---
+    prev_low = df['low'].shift(1)
+    df['Piercing_Line'] = (prev_open > prev_close) & (current_open < current_close) & (current_open < df['low'].shift(1)) & (current_close > (prev_open + prev_close) / 2)
+
+    # --- Dark Cloud Cover (Bearish Reversal) ---
+    prev_high = df['high'].shift(1)
+    df['Dark_Cloud_Cover'] = (prev_open < prev_close) & (current_open > current_close) & (current_open > df['high'].shift(1)) & (current_close < (prev_open + prev_close) / 2)
+
+    # --- Belt Hold ---
+    df['Bullish_Belt_Hold'] = (df['close'] > df['open']) & ((df['open'] - df['low']) < 0.1 * (df['high'] - df['low']))
+    df['Bearish_Belt_Hold'] = (df['open'] > df['close']) & ((df['high'] - df['open']) < 0.1 * (df['high'] - df['low']))
+
+    # --- Abandoned Baby ---
+    # Pola tiga candle: Candle 1 (trend), Candle 2 doji (terpisah gap), Candle 3 reversal
+    df['Abandoned_Baby_Bullish'] = (df['close'].shift(2) > df['open'].shift(2)) & (df['Doji'].shift(1)) & (df['open'] < df['close'].shift(1)) & (df['close'] > df['open'])
+    df['Abandoned_Baby_Bearish'] = (df['close'].shift(2) < df['open'].shift(2)) & (df['Doji'].shift(1)) & (df['open'] > df['close'].shift(1)) & (df['close'] < df['open'])
     
-    # 2. Railroad Tracks (toleransi 0.03)
-    tol_rt = 0.03 * (df['high'] - df['low'])
-    df['Railroad_Tracks'] = (
-        (abs(df['open'] - df['open'].shift(1)) <= tol_rt) &
-        (abs(df['close'] - df['close'].shift(1)) <= tol_rt) &
-        (
-            ((df['close'].shift(1) > df['open'].shift(1)) & (df['close'] > df['open'])) |
-            ((df['close'].shift(1) < df['open'].shift(1)) & (df['close'] < df['open']))
-        )
-    )
+    # --- Kicker Pattern ---
+    df['Kicker_Bullish'] = (df['close'].shift(1) > df['open'].shift(1)) & (df['open'] < current_close) & (df['open'] < df['close'].shift(1))
+    df['Kicker_Bearish'] = (df['close'].shift(1) < df['open'].shift(1)) & (df['open'] > current_close) & (df['open'] > df['close'].shift(1))
     
-    # 3. Three Inside (Up & Down)
-    df['Three_Inside_Up'] = (
-        (df['close'].shift(2) < df['open'].shift(2)) &
-        (df['close'].shift(1) > df['open'].shift(1)) &
-        (df['high'].shift(1) < df['high'].shift(2)) & (df['low'].shift(1) > df['low'].shift(2)) &
-        (df['close'] > df['open']) &
-        (df['open'] < df['open'].shift(1)) & (df['close'] > df['close'].shift(1))
-    )
-    df['Three_Inside_Down'] = (
-        (df['close'].shift(2) > df['open'].shift(2)) &
-        (df['close'].shift(1) < df['open'].shift(1)) &
-        (df['high'].shift(1) < df['high'].shift(2)) & (df['low'].shift(1) > df['low'].shift(2)) &
-        (df['close'] < df['open']) &
-        (df['open'] > df['open'].shift(1)) & (df['close'] < df['close'].shift(1))
-    )
-    df['Three_Inside'] = df['Three_Inside_Up'] | df['Three_Inside_Down']
-    
-    # 4. Fakey Pattern
-    body_prev = abs(df['close'].shift(1) - df['open'].shift(1))
-    df['Fakey_Bullish'] = (
-        ((df['high'].shift(1) - np.maximum(df['open'].shift(1), df['close'].shift(1))) > 2 * body_prev) &
-        (df['close'] < df['low'].shift(1))
-    )
-    df['Fakey_Bearish'] = (
-        ((np.minimum(df['open'].shift(1), df['close'].shift(1)) - df['low'].shift(1)) > 2 * body_prev) &
-        (df['close'] > df['high'].shift(1))
-    )
-    df['Fakey_Pattern'] = df['Fakey_Bullish'] | df['Fakey_Bearish']
-    
-    # 5. Rising & Falling Wedge (window 5)
+    # Optimasi: Rising & Falling Wedge hanya untuk subset data (misalnya 50 candle terakhir)
     df['Rising_Wedge'] = False
     df['Falling_Wedge'] = False
-    window = 5
-    for i in range(window - 1, len(df)):
-        highs = df['high'].iloc[i - window + 1: i + 1]
-        lows = df['low'].iloc[i - window + 1: i + 1]
-        if len(highs) < window or len(lows) < window:
+    wedge_window = 5
+    wedge_check_rows = df.tail(50).index  # hanya periksa 50 candle terakhir
+    for i in wedge_check_rows:
+        if i < wedge_window - 1:
             continue
-        x = np.arange(window)
+        highs = df['high'].iloc[i - wedge_window + 1: i + 1]
+        lows = df['low'].iloc[i - wedge_window + 1: i + 1]
+        if len(highs) < wedge_window or len(lows) < wedge_window:
+            continue
+        x = np.arange(wedge_window)
         slope_high = np.polyfit(x, highs, 1)[0]
         slope_low = np.polyfit(x, lows, 1)[0]
-        # Rising Wedge: kedua slope positif dan slope_low lebih besar daripada slope_high
         if (slope_high > 0) and (slope_low > 0) and (slope_low > slope_high):
             df.at[df.index[i], 'Rising_Wedge'] = True
-        # Falling Wedge: kedua slope negatif dan slope_high lebih besar daripada slope_low
         if (slope_high < 0) and (slope_low < 0) and (slope_high > slope_low):
             df.at[df.index[i], 'Falling_Wedge'] = True
-    
-    # 6. Dragonfly & Gravestone Doji
+
+    # --- Dragonfly & Gravestone Doji ---
     df['Dragonfly_Doji'] = (
         df['Doji'] &
         ((df['high'] - np.maximum(df['open'], df['close'])) <= 0.1 * (df['high'] - df['low'])) &
@@ -293,7 +276,7 @@ def detect_candlestick_patterns(df):
 def check_entry_signals(df):
     """
     Tentukan sinyal entry berdasarkan pola candlestick dan indikator teknikal.
-    df yang diterima sudah TIDAK berisi candle terakhir yang belum selesai.
+    Data df dianggap sudah tidak mengandung candle terakhir yang belum lengkap.
     """
     last_candle = df.iloc[-1]
     prev_candle = df.iloc[-2]
@@ -301,6 +284,7 @@ def check_entry_signals(df):
     adx_threshold = 20
     atr_threshold = df['ATR'].mean() * 0.5
     
+    # Sinyal utama berdasarkan pola candlestick dan cross EMA
     bullish_primary = (
         last_candle['Bullish_Engulfing'] or
         last_candle['Hammer'] or
@@ -349,7 +333,7 @@ def check_entry_signals(df):
         reason.append("Hammer")
     if last_candle['Three_White_Soldiers']:
         reason.append("Three White Soldiers")
-    if (last_candle['EMA_3'] > last_candle['EMA_5'] and prev_candle['EMA_3'] < prev_candle['EMA_3']):
+    if (last_candle['EMA_3'] > last_candle['EMA_5'] and prev_candle['EMA_3'] < prev_candle['EMA_5']):
         reason.append("EMA3 cross EMA5 ke atas")
     if last_candle['Morning_Star']:
         reason.append("Morning Star")
@@ -379,24 +363,30 @@ def check_entry_signals(df):
         reason.append(divergence_warning.strip())
     
     # Pola tambahan
-    if last_candle['Tweezer_Top']:
-        reason.append("Tweezer Top")
-    if last_candle['Tweezer_Bottom']:
-        reason.append("Tweezer Bottom")
-    if last_candle['Railroad_Tracks']:
-        reason.append("Railroad Tracks")
-    if last_candle['Three_Inside']:
-        reason.append("Three Inside")
-    if last_candle['Fakey_Pattern']:
-        reason.append("Fakey Pattern")
-    if last_candle['Rising_Wedge']:
-        reason.append("Rising Wedge")
-    if last_candle['Falling_Wedge']:
-        reason.append("Falling Wedge")
-    if last_candle['Dragonfly_Doji']:
-        reason.append("Dragonfly Doji")
-    if last_candle['Gravestone_Doji']:
-        reason.append("Gravestone Doji")
+    if last_candle.get('Harami_Bullish', False):
+        reason.append("Harami Bullish")
+    if last_candle.get('Harami_Bearish', False):
+        reason.append("Harami Bearish")
+    if last_candle.get('Harami_Cross_Bullish', False):
+        reason.append("Harami Cross Bullish")
+    if last_candle.get('Harami_Cross_Bearish', False):
+        reason.append("Harami Cross Bearish")
+    if last_candle.get('Piercing_Line', False):
+        reason.append("Piercing Line")
+    if last_candle.get('Dark_Cloud_Cover', False):
+        reason.append("Dark Cloud Cover")
+    if last_candle.get('Bullish_Belt_Hold', False):
+        reason.append("Bullish Belt Hold")
+    if last_candle.get('Bearish_Belt_Hold', False):
+        reason.append("Bearish Belt Hold")
+    if last_candle.get('Abandoned_Baby_Bullish', False):
+        reason.append("Abandoned Baby Bullish")
+    if last_candle.get('Abandoned_Baby_Bearish', False):
+        reason.append("Abandoned Baby Bearish")
+    if last_candle.get('Kicker_Bullish', False):
+        reason.append("Kicker Bullish")
+    if last_candle.get('Kicker_Bearish', False):
+        reason.append("Kicker Bearish")
     
     reason_str = ", ".join(reason) + ", " if reason else ""
     
@@ -419,10 +409,11 @@ def check_entry_signals(df):
     else:
         return ("SELL 📉", "RSI di atas 50, peluang penurunan.", 50)
 
+
 def process_data():
     """
-    Ambil data harga, lalu buang candle terakhir (yang dianggap masih berjalan).
-    Setelah itu, hitung indikator dan pola candlestick, lalu evaluasi sinyal.
+    Ambil data harga, buang candle terakhir (yang dianggap belum lengkap),
+    hitung indikator dan pola candlestick, lalu evaluasi sinyal.
     Optimalkan untuk data 1 menit.
     """
     candles = fetch_price_data()
@@ -437,11 +428,11 @@ def process_data():
     df['time'] = pd.to_datetime(df['created_at'])
     df = df[columns]
     
-    # Pastikan kolom numerik memiliki tipe data float64
+    # Pastikan kolom numerik bertipe float64
     for col in ['open', 'close', 'high', 'low']:
         df[col] = df[col].astype(np.float64).round(8)
     
-    # Opsional: Buang candle terakhir yang belum lengkap
+    # Buang candle terakhir yang mungkin belum lengkap
     df = df.iloc[:-1].reset_index(drop=True)
     
     df = calculate_indicators(df)
@@ -449,9 +440,9 @@ def process_data():
     
     signal, reason, strength = check_entry_signals(df)
     
-    # Simulasi outcome trading
-    trade_open = df.iloc[-2]['open']   # Candle terakhir (close)
-    trade_close = df.iloc[-1]['close'] # Candle sebelumnya
+    # Simulasi outcome trading: misalnya, bandingkan open candle terakhir dengan close candle sebelumnya
+    trade_open = df.iloc[-2]['open']
+    trade_close = df.iloc[-1]['close']
     if "BUY" in signal:
         trade_success = (trade_open > trade_close)
     elif "SELL" in signal:
@@ -468,6 +459,7 @@ def process_data():
     print(log_message)
     
     return df, signal, reason, strength
+
 
 def init_driver(twofa_code="", account_type="Demo", username_input="", password_input=""):
     """
