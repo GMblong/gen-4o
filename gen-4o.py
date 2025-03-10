@@ -332,8 +332,8 @@ def check_entry_signals(df):
     strength_bull = (effective_bull / max_possible) * 100
     strength_bear = (effective_bear / max_possible) * 100
 
-    # Ambang minimum kekuatan sinyal (misalnya 40%)
-    min_strength_threshold = 30
+    # Ambang minimum kekuatan sinyal (misalnya 25%)
+    min_strength_threshold = 25
 
     # Tentukan sinyal akhir berdasarkan sinyal utama dan kekuatan konfirmasi
     if bullish_primary and strength_bull >= min_strength_threshold:
