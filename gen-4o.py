@@ -442,7 +442,7 @@ def process_data():
         df[col] = df[col].astype(np.float64).round(8)
     
     # Opsional: Buang candle terakhir yang belum lengkap
-    # df = df.iloc[:-1].reset_index(drop=True)
+    df = df.iloc[:-1].reset_index(drop=True)
     
     df = calculate_indicators(df)
     df = detect_candlestick_patterns(df)
@@ -873,6 +873,7 @@ def display_dashboard(df, signal, reason, strength, trade_msg=""):
             height=500
         )
         st.plotly_chart(fig, use_container_width=True)
+
 def main():
     """
     Fungsi utama untuk menjalankan dashboard dan auto trade.
@@ -917,13 +918,11 @@ def main():
             st.session_state.login_time = None
 
     if auto_refresh:
-        # Auto refresh 3 detik sebelum pergantian menit
         current_google_time = get_google_time()
-        # Hitung interval refresh: (60 - detik sekarang - 3) dalam milidetik
-        refresh_interval_ms = int((60 - current_google_time.second - 5) * 1000 - current_google_time.microsecond / 1000)
-        if refresh_interval_ms < 100:
-            refresh_interval_ms = 100
-        st_autorefresh(interval=refresh_interval_ms, limit=1000, key="auto_refresh")
+        remaining_ms = int((60 - current_google_time.second) * 1000 - current_google_time.microsecond / 1000)
+        if remaining_ms < 1000:
+            remaining_ms = 100
+        st_autorefresh(interval=remaining_ms, limit=1000, key="auto_refresh")
 
     df, signal, reason, strength = process_data()
     if df is not None:
