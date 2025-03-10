@@ -920,7 +920,7 @@ def main():
         # Auto refresh 3 detik sebelum pergantian menit
         current_google_time = get_google_time()
         # Hitung interval refresh: (60 - detik sekarang - 3) dalam milidetik
-        refresh_interval_ms = int((60 - current_google_time.second - 3) * 1000 - current_google_time.microsecond / 1000)
+        refresh_interval_ms = int((60 - current_google_time.second - 5) * 1000 - current_google_time.microsecond / 1000)
         if refresh_interval_ms < 100:
             refresh_interval_ms = 100
         st_autorefresh(interval=refresh_interval_ms, limit=1000, key="auto_refresh")
