@@ -123,29 +123,27 @@ def fetch_price_data():
         logging.error("Gagal mengambil data harga.")
     return []
 
-
+# =============================================================================
+# FUNGSI ANALISIS DATA
+# =============================================================================
 def calculate_indicators(df):
     """
     Hitung indikator teknikal: ATR, ADX, EMA, RSI, StochRSI, Bollinger Bands, MACD.
-    Optimalkan untuk data 1 menit dengan parameter lebih sensitif.
+    Optimasi untuk data 1 menit dengan parameter lebih sensitif.
     """
     df = df.copy()
     
-    # Gunakan window lebih kecil untuk data 1 menit
+    # Gunakan window yang lebih kecil agar lebih responsif
     df['ATR'] = ta.volatility.average_true_range(df['high'], df['low'], df['close'], window=3)
     df['ADX'] = ta.trend.adx(df['high'], df['low'], df['close'], window=3)
     df['EMA_3'] = ta.trend.ema_indicator(df['close'], window=3)
     df['EMA_5'] = ta.trend.ema_indicator(df['close'], window=5)
     df['RSI'] = ta.momentum.rsi(df['close'], window=3)
     
-    # StochRSI dengan window 7 (lebih cepat) daripada default 14
-    min_rsi = df['RSI'].rolling(window=7).min()
-    max_rsi = df['RSI'].rolling(window=7).max()
-    df['StochRSI_K'] = np.where(
-        (max_rsi - min_rsi) == 0,
-        0.5,
-        (df['RSI'] - min_rsi) / (max_rsi - min_rsi)
-    ) * 100
+    # StochRSI dengan window 5 agar deteksi lebih cepat
+    min_rsi = df['RSI'].rolling(window=5).min()
+    max_rsi = df['RSI'].rolling(window=5).max()
+    df['StochRSI_K'] = np.where((max_rsi - min_rsi) == 0, 0.5, (df['RSI'] - min_rsi) / (max_rsi - min_rsi)) * 100
     
     # Bollinger Bands: gunakan rolling window 3 dan multiplier 1.2
     rolling_mean = df['close'].rolling(3).mean()
@@ -163,7 +161,8 @@ def calculate_indicators(df):
 def detect_candlestick_patterns(df):
     """
     Deteksi pola candlestick pada data.
-    Optimalkan untuk data 1 menit dengan penyesuaian toleransi.
+    Optimasi untuk data 1 menit dengan penyesuaian toleransi agar lebih peka dan
+    pembatasan perhitungan pada subset data tertentu.
     """
     df = df.copy()
     
@@ -196,14 +195,13 @@ def detect_candlestick_patterns(df):
         (abs(df['close'] - df['open']) <= 0.3 * (df['high'] - df['low']))
     )
     
-    # Marubozu dengan toleransi dikurangi (0.03)
+    # Marubozu
     tolerance = 0.03 * (df['high'] - df['low'])
     bullish_marubozu = (df['close'] > df['open']) & ((df['open'] - df['low']) <= tolerance) & ((df['high'] - df['close']) <= tolerance)
     bearish_marubozu = (df['close'] < df['open']) & ((df['high'] - df['open']) <= tolerance) & ((df['close'] - df['low']) <= tolerance)
     df['Marubozu'] = bullish_marubozu | bearish_marubozu
 
-    # Pola tambahan dengan toleransi disesuaikan
-    # 1. Tweezer Top & Bottom (toleransi 0.03)
+    # Pola tambahan: Tweezer, Railroad Tracks, Three Inside, Fakey Pattern
     tol = 0.03 * (df['high'] - df['low'])
     df['Tweezer_Top'] = (
         (abs(df['high'] - df['high'].shift(1)) <= tol) &
@@ -214,7 +212,6 @@ def detect_candlestick_patterns(df):
         (df['close'].shift(1) < df['open'].shift(1)) & (df['close'] > df['open'])
     )
     
-    # 2. Railroad Tracks (toleransi 0.03)
     tol_rt = 0.03 * (df['high'] - df['low'])
     df['Railroad_Tracks'] = (
         (abs(df['open'] - df['open'].shift(1)) <= tol_rt) &
@@ -225,7 +222,6 @@ def detect_candlestick_patterns(df):
         )
     )
     
-    # 3. Three Inside (Up & Down)
     df['Three_Inside_Up'] = (
         (df['close'].shift(2) < df['open'].shift(2)) &
         (df['close'].shift(1) > df['open'].shift(1)) &
@@ -242,7 +238,6 @@ def detect_candlestick_patterns(df):
     )
     df['Three_Inside'] = df['Three_Inside_Up'] | df['Three_Inside_Down']
     
-    # 4. Fakey Pattern
     body_prev = abs(df['close'].shift(1) - df['open'].shift(1))
     df['Fakey_Bullish'] = (
         ((df['high'].shift(1) - np.maximum(df['open'].shift(1), df['close'].shift(1))) > 2 * body_prev) &
@@ -254,26 +249,27 @@ def detect_candlestick_patterns(df):
     )
     df['Fakey_Pattern'] = df['Fakey_Bullish'] | df['Fakey_Bearish']
     
-    # 5. Rising & Falling Wedge (window 5)
+    # Rising & Falling Wedge, batasi perhitungan hanya untuk 50 candle terakhir
     df['Rising_Wedge'] = False
     df['Falling_Wedge'] = False
-    window = 5
-    for i in range(window - 1, len(df)):
-        highs = df['high'].iloc[i - window + 1: i + 1]
-        lows = df['low'].iloc[i - window + 1: i + 1]
-        if len(highs) < window or len(lows) < window:
+    wedge_window = 5
+    wedge_check_rows = df.tail(50).index  # hanya periksa 50 candle terakhir
+    for i in wedge_check_rows:
+        if i < wedge_window - 1:
             continue
-        x = np.arange(window)
+        highs = df['high'].iloc[i - wedge_window + 1: i + 1]
+        lows = df['low'].iloc[i - wedge_window + 1: i + 1]
+        if len(highs) < wedge_window or len(lows) < wedge_window:
+            continue
+        x = np.arange(wedge_window)
         slope_high = np.polyfit(x, highs, 1)[0]
         slope_low = np.polyfit(x, lows, 1)[0]
-        # Rising Wedge: kedua slope positif dan slope_low lebih besar daripada slope_high
         if (slope_high > 0) and (slope_low > 0) and (slope_low > slope_high):
             df.at[df.index[i], 'Rising_Wedge'] = True
-        # Falling Wedge: kedua slope negatif dan slope_high lebih besar daripada slope_low
         if (slope_high < 0) and (slope_low < 0) and (slope_high > slope_low):
             df.at[df.index[i], 'Falling_Wedge'] = True
     
-    # 6. Dragonfly & Gravestone Doji
+    # Dragonfly & Gravestone Doji
     df['Dragonfly_Doji'] = (
         df['Doji'] &
         ((df['high'] - np.maximum(df['open'], df['close'])) <= 0.1 * (df['high'] - df['low'])) &
@@ -291,7 +287,7 @@ def detect_candlestick_patterns(df):
 def check_entry_signals(df):
     """
     Tentukan sinyal entry berdasarkan pola candlestick dan indikator teknikal.
-    df yang diterima sudah TIDAK berisi candle terakhir yang belum selesai.
+    Data df dianggap sudah tidak mengandung candle terakhir yang belum selesai.
     """
     last_candle = df.iloc[-1]
     prev_candle = df.iloc[-2]
@@ -347,7 +343,7 @@ def check_entry_signals(df):
         reason.append("Hammer")
     if last_candle['Three_White_Soldiers']:
         reason.append("Three White Soldiers")
-    if (last_candle['EMA_3'] > last_candle['EMA_5'] and prev_candle['EMA_3'] < prev_candle['EMA_3']):
+    if (last_candle['EMA_3'] > last_candle['EMA_5'] and prev_candle['EMA_3'] < prev_candle['EMA_5']):
         reason.append("EMA3 cross EMA5 ke atas")
     if last_candle['Morning_Star']:
         reason.append("Morning Star")
@@ -417,7 +413,6 @@ def check_entry_signals(df):
     else:
         return ("SELL 📉", "RSI di atas 50, peluang penurunan.", 50)
 
-
 def process_data():
     """
     Ambil data harga, lalu buang candle terakhir (yang dianggap masih berjalan).
@@ -449,8 +444,8 @@ def process_data():
     signal, reason, strength = check_entry_signals(df)
     
     # Simulasi outcome trading
-    trade_open = df.iloc[-1]['open']   # Candle terakhir (close)
-    trade_close = df.iloc[-2]['close'] # Candle sebelumnya
+    trade_open = df.iloc[-2]['open']   # Candle terakhir (close)
+    trade_close = df.iloc[-1]['close'] # Candle sebelumnya
     if "BUY" in signal:
         trade_success = (trade_open > trade_close)
     elif "SELL" in signal:
