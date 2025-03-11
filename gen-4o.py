@@ -563,9 +563,9 @@ def init_driver(twofa_code="", account_type="Demo", username_input="", password_
 
     try:
         account_types = {
-            'Real': "//div[normalize-space()='Real account']",
-            'Demo': "//div[normalize-space()='Demo account']",
-            'Tournament': "//div[normalize-space()='Tournament account']"
+            'Real': "/html/body/vui-popover/div[2]/account-list/div[1]",
+            'Demo': "/html/body/vui-popover/div[2]/account-list/div[2]",
+            'Tournament': "/html/body/vui-popover/div[2]/account-list/div[3]"
         }
         chosen_xpath = account_types.get(account_type)
         if not chosen_xpath:
