@@ -347,7 +347,7 @@ def check_entry_signals(df):
     # dan untuk downtrend, maksimum untuk sinyal bearish mendekati 6.2.
     # Kita gunakan ambang minimum kekuatan sinyal (misalnya 30% dari nilai maksimum 6.2)
     max_possible_total = 6.2
-    min_strength_threshold = 30  
+    min_strength_threshold = 27.5  
     min_effective = (min_strength_threshold / 100) * max_possible_total
 
     strength_bull = (effective_bull_total / max_possible_total) * 100
