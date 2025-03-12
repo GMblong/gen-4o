@@ -127,18 +127,15 @@ def fetch_price_data():
 # FUNGSI ANALISIS DATA YANG DIREVISI
 # =============================================================================
 def calculate_indicators(df):
-    """
-    Hitung indikator teknikal dengan optimasi parameter untuk data 1 menit.
-    Ditambahkan perhitungan Parabolic SAR untuk mendeteksi tren.
-    """
     df = df.copy()
     
     # ATR dan ADX dengan window 5 untuk mengurangi noise
     df['ATR'] = ta.volatility.average_true_range(df['high'], df['low'], df['close'], window=5)
     df['ADX'] = ta.trend.adx(df['high'], df['low'], df['close'], window=5)
     
-    # EMA dengan window 3 dan window 8
+    # EMA dengan window 3, 5, dan 8
     df['EMA_3'] = ta.trend.ema_indicator(df['close'], window=3)
+    df['EMA_5'] = ta.trend.ema_indicator(df['close'], window=5)  # Tambahan EMA 5
     df['EMA_8'] = ta.trend.ema_indicator(df['close'], window=8)
     
     # RSI dengan window 5
@@ -169,7 +166,6 @@ def calculate_indicators(df):
     df['PSAR_trend'] = np.where(df['close'] > df['PSAR'], 'uptrend', 'downtrend')
     
     return df
-
 
 def detect_candlestick_patterns(df):
     """
@@ -373,6 +369,7 @@ def check_entry_signals(df):
 
     overall_strength = max(strength_bull, strength_bear)
     return ("NO SIGNAL", "Kekuatan sinyal rendah (%.1f%%), hindari trade." % overall_strength, overall_strength)
+
 
 
 def process_data():
