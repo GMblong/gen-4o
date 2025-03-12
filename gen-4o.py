@@ -387,7 +387,7 @@ def process_data():
         df[col] = df[col].astype(np.float64).round(8)
     
     # Buang candle terakhir yang mungkin belum lengkap (jika diperlukan)
-    # df = df.iloc[:-1].reset_index(drop=True)
+    df = df.iloc[:-1].reset_index(drop=True)
     
     df = calculate_indicators(df)
     df = detect_candlestick_patterns(df)
