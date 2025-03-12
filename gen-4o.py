@@ -804,28 +804,49 @@ def display_dashboard(df, signal, reason, strength, trade_msg=""):
         st.dataframe(df_last30)
     
     with st.expander("### Grafik Candlestick dan Indikator"):
+        # Ambil data untuk 15 menit terakhir (sesuaikan jika memang ingin 30 menit)
         time_threshold = df['time'].max() - pd.Timedelta(minutes=15)
-        df_last30 = df[df['time'] >= time_threshold]
+        df_last15 = df[df['time'] >= time_threshold]
+
+        # Buat figure candlestick
         fig = go.Figure(data=[go.Candlestick(
-            x=df_last30['time'],
-            open=df_last30['open'],
-            high=df_last30['high'],
-            low=df_last30['low'],
-            close=df_last30['close'],
+            x=df_last15['time'],
+            open=df_last15['open'],
+            high=df_last15['high'],
+            low=df_last15['low'],
+            close=df_last15['close'],
             name="Candlestick"
         )])
-        fig.add_trace(go.Scatter(x=df_last30['time'], y=df_last30['EMA_3'], mode='lines', name='EMA 3'))
-        fig.add_trace(go.Scatter(x=df_last30['time'], y=df_last30['EMA_5'], mode='lines', name='EMA 5'))
-        fig.add_trace(go.Scatter(x=df_last30['time'], y=df_last30['BB_Upper'], mode='lines', name='BB Upper', line=dict(dash='dash')))
-        fig.add_trace(go.Scatter(x=df_last30['time'], y=df_last30['BB_Lower'], mode='lines', name='BB Lower', line=dict(dash='dash')))
+
+        # Tambahkan indikator EMA
+        fig.add_trace(go.Scatter(x=df_last15['time'], y=df_last15['EMA_3'],
+                                mode='lines', name='EMA 3'))
+        fig.add_trace(go.Scatter(x=df_last15['time'], y=df_last15['EMA_5'],
+                                mode='lines', name='EMA 5'))
+        fig.add_trace(go.Scatter(x=df_last15['time'], y=df_last15['EMA_8'],
+                                mode='lines', name='EMA 8'))
+
+        # Tambahkan Bollinger Bands
+        fig.add_trace(go.Scatter(x=df_last15['time'], y=df_last15['BB_Upper'],
+                                mode='lines', name='BB Upper', line=dict(dash='dash')))
+        fig.add_trace(go.Scatter(x=df_last15['time'], y=df_last15['BB_Lower'],
+                                mode='lines', name='BB Lower', line=dict(dash='dash')))
+
+        # Tambahkan PSAR sebagai marker untuk menandai titik-titik sinyal
+        fig.add_trace(go.Scatter(x=df_last15['time'], y=df_last15['PSAR'],
+                                mode='markers', name='PSAR',
+                                marker=dict(symbol='x', size=8, color='yellow')))
+
+        # Update layout figure
         fig.update_layout(
-            title="Grafik Harga dan Indikator (30 Menit Terakhir)",
+            title="Grafik Harga dan Indikator (15 Menit Terakhir)",
             xaxis_title="Waktu",
             yaxis_title="Harga",
             template="plotly_dark",
             height=500
         )
         st.plotly_chart(fig, use_container_width=True)
+
 
 def main():
     """
