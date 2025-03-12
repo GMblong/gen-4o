@@ -1,7 +1,7 @@
 import os
 import sys
 import re
-import time
+import ta
 import logging
 import requests
 import numpy as np
@@ -124,24 +124,27 @@ def fetch_price_data():
     return []
 
 # =============================================================================
-# FUNGSI ANALISIS DATA
+# FUNGSI ANALISIS DATA YANG DIREVISI
 # =============================================================================
 def calculate_indicators(df):
     """
-    Hitung indikator teknikal: ATR, ADX, EMA, RSI, StochRSI, Bollinger Bands, MACD.
-    Optimalkan untuk data 1 menit dengan parameter yang lebih sensitif.
-    (Indikator volume tidak dihitung karena data volume tidak tersedia)
+    Hitung indikator teknikal dengan optimasi parameter untuk data 1 menit.
+    Ditambahkan perhitungan Parabolic SAR untuk mendeteksi tren.
     """
     df = df.copy()
     
-    # Indikator dasar dengan window kecil (sesuai untuk data 1 menit)
-    df['ATR'] = ta.volatility.average_true_range(df['high'], df['low'], df['close'], window=3)
-    df['ADX'] = ta.trend.adx(df['high'], df['low'], df['close'], window=3)
-    df['EMA_3'] = ta.trend.ema_indicator(df['close'], window=3)
-    df['EMA_5'] = ta.trend.ema_indicator(df['close'], window=5)
-    df['RSI'] = ta.momentum.rsi(df['close'], window=3)
+    # ATR dan ADX dengan window 5 untuk mengurangi noise
+    df['ATR'] = ta.volatility.average_true_range(df['high'], df['low'], df['close'], window=5)
+    df['ADX'] = ta.trend.adx(df['high'], df['low'], df['close'], window=5)
     
-    # StochRSI dengan window 7 agar deteksi lebih cepat
+    # EMA dengan window 3 dan window 8
+    df['EMA_3'] = ta.trend.ema_indicator(df['close'], window=3)
+    df['EMA_8'] = ta.trend.ema_indicator(df['close'], window=8)
+    
+    # RSI dengan window 5
+    df['RSI'] = ta.momentum.rsi(df['close'], window=5)
+    
+    # StochRSI dengan rolling window 7
     min_rsi = df['RSI'].rolling(window=7).min()
     max_rsi = df['RSI'].rolling(window=7).max()
     df['StochRSI_K'] = np.where(
@@ -150,15 +153,20 @@ def calculate_indicators(df):
         (df['RSI'] - min_rsi) / (max_rsi - min_rsi)
     ) * 100
     
-    # Bollinger Bands: rolling window 3 dan multiplier 1.2
-    rolling_mean = df['close'].rolling(3).mean()
-    rolling_std = df['close'].rolling(3).std()
+    # Bollinger Bands dengan rolling window 5 dan multiplier 1.2
+    rolling_mean = df['close'].rolling(window=5).mean()
+    rolling_std = df['close'].rolling(window=5).std()
     df['BB_Upper'] = rolling_mean + (rolling_std * 1.2)
     df['BB_Lower'] = rolling_mean - (rolling_std * 1.2)
     
-    # MACD dengan parameter sensitif: window_slow=6, window_fast=3, window_sign=4
-    df['MACD'] = ta.trend.macd(df['close'], window_slow=6, window_fast=3)
-    df['MACD_signal'] = ta.trend.macd_signal(df['close'], window_slow=6, window_fast=3, window_sign=4)
+    # MACD dengan parameter disesuaikan: window_slow=10, window_fast=5, window_sign=3
+    df['MACD'] = ta.trend.macd(df['close'], window_slow=10, window_fast=5)
+    df['MACD_signal'] = ta.trend.macd_signal(df['close'], window_slow=10, window_fast=5, window_sign=3)
+    
+    # Parabolic SAR dengan parameter standar untuk data 1 menit
+    psar_indicator = ta.trend.PSARIndicator(high=df['high'], low=df['low'], close=df['close'], step=0.02, max_step=0.2)
+    df['PSAR'] = psar_indicator.psar()
+    df['PSAR_trend'] = np.where(df['close'] > df['PSAR'], 'uptrend', 'downtrend')
     
     return df
 
@@ -207,8 +215,6 @@ def detect_candlestick_patterns(df):
     df['Marubozu'] = bullish_marubozu | bearish_marubozu
 
     # Pola tambahan
-
-    # --- Harami & Harami Cross ---
     prev_open = df['open'].shift(1)
     prev_close = df['close'].shift(1)
     current_open = df['open']
@@ -217,22 +223,12 @@ def detect_candlestick_patterns(df):
     df['Harami_Bearish'] = (prev_open < prev_close) & (current_open > current_close) & (current_open < prev_close) & (current_close > prev_open)
     df['Harami_Cross_Bullish'] = (prev_open > prev_close) & (abs(current_open - current_close) <= 0.1 * (df['high'] - df['low'])) & (current_open > prev_close) & (current_close < prev_open)
     df['Harami_Cross_Bearish'] = (prev_open < prev_close) & (abs(current_open - current_close) <= 0.1 * (df['high'] - df['low'])) & (current_open < prev_close) & (current_close > prev_open)
-
-    # --- Piercing Line (Bullish Reversal) ---
     df['Piercing_Line'] = (prev_open > prev_close) & (current_open < current_close) & (current_open < df['low'].shift(1)) & (current_close > (prev_open + prev_close) / 2)
-
-    # --- Dark Cloud Cover (Bearish Reversal) ---
     df['Dark_Cloud_Cover'] = (prev_open < prev_close) & (current_open > current_close) & (current_open > df['high'].shift(1)) & (current_close < (prev_open + prev_close) / 2)
-
-    # --- Belt Hold ---
     df['Bullish_Belt_Hold'] = (df['close'] > df['open']) & ((df['open'] - df['low']) < 0.1 * (df['high'] - df['low']))
     df['Bearish_Belt_Hold'] = (df['open'] > df['close']) & ((df['high'] - df['open']) < 0.1 * (df['high'] - df['low']))
-
-    # --- Abandoned Baby ---
     df['Abandoned_Baby_Bullish'] = (df['close'].shift(2) > df['open'].shift(2)) & (df['Doji'].shift(1)) & (df['open'] < df['close'].shift(1)) & (df['close'] > df['open'])
     df['Abandoned_Baby_Bearish'] = (df['close'].shift(2) < df['open'].shift(2)) & (df['Doji'].shift(1)) & (df['open'] > df['close'].shift(1)) & (df['close'] < df['open'])
-    
-    # --- Kicker Pattern ---
     df['Kicker_Bullish'] = (df['close'].shift(1) > df['open'].shift(1)) & (df['open'] < current_close) & (df['open'] < df['close'].shift(1))
     df['Kicker_Bearish'] = (df['close'].shift(1) < df['open'].shift(1)) & (df['open'] > current_close) & (df['open'] > df['close'].shift(1))
     
@@ -256,7 +252,7 @@ def detect_candlestick_patterns(df):
         if (slope_high < 0) and (slope_low < 0) and (slope_high > slope_low):
             df.at[df.index[i], 'Falling_Wedge'] = True
 
-    # --- Dragonfly & Gravestone Doji ---
+    # Dragonfly & Gravestone Doji
     df['Dragonfly_Doji'] = (
         df['Doji'] &
         ((df['high'] - np.maximum(df['open'], df['close'])) <= 0.1 * (df['high'] - df['low'])) &
@@ -270,31 +266,33 @@ def detect_candlestick_patterns(df):
     
     return df
 
+
 def check_entry_signals(df):
     """
-    Tentukan sinyal entry berdasarkan indikator teknikal dan pola candlestick.
-    Fungsi ini menghitung nilai kekuatan secara kontinu (0-100%) dari indikator teknikal
-    dan menambahkan bonus jika pola candlestick bullish atau bearish terdeteksi.
-    Jika kekuatan sinyal total kurang dari ambang minimum (misalnya 25%), kembalikan "NO SIGNAL".
+    Tentukan sinyal entry berdasarkan indikator teknikal, pola candlestick, dan tren PSAR.
+    Fungsi ini menghitung nilai kekuatan secara kontinu (0-100%) dari indikator teknikal,
+    kemudian menambahkan bonus jika pola candlestick atau tren PSAR mendukung.
+    Jika kekuatan sinyal total kurang dari ambang minimum, kembalikan "NO SIGNAL".
     """
     last_candle = df.iloc[-1]
     prev_candle = df.iloc[-2]
     
+    # Parameter threshold
     adx_threshold = 20
     atr_threshold = df['ATR'].mean() * 0.5  # ambang ATR
     
-    # Kontribusi kontinu dari indikator teknikal untuk sinyal bullish
+    # Kontribusi indikator untuk sinyal bullish
     rsi_contrib = max(0, (50 - last_candle['RSI']) / 50)       # nilai antara 0 dan 1
     stoch_contrib = max(0, (20 - last_candle['StochRSI_K']) / 20)
     macd_diff = last_candle['MACD'] - last_candle['MACD_signal']
-    macd_contrib = min(max(macd_diff / 0.5, 0), 1)             # jika perbedaan >= 0.5, kontribusi = 1
+    macd_contrib = min(max(macd_diff / 0.5, 0), 1)
     atr_adx_ratio = (last_candle['ATR'] / atr_threshold + last_candle['ADX'] / adx_threshold) / 2
     atr_adx_contrib = min(atr_adx_ratio, 1)
     breakout_contrib = 1 if (last_candle['close'] < last_candle['BB_Lower']) else 0
 
     effective_bull = rsi_contrib + stoch_contrib + macd_contrib + atr_adx_contrib + breakout_contrib
 
-    # Kontribusi kontinu untuk sinyal bearish
+    # Kontribusi indikator untuk sinyal bearish
     rsi_contrib_bear = max(0, (last_candle['RSI'] - 50) / 50)
     stoch_contrib_bear = max(0, (last_candle['StochRSI_K'] - 80) / 20)
     macd_diff_bear = last_candle['MACD_signal'] - last_candle['MACD']
@@ -305,69 +303,63 @@ def check_entry_signals(df):
     effective_bear = rsi_contrib_bear + stoch_contrib_bear + macd_contrib_bear + atr_adx_contrib_bear + breakout_contrib_bear
 
     # --- BONUS KANDIDAT POLA CANDLESTICK ---
-    # Daftar pola bullish (bernilai 0.2 per pola jika terdeteksi)
-    bullish_patterns = ['Hammer', 'Bullish_Engulfing', 'Three_White_Soldiers', 'Morning_Star',
-                        'Harami_Bullish', 'Harami_Cross_Bullish', 'Piercing_Line', 'Bullish_Belt_Hold',
-                        'Abandoned_Baby_Bullish', 'Kicker_Bullish']
-    # Daftar pola bearish
-    bearish_patterns = ['Shooting_Star', 'Bearish_Engulfing', 'Three_Black_Crows', 'Evening_Star',
-                        'Harami_Bearish', 'Harami_Cross_Bearish', 'Dark_Cloud_Cover', 'Bearish_Belt_Hold',
-                        'Abandoned_Baby_Bearish', 'Kicker_Bearish']
-    
     bonus_weight = 0.2
     pattern_bonus_bull = 0
     pattern_bonus_bear = 0
 
-    # Untuk pola Marubozu, cek arah candle
+    # Bonus untuk pola Marubozu berdasarkan arah candle
     if last_candle['Marubozu']:
         if last_candle['close'] > last_candle['open']:
             pattern_bonus_bull += bonus_weight
         else:
             pattern_bonus_bear += bonus_weight
 
-    # Iterasi untuk pola bullish
+    bullish_patterns = ['Hammer', 'Bullish_Engulfing', 'Three_White_Soldiers', 'Morning_Star',
+                        'Harami_Bullish', 'Harami_Cross_Bullish', 'Piercing_Line', 'Bullish_Belt_Hold',
+                        'Abandoned_Baby_Bullish', 'Kicker_Bullish']
+    bearish_patterns = ['Shooting_Star', 'Bearish_Engulfing', 'Three_Black_Crows', 'Evening_Star',
+                        'Harami_Bearish', 'Harami_Cross_Bearish', 'Dark_Cloud_Cover', 'Bearish_Belt_Hold',
+                        'Abandoned_Baby_Bearish', 'Kicker_Bearish']
     for pattern in bullish_patterns:
         if last_candle.get(pattern, False):
             pattern_bonus_bull += bonus_weight
-
-    # Iterasi untuk pola bearish
     for pattern in bearish_patterns:
         if last_candle.get(pattern, False):
             pattern_bonus_bear += bonus_weight
 
-    # Batasi bonus maksimum agar tidak melebihi 1.0
     pattern_bonus_bull = min(pattern_bonus_bull, 1.0)
     pattern_bonus_bear = min(pattern_bonus_bear, 1.0)
+    
+    # --- BONUS DARI TREND PSAR ---
+    psar_bonus_bull = bonus_weight if last_candle['PSAR_trend'] == 'uptrend' else 0
+    psar_bonus_bear = bonus_weight if last_candle['PSAR_trend'] == 'downtrend' else 0
 
-    # Tambahkan bonus pola ke effective
-    effective_bull_total = effective_bull + pattern_bonus_bull
-    effective_bear_total = effective_bear + pattern_bonus_bear
+    effective_bull_total = effective_bull + pattern_bonus_bull + psar_bonus_bull
+    effective_bear_total = effective_bear + pattern_bonus_bear + psar_bonus_bear
 
-    # Total maksimum effective: indikator maksimal (5) + bonus maksimal (1) = 6
-    max_possible_total = 6.0
+    # Total maksimum: indikator (5) + bonus pola (maks 1) + bonus PSAR (0.2) = 6.2
+    max_possible_total = 6.2
     strength_bull = (effective_bull_total / max_possible_total) * 100
     strength_bear = (effective_bear_total / max_possible_total) * 100
 
-    # Ambang minimum kekuatan sinyal
+    # Ambang minimum kekuatan sinyal (misalnya 30%)
     min_strength_threshold = 30  
     min_effective = (min_strength_threshold / 100) * max_possible_total
 
-    # Pilih sinyal berdasarkan nilai effective yang lebih tinggi
     if effective_bull_total >= min_effective and effective_bull_total >= effective_bear_total:
         signal = "BUY KUAT 📈" if strength_bull >= 60 else "BUY LEMAH 📈"
         reason_str = ("Kontribusi indikator: RSI=%.2f, StochRSI=%.2f, MACD=%.2f, ATR/ADX=%.2f, Breakout=%d; " %
                       (rsi_contrib, stoch_contrib, macd_contrib, atr_adx_contrib, breakout_contrib)
-                      + "Bonus pola: %.2f" % pattern_bonus_bull)
+                      + "Bonus pola: %.2f, PSAR: %.2f" % (pattern_bonus_bull, psar_bonus_bull))
         return signal, "Konfirmasi bullish: " + reason_str, strength_bull
     
     if effective_bear_total >= min_effective:
         signal = "SELL KUAT 📉" if strength_bear >= 60 else "SELL LEMAH 📉"
         reason_str = ("Kontribusi indikator: RSI=%.2f, StochRSI=%.2f, MACD=%.2f, ATR/ADX=%.2f, Breakout=%d; " %
                       (rsi_contrib_bear, stoch_contrib_bear, macd_contrib_bear, atr_adx_contrib_bear, breakout_contrib_bear)
-                      + "Bonus pola: %.2f" % pattern_bonus_bear)
+                      + "Bonus pola: %.2f, PSAR: %.2f" % (pattern_bonus_bear, psar_bonus_bear))
         return signal, "Konfirmasi bearish: " + reason_str, strength_bear
 
-    # Jika tidak ada sinyal yang memenuhi ambang, kembalikan NO SIGNAL
     overall_strength = max(strength_bull, strength_bear)
     return ("NO SIGNAL", "Kekuatan sinyal rendah (%.1f%%), hindari trade." % overall_strength, overall_strength)
 
@@ -378,7 +370,7 @@ def process_data():
     hitung indikator dan pola candlestick, lalu evaluasi sinyal.
     Optimalkan untuk data 1 menit.
     """
-    candles = fetch_price_data()
+    candles = fetch_price_data()  # Pastikan fungsi fetch_price_data() telah terdefinisi
     if not candles:
         return None, None, None, None
     
@@ -394,7 +386,7 @@ def process_data():
     for col in ['open', 'close', 'high', 'low']:
         df[col] = df[col].astype(np.float64).round(8)
     
-    # Buang candle terakhir yang mungkin belum lengkap
+    # Buang candle terakhir yang mungkin belum lengkap (jika diperlukan)
     # df = df.iloc[:-1].reset_index(drop=True)
     
     df = calculate_indicators(df)
