@@ -266,7 +266,6 @@ def detect_candlestick_patterns(df):
     
     return df
 
-
 def check_entry_signals(df):
     """
     Tentukan sinyal entry berdasarkan indikator teknikal, pola candlestick, dan tren PSAR.
@@ -281,8 +280,9 @@ def check_entry_signals(df):
     adx_threshold = 20
     atr_threshold = df['ATR'].mean() * 0.5  # ambang ATR
     
-    # Kontribusi indikator untuk sinyal bullish
-    rsi_contrib = max(0, (50 - last_candle['RSI']) / 50)       # nilai antara 0 dan 1
+    # --- Perhitungan Kontribusi Indikator Dasar ---
+    # Kontribusi untuk sinyal bullish
+    rsi_contrib = max(0, (50 - last_candle['RSI']) / 50)
     stoch_contrib = max(0, (20 - last_candle['StochRSI_K']) / 20)
     macd_diff = last_candle['MACD'] - last_candle['MACD_signal']
     macd_contrib = min(max(macd_diff / 0.5, 0), 1)
@@ -290,9 +290,7 @@ def check_entry_signals(df):
     atr_adx_contrib = min(atr_adx_ratio, 1)
     breakout_contrib = 1 if (last_candle['close'] < last_candle['BB_Lower']) else 0
 
-    effective_bull = rsi_contrib + stoch_contrib + macd_contrib + atr_adx_contrib + breakout_contrib
-
-    # Kontribusi indikator untuk sinyal bearish
+    # Kontribusi untuk sinyal bearish
     rsi_contrib_bear = max(0, (last_candle['RSI'] - 50) / 50)
     stoch_contrib_bear = max(0, (last_candle['StochRSI_K'] - 80) / 20)
     macd_diff_bear = last_candle['MACD_signal'] - last_candle['MACD']
@@ -300,7 +298,16 @@ def check_entry_signals(df):
     atr_adx_contrib_bear = atr_adx_contrib  # sama dengan bullish
     breakout_contrib_bear = 1 if (last_candle['close'] > last_candle['BB_Upper']) else 0
 
-    effective_bear = rsi_contrib_bear + stoch_contrib_bear + macd_contrib_bear + atr_adx_contrib_bear + breakout_contrib_bear
+    # --- Penerapan Trend Multiplier Berdasarkan PSAR ---
+    if last_candle['PSAR_trend'] == 'uptrend':
+        multiplier_bull = 1.0
+        multiplier_bear = 0.5
+    else:
+        multiplier_bull = 0.5
+        multiplier_bear = 1.0
+
+    base_bull = (rsi_contrib + stoch_contrib + macd_contrib + atr_adx_contrib + breakout_contrib) * multiplier_bull
+    base_bear = (rsi_contrib_bear + stoch_contrib_bear + macd_contrib_bear + atr_adx_contrib_bear + breakout_contrib_bear) * multiplier_bear
 
     # --- BONUS KANDIDAT POLA CANDLESTICK ---
     bonus_weight = 0.2
@@ -320,6 +327,7 @@ def check_entry_signals(df):
     bearish_patterns = ['Shooting_Star', 'Bearish_Engulfing', 'Three_Black_Crows', 'Evening_Star',
                         'Harami_Bearish', 'Harami_Cross_Bearish', 'Dark_Cloud_Cover', 'Bearish_Belt_Hold',
                         'Abandoned_Baby_Bearish', 'Kicker_Bearish']
+
     for pattern in bullish_patterns:
         if last_candle.get(pattern, False):
             pattern_bonus_bull += bonus_weight
@@ -327,6 +335,7 @@ def check_entry_signals(df):
         if last_candle.get(pattern, False):
             pattern_bonus_bear += bonus_weight
 
+    # Batasi bonus agar tidak melebihi 1.0
     pattern_bonus_bull = min(pattern_bonus_bull, 1.0)
     pattern_bonus_bear = min(pattern_bonus_bear, 1.0)
     
@@ -334,17 +343,19 @@ def check_entry_signals(df):
     psar_bonus_bull = bonus_weight if last_candle['PSAR_trend'] == 'uptrend' else 0
     psar_bonus_bear = bonus_weight if last_candle['PSAR_trend'] == 'downtrend' else 0
 
-    effective_bull_total = effective_bull + pattern_bonus_bull + psar_bonus_bull
-    effective_bear_total = effective_bear + pattern_bonus_bear + psar_bonus_bear
+    # Total effective score
+    effective_bull_total = base_bull + pattern_bonus_bull + psar_bonus_bull
+    effective_bear_total = base_bear + pattern_bonus_bear + psar_bonus_bear
 
-    # Total maksimum: indikator (5) + bonus pola (maks 1) + bonus PSAR (0.2) = 6.2
+    # Total maksimum bervariasi berdasarkan multiplier, namun untuk uptrend, maksimum mendekati 6.2
+    # dan untuk downtrend, maksimum untuk sinyal bearish mendekati 6.2.
+    # Kita gunakan ambang minimum kekuatan sinyal (misalnya 30% dari nilai maksimum 6.2)
     max_possible_total = 6.2
-    strength_bull = (effective_bull_total / max_possible_total) * 100
-    strength_bear = (effective_bear_total / max_possible_total) * 100
-
-    # Ambang minimum kekuatan sinyal (misalnya 30%)
     min_strength_threshold = 30  
     min_effective = (min_strength_threshold / 100) * max_possible_total
+
+    strength_bull = (effective_bull_total / max_possible_total) * 100
+    strength_bear = (effective_bear_total / max_possible_total) * 100
 
     if effective_bull_total >= min_effective and effective_bull_total >= effective_bear_total:
         signal = "BUY KUAT 📈" if strength_bull >= 60 else "BUY LEMAH 📈"
